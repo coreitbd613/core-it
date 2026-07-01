@@ -71,11 +71,53 @@ const Services12 = ({ className }: Services12Props) => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {/* Featured Services - First 2 */}
-          {services.slice(0, 2).map((service, idx) => (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Featured - spans 2 of 3 columns */}
+          <motion.a
+            href={services[0].url}
+            whileHover={{ opacity: 0.8 }}
+            className="group block overflow-hidden rounded-xl lg:col-span-2"
+          >
+            <Card className="relative aspect-[4/3] overflow-hidden p-0 lg:aspect-auto lg:h-[26rem]">
+              <img
+                src={services[0].image}
+                alt={services[0].title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <CardContent className="absolute inset-0 flex flex-col justify-start p-6">
+                <div className="pr-4 font-semibold text-white">
+                  {services[0].title}
+                </div>
+              </CardContent>
+              <ArrowUpRight className="absolute top-6 right-6 h-6 w-6 text-white transition-transform group-hover:scale-110" />
+            </Card>
+          </motion.a>
+
+          {/* Second - 1 of 3 columns, same row/height as featured */}
+          <motion.a
+            href={services[1].url}
+            whileHover={{ opacity: 0.8 }}
+            className="group block overflow-hidden rounded-xl"
+          >
+            <Card className="relative aspect-[4/3] overflow-hidden p-0 lg:aspect-auto lg:h-[26rem]">
+              <img
+                src={services[1].image}
+                alt={services[1].title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <CardContent className="absolute inset-0 flex flex-col justify-start p-6">
+                <div className="pr-4 font-semibold text-white">
+                  {services[1].title}
+                </div>
+              </CardContent>
+              <ArrowUpRight className="absolute top-6 right-6 h-6 w-6 text-white transition-transform group-hover:scale-110" />
+            </Card>
+          </motion.a>
+
+          {/* Remaining 3 - evenly split across the row below */}
+          {services.slice(2).map((service, idx) => (
             <motion.a
-              key={idx}
+              key={idx + 2}
               href={service.url}
               whileHover={{ opacity: 0.8 }}
               className="group block overflow-hidden rounded-xl"
@@ -86,41 +128,15 @@ const Services12 = ({ className }: Services12Props) => {
                   alt={service.title}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
-                <CardContent className="absolute inset-0 flex flex-col justify-start p-6">
-                  <div className="pr-4 font-semibold text-white">
+                <CardContent className="absolute inset-0 flex flex-col justify-start p-4">
+                  <div className="pr-4 text-sm font-semibold text-white">
                     {service.title}
                   </div>
                 </CardContent>
-                <ArrowUpRight className="absolute top-6 right-6 h-6 w-6 text-white transition-transform group-hover:scale-110" />
+                <ArrowUpRight className="absolute top-4 right-4 h-5 w-5 text-white transition-transform group-hover:scale-110" />
               </Card>
             </motion.a>
           ))}
-
-          {/* Secondary Services - Remaining 3 */}
-          <div className="col-span-full grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {services.slice(2).map((service, idx) => (
-              <motion.a
-                key={idx + 2}
-                href={service.url}
-                whileHover={{ opacity: 0.8 }}
-                className="group block overflow-hidden rounded-xl"
-              >
-                <Card className="relative aspect-[4/3] overflow-hidden p-0">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  <CardContent className="absolute inset-0 flex flex-col justify-start p-4">
-                    <div className="pr-4 text-sm font-semibold text-white">
-                      {service.title}
-                    </div>
-                  </CardContent>
-                  <ArrowUpRight className="absolute top-4 right-4 h-5 w-5 text-white transition-transform group-hover:scale-110" />
-                </Card>
-              </motion.a>
-            ))}
-          </div>
         </div>
       </div>
     </section>
