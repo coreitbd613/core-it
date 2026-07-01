@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function SiteHero() {
   return (
-    <section className="relative h-screen overflow-hidden">
+    <section className="sticky top-0 z-0 h-screen overflow-hidden">
       {/* Looping video background */}
       <video
         className="absolute inset-0 size-full object-cover"

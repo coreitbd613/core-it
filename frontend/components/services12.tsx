@@ -52,7 +52,10 @@ interface Services12Props {
 
 const Services12 = ({ className }: Services12Props) => {
   return (
-    <section id="services" className={cn("py-32", className)}>
+    <section
+      id="services"
+      className={cn("relative z-10 rounded-t-3xl bg-background py-32 shadow-[0_-40px_60px_-25px_rgba(0,0,0,0.35)]", className)}
+    >
       <div className="container grid grid-cols-1 gap-10 lg:grid-cols-3">
         <div className="flex flex-col lg:col-span-1 lg:self-center">
           <h2 className="mb-4 text-4xl font-medium text-foreground md:text-6xl">
