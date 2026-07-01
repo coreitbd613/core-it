@@ -54,10 +54,10 @@ const Services12 = ({ className }: Services12Props) => {
   return (
     <section
       id="services"
-      className={cn("relative z-10 rounded-t-3xl bg-background py-32 shadow-[0_-40px_60px_-25px_rgba(0,0,0,0.35)]", className)}
+      className={cn("relative z-10 bg-background py-32", className)}
     >
-      <div className="container grid grid-cols-1 gap-10 lg:grid-cols-3">
-        <div className="flex flex-col lg:col-span-1 lg:self-center">
+      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col">
           <h2 className="mb-4 text-4xl font-medium text-foreground md:text-6xl">
             Featured Services
           </h2>
@@ -71,7 +71,7 @@ const Services12 = ({ className }: Services12Props) => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {/* Featured Services - First 2 */}
           {services.slice(0, 2).map((service, idx) => (
             <motion.a
