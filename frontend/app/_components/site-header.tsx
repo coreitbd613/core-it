@@ -37,6 +37,7 @@ export function SiteHeader() {
             className="h-36 w-auto rounded-sm"
           />
         </Link>
+        
 
         <nav className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => (
