@@ -1,8 +1,8 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
-import { RippleButton } from "@/components/ui/ripple-button";
 
 export function SiteHero() {
   return (
@@ -55,13 +55,14 @@ export function SiteHero() {
           >
             Contact Us
           </InteractiveHoverButton>
-          <RippleButton
-            rippleColor="#ffffff"
-            className="h-12 border-white/25 bg-white/5 px-8 text-base text-white backdrop-blur-sm hover:bg-white/10"
-            onClick={() => document.getElementById("services")?.scrollIntoView()}
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-12 border-white/25 bg-white/5 px-8 text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
+            asChild
           >
-            Explore Services
-          </RippleButton>
+            <a href="#services">Explore Services</a>
+          </Button>
         </div>
       </div>
     </section>

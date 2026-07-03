@@ -4,8 +4,10 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import {
   Sheet,
   SheetClose,
@@ -24,6 +26,13 @@ const navLinks = [
 ] as const;
 
 export function SiteHeader() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-black/30 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -48,6 +57,13 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          {mounted && (
+            <AnimatedThemeToggler
+              theme={resolvedTheme === "light" ? "light" : "dark"}
+              onThemeChange={(theme) => setTheme(theme)}
+              className="flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 hover:text-white [&_svg]:size-4.5"
+            />
+          )}
           <Button variant="ghost" size="lg" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
             <a href="#contact">Sign in</a>
           </Button>
@@ -92,6 +108,18 @@ export function SiteHeader() {
               ))}
             </nav>
             <div className="mt-auto flex flex-col gap-2 p-4">
+              {mounted && (
+                <div className="mb-1 flex items-center justify-between rounded-lg border border-input px-3 py-2.5">
+                  <span className="text-sm font-medium text-foreground">
+                    {resolvedTheme === "light" ? "Light mode" : "Dark mode"}
+                  </span>
+                  <AnimatedThemeToggler
+                    theme={resolvedTheme === "light" ? "light" : "dark"}
+                    onThemeChange={(theme) => setTheme(theme)}
+                    className="flex size-8 items-center justify-center rounded-md text-foreground hover:bg-muted [&_svg]:size-4"
+                  />
+                </div>
+              )}
               <SheetClose asChild>
                 <Button variant="outline" size="lg" asChild>
                   <a href="#contact">Sign in</a>

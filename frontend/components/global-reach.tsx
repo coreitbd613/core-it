@@ -4,7 +4,6 @@ import { ArrowRight, Globe as GlobeIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Globe } from "@/components/ui/globe";
-import { Particles } from "@/components/ui/particles";
 import { cn } from "@/lib/utils";
 
 interface GlobalReachProps {
@@ -20,15 +19,6 @@ const GlobalReach = ({ className }: GlobalReachProps) => {
         className
       )}
     >
-      {/* Subtle particle field */}
-      <Particles
-        className="absolute inset-0"
-        quantity={80}
-        staticity={40}
-        size={0.4}
-        color="#000000"
-      />
-
       {/* Orange radial glow */}
       <div
         aria-hidden
