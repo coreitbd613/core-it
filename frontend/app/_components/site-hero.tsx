@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 export function SiteHero() {
   return (
@@ -48,16 +49,12 @@ export function SiteHero() {
 
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <Button
-            size="lg"
-            className="h-12 gap-2 bg-[#FD6005] px-8 text-white hover:bg-[#FD6005]/85"
-            asChild
+          <InteractiveHoverButton
+            className="h-12 px-8 text-base"
+            onClick={() => document.getElementById("contact")?.scrollIntoView()}
           >
-            <a href="#contact">
-              Get a Free Quote
-              <ArrowRight className="size-4" />
-            </a>
-          </Button>
+            Contact Us
+          </InteractiveHoverButton>
           <Button
             size="lg"
             variant="outline"
