@@ -1,8 +1,8 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { RippleButton } from "@/components/ui/ripple-button";
 
 export function SiteHero() {
   return (
@@ -50,19 +50,18 @@ export function SiteHero() {
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <InteractiveHoverButton
-            className="h-12 px-8 text-base"
+            className="h-12 rounded-lg px-8 text-base"
             onClick={() => document.getElementById("contact")?.scrollIntoView()}
           >
             Contact Us
           </InteractiveHoverButton>
-          <Button
-            size="lg"
-            variant="outline"
-            className="h-12 border-white/25 bg-white/5 px-8 text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
-            asChild
+          <RippleButton
+            rippleColor="#ffffff"
+            className="h-12 border-white/25 bg-white/5 px-8 text-base text-white backdrop-blur-sm hover:bg-white/10"
+            onClick={() => document.getElementById("services")?.scrollIntoView()}
           >
-            <a href="#services">Explore Services</a>
-          </Button>
+            Explore Services
+          </RippleButton>
         </div>
       </div>
     </section>
