@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight, Globe as GlobeIcon } from "lucide-react";
+import { Globe as GlobeIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Globe } from "@/components/ui/globe";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { cn } from "@/lib/utils";
 
 interface GlobalReachProps {
@@ -49,16 +49,12 @@ const GlobalReach = ({ className }: GlobalReachProps) => {
             zones.
           </p>
 
-          <Button
-            size="lg"
-            className="mt-10 w-fit gap-2 bg-[#FD6005] px-8 text-white hover:bg-[#FD6005]/85"
-            asChild
+          <InteractiveHoverButton
+            className="mt-10 h-12 w-fit rounded-lg px-8 text-base"
+            onClick={() => document.getElementById("contact")?.scrollIntoView()}
           >
-            <a href="#contact">
-              Get a Free Quote
-              <ArrowRight className="size-4" />
-            </a>
-          </Button>
+            Contact Us
+          </InteractiveHoverButton>
         </div>
 
         {/* Globe column - full width below text on mobile, right side on desktop */}
