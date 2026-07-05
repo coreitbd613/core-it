@@ -58,7 +58,7 @@ export function SiteHero() {
           <Button
             size="lg"
             variant="outline"
-            className="h-12 border-white/25 bg-white/5 px-8 text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
+            className="h-12 border-white/25 bg-white/5 px-8 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
             asChild
           >
             <a href="#services">Explore Services</a>

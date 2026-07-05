@@ -77,7 +77,7 @@ export class AuthController {
       profile,
     );
     this.setAuthCookies(res, tokens);
-    res.redirect(frontendUrl);
+    res.redirect(`${frontendUrl}/dashboard`);
   }
 
   @Post('refresh')

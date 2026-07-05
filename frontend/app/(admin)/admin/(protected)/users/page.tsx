@@ -1,15 +1,11 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Activity, ShieldCheck, UserPlus, Users } from "lucide-react"
 
-import DashboardStatsGrid, {
-  type DashboardStatItem,
-} from "@/components/shared/dashboard/DashboardStatsGrid"
 import { DataTable } from "@/components/shared/data-table/DataTable"
 import { Badge } from "@/components/ui/badge"
 
-type RecentUser = {
+type UserRow = {
   id: string
   name: string
   email: string
@@ -17,23 +13,17 @@ type RecentUser = {
   joinedAt: string
 }
 
-// Placeholder until a real stats/users endpoint exists on the backend.
-const mockStats: DashboardStatItem[] = [
-  { label: "Total Users", value: 1284, icon: Users, tone: "primary" },
-  { label: "Admins", value: 6, icon: ShieldCheck, tone: "neutral" },
-  { label: "New Signups Today", value: 18, icon: UserPlus, tone: "chart2" },
-  { label: "Active Sessions", value: 92, icon: Activity, tone: "chart4" },
-]
-
-const mockRecentUsers: RecentUser[] = [
+// Placeholder until a real users-list endpoint exists on the backend.
+const mockUsers: UserRow[] = [
   { id: "1", name: "Amelia Turner", email: "amelia@example.com", role: "USER", joinedAt: "2026-07-04" },
   { id: "2", name: "Rafiq Islam", email: "rafiq@example.com", role: "ADMIN", joinedAt: "2026-07-03" },
   { id: "3", name: "Priya Nair", email: "priya@example.com", role: "USER", joinedAt: "2026-07-02" },
   { id: "4", name: "Diego Alvarez", email: "diego@example.com", role: "USER", joinedAt: "2026-07-01" },
   { id: "5", name: "Sana Malik", email: "sana@example.com", role: "USER", joinedAt: "2026-06-30" },
+  { id: "6", name: "Tomasz Nowak", email: "tomasz@example.com", role: "USER", joinedAt: "2026-06-29" },
 ]
 
-const columns: ColumnDef<RecentUser>[] = [
+const columns: ColumnDef<UserRow>[] = [
   { accessorKey: "name", header: "Name", enableSorting: true },
   { accessorKey: "email", header: "Email" },
   {
@@ -48,25 +38,15 @@ const columns: ColumnDef<RecentUser>[] = [
   { accessorKey: "joinedAt", header: "Joined", enableSorting: true },
 ]
 
-export default function AdminDashboardPage() {
+export default function AdminUsersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your CRM/ERP activity.</p>
+        <h1 className="text-2xl font-bold">Users</h1>
+        <p className="text-muted-foreground">Everyone with access to Core IT.</p>
       </div>
 
-      <DashboardStatsGrid items={mockStats} />
-
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Recent users</h2>
-        <DataTable
-          columns={columns}
-          data={mockRecentUsers}
-          getRowId={(row) => row.id}
-          enableRowSelection={false}
-        />
-      </div>
+      <DataTable columns={columns} data={mockUsers} getRowId={(row) => row.id} />
     </div>
   )
 }

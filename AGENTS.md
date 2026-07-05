@@ -1,5 +1,7 @@
 # AGENTS.md
 
+See `CLAUDE.md` for project overview, design direction, and working-style preferences. This file is environment/tooling facts only.
+
 - App lives in `frontend/` (Next.js 16 + Turbopack + Tailwind v4 + shadcn). Root-level files are just tooling (skills CLI, MCP config) — not part of the app.
 - Package manager: **pnpm** (`frontend/pnpm-lock.yaml`). Don't use npm/yarn there.
 - Run dev server: `cd frontend && pnpm dev` (or `build` / `start` / `lint`).

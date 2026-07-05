@@ -50,7 +50,7 @@ export function LoginForm({
         return
       }
 
-      router.push("/")
+      router.push("/dashboard")
       router.refresh()
     } catch {
       toast.error("Couldn't reach the server. Please try again.")
