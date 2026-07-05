@@ -7,3 +7,4 @@
 - Brand color: `--primary: #FD6005` (orange). Base radius: `--radius: 0.5rem` → use `rounded-lg` to match existing buttons/cards.
 - `frontend/next.config.ts` sets `turbopack.root` explicitly — needed because a root-level `package-lock.json`/pnpm files otherwise confuse Turbopack's workspace-root detection.
 - Git commits in this repo use identity `Core IT <coreitbd613@gmail.com>` (repo-local `git config`), matching the GitHub account (`coreitbd613`) Vercel deploys are tied to — don't let it fall back to a personal git identity.
+- Component placement: route-only components go in `app/<route>/_components/` (underscore prefix opts out of Next.js routing); components used by 2+ unrelated routes go in `frontend/components/shared/`; shadcn/Magic UI primitives stay in `frontend/components/ui/`.

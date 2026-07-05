@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { useState } from "react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
@@ -27,17 +27,11 @@ export function SignupForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
   const [name, setName] = React.useState("")
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -76,16 +70,22 @@ export function SignupForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Link href="/" className="flex h-10 items-center justify-center" aria-label="CORE IT home">
-        {mounted && (
-          <Image
-            src={resolvedTheme === "light" ? "/logo-light.png" : "/logo-dark.png"}
-            alt="CORE IT"
-            width={160}
-            height={101}
-            priority
-            className="h-32 w-auto"
-          />
-        )}
+        <Image
+          src="/logo-light.png"
+          alt="CORE IT"
+          width={160}
+          height={101}
+          priority
+          className="h-32 w-auto dark:hidden"
+        />
+        <Image
+          src="/logo-dark.png"
+          alt="CORE IT"
+          width={160}
+          height={101}
+          priority
+          className="hidden h-32 w-auto dark:block"
+        />
       </Link>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
@@ -102,6 +102,7 @@ export function SignupForm({
                 <Input
                   id="name"
                   type="text"
+                  autoComplete="name"
                   placeholder="Jane Doe"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
@@ -112,6 +113,7 @@ export function SignupForm({
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="m@example.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -125,6 +127,7 @@ export function SignupForm({
                     <Input
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       minLength={8}
@@ -138,6 +141,7 @@ export function SignupForm({
                     <Input
                       id="confirm-password"
                       type="password"
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(event) =>
                         setConfirmPassword(event.target.value)

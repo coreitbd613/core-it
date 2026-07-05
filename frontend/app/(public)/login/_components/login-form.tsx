@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -27,15 +26,9 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -69,16 +62,22 @@ export function LoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Link href="/" className="flex h-10 items-center justify-center" aria-label="CORE IT home">
-        {mounted && (
-          <Image
-            src={resolvedTheme === "light" ? "/logo-light.png" : "/logo-dark.png"}
-            alt="CORE IT"
-            width={160}
-            height={101}
-            priority
-            className="h-32 w-auto"
-          />
-        )}
+        <Image
+          src="/logo-light.png"
+          alt="CORE IT"
+          width={160}
+          height={101}
+          priority
+          className="h-32 w-auto dark:hidden"
+        />
+        <Image
+          src="/logo-dark.png"
+          alt="CORE IT"
+          width={160}
+          height={101}
+          priority
+          className="hidden h-32 w-auto dark:block"
+        />
       </Link>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
@@ -95,6 +94,7 @@ export function LoginForm({
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="m@example.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -114,6 +114,7 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
