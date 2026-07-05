@@ -17,6 +17,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/shared/password-input"
 import { Spinner } from "@/components/ui/spinner"
 import { useState } from "react"
 
@@ -124,9 +125,8 @@ export function SignupForm({
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input
+                    <PasswordInput
                       id="password"
-                      type="password"
                       autoComplete="new-password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
@@ -138,9 +138,8 @@ export function SignupForm({
                     <FieldLabel htmlFor="confirm-password">
                       Confirm Password
                     </FieldLabel>
-                    <Input
+                    <PasswordInput
                       id="confirm-password"
-                      type="password"
                       autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(event) =>
