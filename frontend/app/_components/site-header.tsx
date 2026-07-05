@@ -65,10 +65,10 @@ export function SiteHeader() {
             />
           )}
           <Button variant="ghost" size="lg" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
-            <a href="#contact">Sign in</a>
+            <Link href="/login">Sign in</Link>
           </Button>
           <Button size="lg" className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
-            <a href="#contact">Get a Quote</a>
+            <Link href="/signup">Sign up</Link>
           </Button>
         </div>
 
@@ -122,12 +122,12 @@ export function SiteHeader() {
               )}
               <SheetClose asChild>
                 <Button variant="outline" size="lg" asChild>
-                  <a href="#contact">Sign in</a>
+                  <Link href="/login">Sign in</Link>
                 </Button>
               </SheetClose>
               <SheetClose asChild>
                 <Button size="lg" asChild>
-                  <a href="#contact">Get a Quote</a>
+                  <Link href="/signup">Sign up</Link>
                 </Button>
               </SheetClose>
             </div>
