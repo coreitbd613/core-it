@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -20,13 +21,10 @@ export function AdminLoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsSubmitting(true)
+  async function adminLoginAction(_state: null, formData: FormData) {
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
 
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
@@ -41,7 +39,7 @@ export function AdminLoginForm({
           message?: string
         } | null
         toast.error(body?.message ?? "Invalid email or password.")
-        return
+        return null
       }
 
       const user = (await res.json()) as CurrentUser
@@ -53,17 +51,19 @@ export function AdminLoginForm({
           credentials: "include",
         })
         toast.error("This account doesn't have admin access.")
-        return
+        return null
       }
 
       router.push("/admin/dashboard")
       router.refresh()
     } catch {
       toast.error("Couldn't reach the server. Please try again.")
-    } finally {
-      setIsSubmitting(false)
     }
+
+    return null
   }
+
+  const [, formAction, isPending] = useActionState(adminLoginAction, null)
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -75,17 +75,16 @@ export function AdminLoginForm({
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form action={formAction}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   autoComplete="email"
                   placeholder="admin@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
                   required
                 />
               </Field>
@@ -93,15 +92,14 @@ export function AdminLoginForm({
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <PasswordInput
                   id="password"
+                  name="password"
                   autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
                   required
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Spinner className="size-4" />}
+                <Button type="submit" disabled={isPending}>
+                  {isPending && <Spinner className="size-4" />}
                   Sign in
                 </Button>
               </Field>

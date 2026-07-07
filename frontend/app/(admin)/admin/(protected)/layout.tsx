@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   LayoutDashboard,
@@ -25,10 +26,10 @@ export default function AdminProtectedLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const [user, setUser] = React.useState<CurrentUser | null>(null)
-  const [loading, setLoading] = React.useState(true)
+  const [user, setUser] = useState<CurrentUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  React.useEffect(() => {
+  useEffect(() => {
     getCurrentUser()
       .then(setUser)
       .finally(() => setLoading(false))

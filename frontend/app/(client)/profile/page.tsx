@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react"
 
 import { getCurrentUser, type CurrentUser } from "@/lib/auth"
 import {
@@ -18,10 +19,10 @@ function getInitials(name: string) {
 }
 
 export default function UserProfilePage() {
-  const [user, setUser] = React.useState<CurrentUser | null>(null)
-  const [loading, setLoading] = React.useState(true)
+  const [user, setUser] = useState<CurrentUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  React.useEffect(() => {
+  useEffect(() => {
     getCurrentUser()
       .then(setUser)
       .finally(() => setLoading(false))

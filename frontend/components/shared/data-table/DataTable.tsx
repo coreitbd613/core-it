@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -106,12 +107,12 @@ export function DataTable<TData>({
   stickyLastColumn = false,
 }: DataTableProps<TData>) {
   const [internalRowSelection, setInternalRowSelection] =
-    React.useState<RowSelectionState>({});
+    useState<RowSelectionState>({});
   const activeRowSelection = rowSelection ?? internalRowSelection;
   const handleRowSelectionChange =
     onRowSelectionChange ?? setInternalRowSelection;
   const [internalSorting, setInternalSorting] =
-    React.useState<SortingState>([]);
+    useState<SortingState>([]);
   const activeSorting = sorting ?? internalSorting;
   const handleSortingChange = onSortingChange ?? setInternalSorting;
 

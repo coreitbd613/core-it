@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -10,7 +11,7 @@ export function PasswordInput({
   className,
   ...props
 }: Omit<React.ComponentProps<"input">, "type">) {
-  const [visible, setVisible] = React.useState(false)
+  const [visible, setVisible] = useState(false)
 
   return (
     <div className="relative">
