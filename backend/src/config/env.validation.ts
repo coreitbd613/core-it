@@ -65,6 +65,14 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   COOKIE_DOMAIN?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  AZURE_STORAGE_CONNECTION_STRING: string;
+
+  @IsString()
+  @IsNotEmpty()
+  AZURE_STORAGE_CONTAINER: string;
 }
 
 export function validate(config: Record<string, unknown>) {
