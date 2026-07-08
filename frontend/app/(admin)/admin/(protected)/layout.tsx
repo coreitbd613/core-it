@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
+  Globe,
   LayoutDashboard,
   Settings,
   Users,
@@ -15,6 +16,7 @@ import PanelDashboardShell, {
 
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
+  { name: "Domain Orders", href: "/admin/domain-orders", icon: <Globe /> },
   { name: "Users", href: "/admin/users", icon: <Users /> },
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },
 ]
