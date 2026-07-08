@@ -11,6 +11,7 @@ import {
   useUpdateProfile,
   useUploadAvatar,
 } from "@/hooks/use-current-user"
+import type { AuthScope } from "@/lib/auth"
 import {
   Avatar,
   AvatarFallback,
@@ -44,10 +45,10 @@ function getInitials(name: string) {
   return words.slice(0, 2).map((word) => word[0]?.toUpperCase()).join("")
 }
 
-export function ProfileForm() {
-  const { data: user, isPending } = useCurrentUser()
-  const updateProfile = useUpdateProfile()
-  const uploadAvatar = useUploadAvatar()
+export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
+  const { data: user, isPending } = useCurrentUser(scope)
+  const updateProfile = useUpdateProfile(scope)
+  const uploadAvatar = useUploadAvatar(scope)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [name, setName] = useState("")

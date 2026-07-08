@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
+import { ClientAuthProvider } from "@/contexts/client-auth-context";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -51,8 +52,10 @@ export default function RootLayout({
         </Script>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <QueryProvider>
-            {children}
-            <Toaster />
+            <ClientAuthProvider>
+              {children}
+              <Toaster />
+            </ClientAuthProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

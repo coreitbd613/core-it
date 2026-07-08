@@ -4,9 +4,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { LayoutDashboard, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 
+import { useClientAuth } from "@/contexts/client-auth-context";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import {
@@ -28,6 +29,7 @@ const navLinks = [
 
 export function SiteHeader() {
   const { resolvedTheme, setTheme } = useTheme();
+  const { user, isPending } = useClientAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -65,12 +67,32 @@ export function SiteHeader() {
               className="flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 hover:text-white [&_svg]:size-4.5"
             />
           )}
-          <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
-          <Button className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
-            <Link href="/signup">Sign up</Link>
-          </Button>
+          {!mounted || isPending ? null : user ? (
+            <Button
+              size="lg"
+              className="gap-2 bg-[#FD6005] text-white hover:bg-[#FD6005]/85"
+              asChild
+            >
+              <Link href="/dashboard">
+                <LayoutDashboard className="size-4" />
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button
+                size="lg"
+                variant="ghost"
+                className="text-white/80 hover:text-white hover:bg-white/10"
+                asChild
+              >
+                <Link href="/login">Sign in</Link>
+              </Button>
+              <Button size="lg" className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
+                <Link href="/signup">Sign up</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <Sheet>
@@ -121,16 +143,29 @@ export function SiteHeader() {
                   />
                 </div>
               )}
-              <SheetClose asChild>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/login">Sign in</Link>
-                </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                <Button size="lg" asChild>
-                  <Link href="/signup">Sign up</Link>
-                </Button>
-              </SheetClose>
+              {mounted && !isPending && user ? (
+                <SheetClose asChild>
+                  <Button size="lg" className="gap-2" asChild>
+                    <Link href="/dashboard">
+                      <LayoutDashboard className="size-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                </SheetClose>
+              ) : (
+                <>
+                  <SheetClose asChild>
+                    <Button variant="outline" size="lg" asChild>
+                      <Link href="/login">Sign in</Link>
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button size="lg" asChild>
+                      <Link href="/signup">Sign up</Link>
+                    </Button>
+                  </SheetClose>
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>

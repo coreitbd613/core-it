@@ -2,15 +2,13 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useQueryClient } from "@tanstack/react-query"
 import {
   LayoutDashboard,
   Settings,
   Users,
 } from "lucide-react"
 
-import { logout } from "@/lib/auth"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { AdminAuthProvider, useAdminAuth } from "@/contexts/admin-auth-context"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -21,18 +19,12 @@ const adminNavItems: PanelNavItem[] = [
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },
 ]
 
-export default function AdminProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function AdminProtectedShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const { data: user, isPending } = useCurrentUser()
+  const { user, isPending, logout } = useAdminAuth()
 
   async function handleLogout() {
     await logout()
-    queryClient.clear()
     router.push("/admin/login")
     router.refresh()
   }
@@ -53,5 +45,17 @@ export default function AdminProtectedLayout({
     >
       {children}
     </PanelDashboardShell>
+  )
+}
+
+export default function AdminProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AdminAuthProvider>
+      <AdminProtectedShell>{children}</AdminProtectedShell>
+    </AdminAuthProvider>
   )
 }

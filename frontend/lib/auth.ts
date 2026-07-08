@@ -1,5 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
+export type AuthScope = "client" | "admin"
+
 export type CurrentUser = {
   id: string
   email: string
@@ -16,20 +18,30 @@ export type UpdateProfileInput = {
   whatsappNumber?: string
 }
 
+function authPath(scope: AuthScope, path: string): string {
+  const prefix = scope === "admin" ? "/auth/admin" : "/auth"
+  return `${API_URL}${prefix}${path}`
+}
+
 /**
  * Access/refresh tokens are httpOnly cookies, so this request is the only
- * way client code can learn who's logged in (or that no one is).
+ * way client code can learn who's logged in (or that no one is). Client and
+ * admin sessions use separate cookies/endpoints so both panels can stay
+ * signed in at the same time.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const res = await fetch(`${API_URL}/auth/me`, { credentials: "include" })
+export async function getCurrentUser(scope: AuthScope = "client"): Promise<CurrentUser | null> {
+  const res = await fetch(authPath(scope, "/me"), { credentials: "include" })
   if (!res.ok) {
     return null
   }
   return (await res.json()) as CurrentUser
 }
 
-export async function updateProfile(input: UpdateProfileInput): Promise<CurrentUser> {
-  const res = await fetch(`${API_URL}/auth/me`, {
+export async function updateProfile(
+  input: UpdateProfileInput,
+  scope: AuthScope = "client",
+): Promise<CurrentUser> {
+  const res = await fetch(authPath(scope, "/me"), {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -42,11 +54,11 @@ export async function updateProfile(input: UpdateProfileInput): Promise<CurrentU
   return (await res.json()) as CurrentUser
 }
 
-export async function uploadAvatar(file: File): Promise<CurrentUser> {
+export async function uploadAvatar(file: File, scope: AuthScope = "client"): Promise<CurrentUser> {
   const formData = new FormData()
   formData.append("file", file)
 
-  const res = await fetch(`${API_URL}/auth/me/avatar`, {
+  const res = await fetch(authPath(scope, "/me/avatar"), {
     method: "POST",
     credentials: "include",
     body: formData,
@@ -58,8 +70,8 @@ export async function uploadAvatar(file: File): Promise<CurrentUser> {
   return (await res.json()) as CurrentUser
 }
 
-export async function logout(): Promise<void> {
-  await fetch(`${API_URL}/auth/logout`, {
+export async function logout(scope: AuthScope = "client"): Promise<void> {
+  await fetch(authPath(scope, "/logout"), {
     method: "POST",
     credentials: "include",
   })

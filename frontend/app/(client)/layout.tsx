@@ -2,11 +2,9 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useQueryClient } from "@tanstack/react-query"
 import { LayoutDashboard, User } from "lucide-react"
 
-import { logout } from "@/lib/auth"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { useClientAuth } from "@/contexts/client-auth-context"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -22,12 +20,10 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const { data: user, isPending } = useCurrentUser()
+  const { user, isPending, logout } = useClientAuth()
 
   async function handleLogout() {
     await logout()
-    queryClient.clear()
     router.push("/login")
     router.refresh()
   }

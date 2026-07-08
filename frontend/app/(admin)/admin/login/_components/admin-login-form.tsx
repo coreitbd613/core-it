@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
-import type { CurrentUser } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -27,7 +26,7 @@ export function AdminLoginForm({
     const password = formData.get("password") as string
 
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${API_URL}/auth/admin/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -39,18 +38,6 @@ export function AdminLoginForm({
           message?: string
         } | null
         toast.error(body?.message ?? "Invalid email or password.")
-        return null
-      }
-
-      const user = (await res.json()) as CurrentUser
-      if (user.role !== "ADMIN") {
-        // Valid credentials, but not an admin account: drop the session
-        // that login just created instead of leaving stray cookies around.
-        await fetch(`${API_URL}/auth/logout`, {
-          method: "POST",
-          credentials: "include",
-        })
-        toast.error("This account doesn't have admin access.")
         return null
       }
 

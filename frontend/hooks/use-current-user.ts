@@ -10,37 +10,40 @@ import {
   getCurrentUser,
   updateProfile,
   uploadAvatar,
+  type AuthScope,
   type CurrentUser,
   type UpdateProfileInput,
 } from "@/lib/auth"
 
-export const currentUserKey = ["current-user"] as const
+export function currentUserKey(scope: AuthScope) {
+  return ["current-user", scope] as const
+}
 
-export function useCurrentUser() {
+export function useCurrentUser(scope: AuthScope = "client") {
   return useQuery({
-    queryKey: currentUserKey,
-    queryFn: getCurrentUser,
+    queryKey: currentUserKey(scope),
+    queryFn: () => getCurrentUser(scope),
   })
 }
 
-export function useUpdateProfile() {
+export function useUpdateProfile(scope: AuthScope = "client") {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: UpdateProfileInput) => updateProfile(input),
+    mutationFn: (input: UpdateProfileInput) => updateProfile(input, scope),
     onSuccess: (user: CurrentUser) => {
-      queryClient.setQueryData(currentUserKey, user)
+      queryClient.setQueryData(currentUserKey(scope), user)
     },
   })
 }
 
-export function useUploadAvatar() {
+export function useUploadAvatar(scope: AuthScope = "client") {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (file: File) => uploadAvatar(file),
+    mutationFn: (file: File) => uploadAvatar(file, scope),
     onSuccess: (user: CurrentUser) => {
-      queryClient.setQueryData(currentUserKey, user)
+      queryClient.setQueryData(currentUserKey(scope), user)
     },
   })
 }

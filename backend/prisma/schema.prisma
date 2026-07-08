@@ -19,6 +19,11 @@ enum Role {
   ADMIN
 }
 
+enum AuthScope {
+  CLIENT
+  ADMIN
+}
+
 model User {
   id             String         @id @default(uuid())
   email          String         @unique
@@ -39,6 +44,7 @@ model RefreshToken {
   hash       String
   userId     String
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope      AuthScope @default(CLIENT)
   expiresAt  DateTime
   createdAt  DateTime  @default(now())
   revokedAt  DateTime?

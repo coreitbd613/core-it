@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -17,20 +18,27 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { CookieOptions, Request, Response } from 'express';
+import { AuthScope, Role } from '../../generated/prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import type { SanitizedUser, TokenPair } from './auth.service';
+import {
+  ADMIN_ACCESS_COOKIE,
+  ADMIN_REFRESH_COOKIE,
+  CLIENT_ACCESS_COOKIE,
+  CLIENT_REFRESH_COOKIE,
+  REFRESH_COOKIE_PATH,
+} from './auth.constants';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
+import { AdminJwtAuthGuard } from './guards/admin-jwt-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { GoogleProfile } from './strategies/google.strategy';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
-
-const REFRESH_COOKIE_PATH = '/api/auth';
 
 @Controller('auth')
 export class AuthController {
@@ -45,7 +53,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, ...tokens } = await this.authService.register(dto);
-    this.setAuthCookies(res, tokens);
+    this.setAuthCookies(res, tokens, AuthScope.CLIENT);
     return user;
   }
 
@@ -57,8 +65,31 @@ export class AuthController {
     @Body() _dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user: sanitized, ...tokens } = await this.authService.login(user);
-    this.setAuthCookies(res, tokens);
+    const { user: sanitized, ...tokens } = await this.authService.login(
+      user,
+      AuthScope.CLIENT,
+    );
+    this.setAuthCookies(res, tokens, AuthScope.CLIENT);
+    return sanitized;
+  }
+
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('admin/login')
+  async adminLogin(
+    @CurrentUser() user: SanitizedUser,
+    @Body() _dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException("This account doesn't have admin access.");
+    }
+
+    const { user: sanitized, ...tokens } = await this.authService.login(
+      user,
+      AuthScope.ADMIN,
+    );
+    this.setAuthCookies(res, tokens, AuthScope.ADMIN);
     return sanitized;
   }
 
@@ -85,7 +116,7 @@ export class AuthController {
     const { user: _user, ...tokens } = await this.authService.loginWithGoogle(
       profile,
     );
-    this.setAuthCookies(res, tokens);
+    this.setAuthCookies(res, tokens, AuthScope.CLIENT);
     res.redirect(`${frontendUrl}/dashboard`);
   }
 
@@ -95,12 +126,27 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const raw = req.cookies?.refresh_token as string | undefined;
+    const raw = req.cookies?.[CLIENT_REFRESH_COOKIE] as string | undefined;
     if (!raw) {
       throw new UnauthorizedException('No refresh token');
     }
-    const tokens = await this.authService.refreshTokens(raw);
-    this.setAuthCookies(res, tokens);
+    const tokens = await this.authService.refreshTokens(raw, AuthScope.CLIENT);
+    this.setAuthCookies(res, tokens, AuthScope.CLIENT);
+    return { ok: true };
+  }
+
+  @Post('admin/refresh')
+  @HttpCode(HttpStatus.OK)
+  async adminRefresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const raw = req.cookies?.[ADMIN_REFRESH_COOKIE] as string | undefined;
+    if (!raw) {
+      throw new UnauthorizedException('No refresh token');
+    }
+    const tokens = await this.authService.refreshTokens(raw, AuthScope.ADMIN);
+    this.setAuthCookies(res, tokens, AuthScope.ADMIN);
     return { ok: true };
   }
 
@@ -110,9 +156,21 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const raw = req.cookies?.refresh_token as string | undefined;
+    const raw = req.cookies?.[CLIENT_REFRESH_COOKIE] as string | undefined;
     await this.authService.logout(raw);
-    this.clearAuthCookies(res);
+    this.clearAuthCookies(res, AuthScope.CLIENT);
+    return { ok: true };
+  }
+
+  @Post('admin/logout')
+  @HttpCode(HttpStatus.OK)
+  async adminLogout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const raw = req.cookies?.[ADMIN_REFRESH_COOKIE] as string | undefined;
+    await this.authService.logout(raw);
+    this.clearAuthCookies(res, AuthScope.ADMIN);
     return { ok: true };
   }
 
@@ -149,6 +207,39 @@ export class AuthController {
     return this.authService.updateAvatar(user.id, file);
   }
 
+  @UseGuards(AdminJwtAuthGuard)
+  @Get('admin/me')
+  adminMe(@CurrentUser() user: SanitizedUser) {
+    return user;
+  }
+
+  @UseGuards(AdminJwtAuthGuard)
+  @Patch('admin/me')
+  async updateAdminMe(
+    @CurrentUser() user: SanitizedUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(user.id, dto);
+  }
+
+  @UseGuards(AdminJwtAuthGuard)
+  @Post('admin/me/avatar')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_AVATAR_SIZE_BYTES } }),
+  )
+  async uploadAdminAvatar(
+    @CurrentUser() user: SanitizedUser,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('File must be an image');
+    }
+    return this.authService.updateAvatar(user.id, file);
+  }
+
   private baseCookieOptions(): CookieOptions {
     const isProd = this.configService.get('NODE_ENV') === 'production';
     return {
@@ -159,23 +250,31 @@ export class AuthController {
     };
   }
 
-  private setAuthCookies(res: Response, tokens: TokenPair) {
+  private setAuthCookies(res: Response, tokens: TokenPair, scope: AuthScope) {
     const base = this.baseCookieOptions();
-    res.cookie('access_token', tokens.accessToken, {
+    const [accessCookie, refreshCookie] = this.cookieNames(scope);
+    res.cookie(accessCookie, tokens.accessToken, {
       ...base,
       path: '/',
       expires: tokens.accessTokenExpiresAt,
     });
-    res.cookie('refresh_token', tokens.refreshToken, {
+    res.cookie(refreshCookie, tokens.refreshToken, {
       ...base,
       path: REFRESH_COOKIE_PATH,
       expires: tokens.refreshTokenExpiresAt,
     });
   }
 
-  private clearAuthCookies(res: Response) {
+  private clearAuthCookies(res: Response, scope: AuthScope) {
     const base = this.baseCookieOptions();
-    res.clearCookie('access_token', { ...base, path: '/' });
-    res.clearCookie('refresh_token', { ...base, path: REFRESH_COOKIE_PATH });
+    const [accessCookie, refreshCookie] = this.cookieNames(scope);
+    res.clearCookie(accessCookie, { ...base, path: '/' });
+    res.clearCookie(refreshCookie, { ...base, path: REFRESH_COOKIE_PATH });
+  }
+
+  private cookieNames(scope: AuthScope): [string, string] {
+    return scope === AuthScope.ADMIN
+      ? [ADMIN_ACCESS_COOKIE, ADMIN_REFRESH_COOKIE]
+      : [CLIENT_ACCESS_COOKIE, CLIENT_REFRESH_COOKIE];
   }
 }

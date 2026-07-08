@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { StorageModule } from '../storage/storage.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
@@ -30,7 +31,13 @@ import { GoogleStrategy } from './strategies/google.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    AdminJwtStrategy,
+    GoogleStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash } from 'crypto';
-import { Role } from '../../generated/prisma/client';
+import { AuthScope, Role } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from '../users/users.service';
@@ -93,12 +93,12 @@ export class AuthService {
       name: dto.name,
     });
 
-    const tokens = await this.issueTokens(user.id, user.email);
+    const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
     return { user: sanitize(user), ...tokens };
   }
 
-  async login(user: SanitizedUser) {
-    const tokens = await this.issueTokens(user.id, user.email);
+  async login(user: SanitizedUser, scope: AuthScope) {
+    const tokens = await this.issueTokens(user.id, user.email, scope);
     return { user, ...tokens };
   }
 
@@ -121,7 +121,7 @@ export class AuthService {
 
   async loginWithGoogle(profile: GoogleProfile) {
     const user = await this.validateGoogleUser(profile);
-    const tokens = await this.issueTokens(user.id, user.email);
+    const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
     return { user: sanitize(user), ...tokens };
   }
 
@@ -140,8 +140,8 @@ export class AuthService {
     return sanitize(user);
   }
 
-  async refreshTokens(rawRefreshToken: string) {
-    let payload: { sub: string; email: string };
+  async refreshTokens(rawRefreshToken: string, scope: AuthScope) {
+    let payload: { sub: string; email: string; scope?: string };
     try {
       payload = await this.jwtService.verifyAsync(rawRefreshToken, {
         secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
@@ -150,8 +150,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    if (payload.scope !== scope) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
     const matched = await this.prisma.refreshToken.findFirst({
-      where: { userId: payload.sub, hash: hashToken(rawRefreshToken) },
+      where: { userId: payload.sub, scope, hash: hashToken(rawRefreshToken) },
     });
     if (!matched) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -159,9 +163,11 @@ export class AuthService {
 
     if (matched.revokedAt) {
       // The same refresh token was presented twice: someone is replaying an
-      // already-rotated token, so kill every session for this user.
+      // already-rotated token, so kill every session for this user within
+      // the same scope (a compromise on one panel shouldn't log the other
+      // panel out).
       await this.prisma.refreshToken.updateMany({
-        where: { userId: payload.sub, revokedAt: null },
+        where: { userId: payload.sub, scope, revokedAt: null },
         data: { revokedAt: new Date() },
       });
       throw new UnauthorizedException('Refresh token reuse detected');
@@ -177,7 +183,7 @@ export class AuthService {
       throw new UnauthorizedException('User no longer exists');
     }
 
-    return this.issueTokens(user.id, user.email);
+    return this.issueTokens(user.id, user.email, scope);
   }
 
   async logout(rawRefreshToken: string | undefined) {
@@ -203,8 +209,12 @@ export class AuthService {
     }
   }
 
-  private async issueTokens(userId: string, email: string): Promise<TokenPair> {
-    const payload = { sub: userId, email };
+  private async issueTokens(
+    userId: string,
+    email: string,
+    scope: AuthScope,
+  ): Promise<TokenPair> {
+    const payload = { sub: userId, email, scope };
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
@@ -229,6 +239,7 @@ export class AuthService {
     await this.prisma.refreshToken.create({
       data: {
         userId,
+        scope,
         hash: hashToken(refreshToken),
         expiresAt: new Date(refreshDecoded.exp * 1000),
       },

@@ -10,7 +10,7 @@ export default function AdminProfilePage() {
         </p>
       </div>
 
-      <ProfileForm />
+      <ProfileForm scope="admin" />
     </div>
   )
 }
