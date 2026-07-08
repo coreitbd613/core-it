@@ -88,6 +88,7 @@ type HeaderAction = {
 type PanelDashboardShellProps = {
   children: ReactNode;
   panelLabel: string;
+  portalLabel: string;
   panelHomeHref: string;
   navItems: PanelNavItem[];
   user: {
@@ -106,6 +107,7 @@ type PanelDashboardShellProps = {
 export default function PanelDashboardShell({
   children,
   panelLabel,
+  portalLabel,
   panelHomeHref,
   navItems,
   user,
@@ -138,7 +140,11 @@ export default function PanelDashboardShell({
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background px-3 md:h-16 md:px-5">
             <div className="flex min-w-0 items-center gap-2">
               <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
+              <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
+              <span className="hidden shrink-0 text-xs font-medium text-muted-foreground sm:inline">
+                {portalLabel}
+              </span>
+              <Separator orientation="vertical" className="mr-1 hidden data-[orientation=vertical]:h-4 sm:block" />
               <Breadcrumb className="min-w-0">
                 <BreadcrumbList className="flex-nowrap">
                   {breadcrumbItems.map((item, index) => {

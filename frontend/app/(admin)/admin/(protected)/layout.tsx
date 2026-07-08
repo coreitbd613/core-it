@@ -44,6 +44,7 @@ export default function AdminProtectedLayout({
   return (
     <PanelDashboardShell
       panelLabel="Admin"
+      portalLabel="Admin Portal"
       panelHomeHref="/admin/dashboard"
       navItems={adminNavItems}
       user={{

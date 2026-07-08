@@ -39,6 +39,7 @@ export default function ClientLayout({
   return (
     <PanelDashboardShell
       panelLabel="User"
+      portalLabel="Client Portal"
       panelHomeHref="/dashboard"
       navItems={userNavItems}
       user={{
