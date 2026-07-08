@@ -85,7 +85,7 @@ export function AdminLoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit" size="lg" disabled={isPending}>
+                <Button type="submit" disabled={isPending}>
                   {isPending && <Spinner className="size-4" />}
                   Sign in
                 </Button>

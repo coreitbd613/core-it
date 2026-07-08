@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { DotFieldBackground } from "@/components/shared/dot-field-background"
 
 import { LoginForm } from "./_components/login-form"
@@ -9,7 +10,9 @@ export default function LoginPage() {
         <DotFieldBackground />
       </div>
       <div className="relative z-10 w-full max-w-sm md:max-w-4xl">
-        <LoginForm />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   )

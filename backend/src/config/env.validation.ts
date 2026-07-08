@@ -73,6 +73,33 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   AZURE_STORAGE_CONTAINER: string;
+
+  // Optional at boot so the app still starts before real Namecheap
+  // credentials are filled in; NamecheapService throws when actually
+  // called if these are missing.
+  @IsString()
+  @IsOptional()
+  NAMECHEAP_API_USER?: string;
+
+  @IsString()
+  @IsOptional()
+  NAMECHEAP_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  NAMECHEAP_USERNAME?: string;
+
+  @IsString()
+  @IsOptional()
+  NAMECHEAP_CLIENT_IP?: string;
+
+  @IsString()
+  @IsOptional()
+  NAMECHEAP_API_BASE_URL?: string;
+
+  @IsNumberString()
+  @IsOptional()
+  USD_TO_BDT_RATE?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

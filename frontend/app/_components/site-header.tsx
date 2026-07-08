@@ -69,7 +69,7 @@ export function SiteHeader() {
           )}
           {!mounted || isPending ? null : user ? (
             <Button
-              size="lg"
+              
               className="gap-2 bg-[#FD6005] text-white hover:bg-[#FD6005]/85"
               asChild
             >
@@ -81,14 +81,14 @@ export function SiteHeader() {
           ) : (
             <>
               <Button
-                size="lg"
+                
                 variant="ghost"
                 className="text-white/80 hover:text-white hover:bg-white/10"
                 asChild
               >
                 <Link href="/login">Sign in</Link>
               </Button>
-              <Button size="lg" className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
+              <Button  className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
                 <Link href="/signup">Sign up</Link>
               </Button>
             </>
@@ -145,7 +145,7 @@ export function SiteHeader() {
               )}
               {mounted && !isPending && user ? (
                 <SheetClose asChild>
-                  <Button size="lg" className="gap-2" asChild>
+                  <Button  className="gap-2" asChild>
                     <Link href="/dashboard">
                       <LayoutDashboard className="size-4" />
                       Dashboard
@@ -155,12 +155,12 @@ export function SiteHeader() {
               ) : (
                 <>
                   <SheetClose asChild>
-                    <Button variant="outline" size="lg" asChild>
+                    <Button variant="outline"  asChild>
                       <Link href="/login">Sign in</Link>
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button size="lg" asChild>
+                    <Button  asChild>
                       <Link href="/signup">Sign up</Link>
                     </Button>
                   </SheetClose>

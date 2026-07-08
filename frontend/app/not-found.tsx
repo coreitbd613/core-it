@@ -37,7 +37,7 @@ export default function NotFound() {
             moved.
           </p>
         </div>
-        <Button size="lg" asChild>
+        <Button asChild>
           <Link href="/">Back to home</Link>
         </Button>
       </div>

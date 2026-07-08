@@ -37,6 +37,7 @@ model User {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   refreshTokens  RefreshToken[]
+  domainOrders   DomainOrder[]
 }
 
 model RefreshToken {
@@ -50,4 +51,44 @@ model RefreshToken {
   revokedAt  DateTime?
 
   @@index([userId])
+}
+
+enum DomainOrderStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
+model DomainOrder {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  domainName String
+  tld        String
+  years      Int    @default(1)
+
+  priceUsd     Decimal
+  priceBdt     Decimal
+  exchangeRate Decimal
+
+  status    DomainOrderStatus @default(PENDING)
+  adminNote String?
+
+  registrantFirstName    String
+  registrantLastName     String
+  registrantAddress1     String
+  registrantAddress2     String?
+  registrantCity         String
+  registrantStateProvince String
+  registrantPostalCode   String
+  registrantCountry      String
+  registrantPhone        String
+  registrantEmail        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

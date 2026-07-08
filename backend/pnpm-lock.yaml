@@ -47,6 +47,9 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
+      fast-xml-parser:
+        specifier: ^5.9.3
+        version: 5.9.3
       passport:
         specifier: ^0.7.0
         version: 0.7.0

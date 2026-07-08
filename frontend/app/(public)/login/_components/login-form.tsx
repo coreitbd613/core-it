@@ -4,7 +4,7 @@ import * as React from "react"
 import { useActionState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { FcGoogle } from "react-icons/fc"
 
@@ -29,6 +29,8 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get("redirect")
 
   async function loginAction(_state: null, formData: FormData) {
     const email = formData.get("email") as string
@@ -50,7 +52,7 @@ export function LoginForm({
         return null
       }
 
-      router.push("/dashboard")
+      router.push(redirect ?? "/dashboard")
       router.refresh()
     } catch {
       toast.error("Couldn't reach the server. Please try again.")
@@ -120,7 +122,7 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit" size="lg" disabled={isPending}>
+                <Button type="submit"  disabled={isPending}>
                   {isPending && <Spinner className="size-4" />}
                   Login
                 </Button>
@@ -129,7 +131,7 @@ export function LoginForm({
                 Or continue with
               </FieldSeparator>
               <Field>
-                <Button variant="outline" size="lg" type="button" className="w-full" asChild>
+                <Button variant="outline"  type="button" className="w-full" asChild>
                   <a href={`${API_URL}/auth/google`}>
                     <FcGoogle className="size-4" />
                     Continue with Google

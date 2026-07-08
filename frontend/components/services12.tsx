@@ -65,7 +65,7 @@ const Services12 = ({ className }: Services12Props) => {
             grow. From web development to mobile apps, we deliver quality
             results that exceed expectations.
           </p>
-          <Button variant="outline" size="lg" className="mt-8 w-fit">
+          <Button variant="outline"  className="mt-8 w-fit">
             View all services <ArrowUpRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

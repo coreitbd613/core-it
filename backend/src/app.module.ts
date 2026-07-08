@@ -7,6 +7,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { StorageModule } from './storage/storage.module';
+import { NamecheapModule } from './namecheap/namecheap.module';
+import { DomainModule } from './domains/domain.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { StorageModule } from './storage/storage.module';
     UsersModule,
     AuthModule,
     StorageModule,
+    NamecheapModule,
+    DomainModule,
   ],
   controllers: [AppController],
   providers: [AppService],

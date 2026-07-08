@@ -146,11 +146,7 @@ export default function PanelDashboardShell({
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background px-3 md:h-16 md:px-5">
             <div className="flex min-w-0 items-center gap-2">
               <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
-              <span className="hidden shrink-0 text-xs font-medium text-muted-foreground sm:inline">
-                {portalLabel}
-              </span>
-              <Separator orientation="vertical" className="mr-1 hidden data-[orientation=vertical]:h-4 sm:block" />
+              <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
               <Breadcrumb className="min-w-0">
                 <BreadcrumbList className="flex-nowrap">
                   {breadcrumbItems.map((item, index) => {
@@ -263,7 +259,7 @@ function PanelSidebar({
       <SidebarHeader className="mx-auto w-full max-w-5xl">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton  asChild>
               <Link href={panelHomeHref}>
                 <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-background ring-1 ring-border">
                   <Image src="/favicon.jpeg" alt="Core IT" width={32} height={32} className="object-cover" />
@@ -375,7 +371,7 @@ function NavUser({
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg" className="pointer-events-none">
+          <SidebarMenuButton  className="pointer-events-none">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <div className="grid flex-1 gap-1.5">
               <Skeleton className="h-3.5 w-24" />
@@ -393,7 +389,7 @@ function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              size="lg"
+              
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
