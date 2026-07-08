@@ -3,12 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, ReactNode, Suspense } from "react";
+import { Fragment, ReactNode, Suspense, useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   ChevronRight,
   ChevronsUpDown,
   House,
   LogOut,
+  Moon,
+  Sun,
   User,
 } from "lucide-react";
 
@@ -38,7 +41,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -87,7 +95,6 @@ type HeaderAction = {
 
 type PanelDashboardShellProps = {
   children: ReactNode;
-  panelLabel: string;
   portalLabel: string;
   panelHomeHref: string;
   navItems: PanelNavItem[];
@@ -106,7 +113,6 @@ type PanelDashboardShellProps = {
 
 export default function PanelDashboardShell({
   children,
-  panelLabel,
   portalLabel,
   panelHomeHref,
   navItems,
@@ -119,14 +125,14 @@ export default function PanelDashboardShell({
   footer,
 }: PanelDashboardShellProps) {
   const pathname = usePathname();
-  const breadcrumbItems = getBreadcrumbItems(pathname, panelLabel, navItems);
+  const breadcrumbItems = getBreadcrumbItems(pathname, navItems);
 
   return (
     <TooltipProvider>
       <SidebarProvider>
         <Suspense fallback={null}>
           <PanelSidebar
-            panelLabel={panelLabel}
+            portalLabel={portalLabel}
             navItems={navItems}
             panelHomeHref={panelHomeHref}
             user={user}
@@ -223,7 +229,7 @@ export default function PanelDashboardShell({
 }
 
 function PanelSidebar({
-  panelLabel,
+  portalLabel,
   navItems,
   panelHomeHref,
   user,
@@ -232,7 +238,7 @@ function PanelSidebar({
   loading,
   userMenuItems,
 }: {
-  panelLabel: string;
+  portalLabel: string;
   navItems: PanelNavItem[];
   panelHomeHref: string;
   user: PanelDashboardShellProps["user"];
@@ -264,7 +270,7 @@ function PanelSidebar({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Core IT</span>
-                  <span className="truncate text-xs text-muted-foreground">{panelLabel} Panel</span>
+                  <span className="truncate text-xs text-muted-foreground">{portalLabel}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -357,7 +363,13 @@ function NavUser({
   userMenuItems: UserMenuItem[];
 }) {
   const { isMobile } = useSidebar();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const initials = getInitials(user.name);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (loading) {
     return (
@@ -420,6 +432,24 @@ function NavUser({
                 Profile
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                {mounted && theme === "dark" ? <Moon /> : <Sun />}
+                Theme
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={mounted ? theme : undefined} onValueChange={setTheme}>
+                  <DropdownMenuRadioItem value="light">
+                    <Sun />
+                    Light
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark">
+                    <Moon />
+                    Dark
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             {userMenuItems.filter((item) => !item.hidden).map((item) => (
               item.href ? (
                 <DropdownMenuItem asChild key={item.label}>
@@ -486,8 +516,7 @@ function isChildNavActive(
   return exact ? pathname === targetPath : isPathActive(pathname, href);
 }
 
-function getBreadcrumbItems(pathname: string, panelLabel: string, navItems: PanelNavItem[]) {
-  const homeHref = navItems[0]?.href || pathname;
+function getBreadcrumbItems(pathname: string, navItems: PanelNavItem[]) {
   const flattened = navItems.flatMap((item) => [
     { label: item.name, href: item.href },
     ...(item.children || []).map((child) => ({ label: child.name, href: child.href })),
@@ -501,16 +530,12 @@ function getBreadcrumbItems(pathname: string, panelLabel: string, navItems: Pane
 
   if (!exact && nearest && leafSegment) {
     return [
-      { label: panelLabel, href: homeHref },
       { label: nearest.label, href: nearest.href },
       { label: formatSegment(leafSegment), href: pathname },
     ];
   }
 
-  return [
-    { label: panelLabel, href: homeHref },
-    { label: currentLabel, href: pathname },
-  ];
+  return [{ label: currentLabel, href: pathname }];
 }
 
 function formatSegment(segment: string) {
