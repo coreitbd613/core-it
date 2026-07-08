@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { LayoutDashboard, User } from "lucide-react"
 
-import { getCurrentUser, logout, type CurrentUser } from "@/lib/auth"
+import { logout } from "@/lib/auth"
+import { useCurrentUser } from "@/hooks/use-current-user"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -21,24 +22,18 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const [user, setUser] = useState<CurrentUser | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .finally(() => setLoading(false))
-  }, [])
+  const queryClient = useQueryClient()
+  const { data: user, isPending } = useCurrentUser()
 
   async function handleLogout() {
     await logout()
+    queryClient.clear()
     router.push("/login")
     router.refresh()
   }
 
   return (
     <PanelDashboardShell
-      panelLabel="User"
       portalLabel="Client Portal"
       panelHomeHref="/dashboard"
       navItems={userNavItems}
@@ -49,7 +44,7 @@ export default function ClientLayout({
       }}
       profileHref="/profile"
       onLogout={handleLogout}
-      loading={loading}
+      loading={isPending}
     >
       {children}
     </PanelDashboardShell>

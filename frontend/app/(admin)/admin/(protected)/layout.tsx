@@ -1,15 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   LayoutDashboard,
   Settings,
   Users,
 } from "lucide-react"
 
-import { getCurrentUser, logout, type CurrentUser } from "@/lib/auth"
+import { logout } from "@/lib/auth"
+import { useCurrentUser } from "@/hooks/use-current-user"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -26,24 +27,18 @@ export default function AdminProtectedLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const [user, setUser] = useState<CurrentUser | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .finally(() => setLoading(false))
-  }, [])
+  const queryClient = useQueryClient()
+  const { data: user, isPending } = useCurrentUser()
 
   async function handleLogout() {
     await logout()
+    queryClient.clear()
     router.push("/admin/login")
     router.refresh()
   }
 
   return (
     <PanelDashboardShell
-      panelLabel="Admin"
       portalLabel="Admin Portal"
       panelHomeHref="/admin/dashboard"
       navItems={adminNavItems}
@@ -54,7 +49,7 @@ export default function AdminProtectedLayout({
       }}
       profileHref="/admin/profile"
       onLogout={handleLogout}
-      loading={loading}
+      loading={isPending}
     >
       {children}
     </PanelDashboardShell>
