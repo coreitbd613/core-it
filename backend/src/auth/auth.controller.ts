@@ -11,9 +11,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CookieOptions, Request, Response } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { AuthService, SanitizedUser, TokenPair } from './auth.service';
+import { AuthService } from './auth.service';
+import type { SanitizedUser, TokenPair } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
