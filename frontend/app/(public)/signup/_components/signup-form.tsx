@@ -149,7 +149,7 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" size="lg" disabled={isPending}>
                   {isPending && <Spinner className="size-4" />}
                   Create Account
                 </Button>
@@ -158,7 +158,7 @@ export function SignupForm({
                 Or continue with
               </FieldSeparator>
               <Field>
-                <Button variant="outline" type="button" className="w-full" asChild>
+                <Button variant="outline" size="lg" type="button" className="w-full" asChild>
                   <a href={`${API_URL}/auth/google`}>
                     <FcGoogle className="size-4" />
                     Continue with Google
@@ -182,8 +182,8 @@ export function SignupForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <Link href="/terms">Terms of Service</Link>{" "}
+        and <Link href="/privacy">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   )

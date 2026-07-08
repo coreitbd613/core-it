@@ -51,7 +51,7 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => (
-            <Button key={link.href} variant="ghost" size="lg" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
+            <Button key={link.href} variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
               <a href={link.href}>{link.label}</a>
             </Button>
           ))}
@@ -65,10 +65,10 @@ export function SiteHeader() {
               className="flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 hover:text-white [&_svg]:size-4.5"
             />
           )}
-          <Button variant="ghost" size="lg" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
+          <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10" asChild>
             <Link href="/login">Sign in</Link>
           </Button>
-          <Button size="lg" className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
+          <Button className="bg-[#FD6005] text-white hover:bg-[#FD6005]/85" asChild>
             <Link href="/signup">Sign up</Link>
           </Button>
         </div>
