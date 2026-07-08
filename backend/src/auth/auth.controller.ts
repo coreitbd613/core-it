@@ -1,26 +1,34 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { CookieOptions, Request, Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import type { SanitizedUser, TokenPair } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { GoogleProfile } from './strategies/google.strategy';
+
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
 const REFRESH_COOKIE_PATH = '/api/auth';
 
@@ -112,6 +120,33 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: SanitizedUser) {
     return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  async updateMe(
+    @CurrentUser() user: SanitizedUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/avatar')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_AVATAR_SIZE_BYTES } }),
+  )
+  async uploadAvatar(
+    @CurrentUser() user: SanitizedUser,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('File must be an image');
+    }
+    return this.authService.updateAvatar(user.id, file);
   }
 
   private baseCookieOptions(): CookieOptions {

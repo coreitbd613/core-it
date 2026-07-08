@@ -33,4 +33,16 @@ export class UsersService {
   linkGoogleId(userId: string, data: { googleId: string; avatarUrl?: string }) {
     return this.prisma.user.update({ where: { id: userId }, data });
   }
+
+  update(
+    id: string,
+    data: {
+      name?: string;
+      contactNumber?: string;
+      whatsappNumber?: string;
+      avatarUrl?: string;
+    },
+  ) {
+    return this.prisma.user.update({ where: { id }, data });
+  }
 }

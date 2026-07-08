@@ -20,16 +20,18 @@ enum Role {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String?
-  name          String?
-  googleId      String?        @unique
-  avatarUrl     String?
-  role          Role           @default(USER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  refreshTokens RefreshToken[]
+  id             String         @id @default(uuid())
+  email          String         @unique
+  password       String?
+  name           String?
+  googleId       String?        @unique
+  avatarUrl      String?
+  contactNumber  String?
+  whatsappNumber String?
+  role           Role           @default(USER)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  refreshTokens  RefreshToken[]
 }
 
 model RefreshToken {

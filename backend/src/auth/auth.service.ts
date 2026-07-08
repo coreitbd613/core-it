@@ -5,8 +5,10 @@ import * as bcrypt from 'bcrypt';
 import { createHash } from 'crypto';
 import { Role } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleProfile } from './strategies/google.strategy';
 
 const SALT_ROUNDS = 10;
@@ -16,6 +18,8 @@ export type SanitizedUser = {
   email: string;
   name: string | null;
   avatarUrl: string | null;
+  contactNumber: string | null;
+  whatsappNumber: string | null;
   role: Role;
 };
 
@@ -39,6 +43,8 @@ function sanitize(user: {
   email: string;
   name: string | null;
   avatarUrl: string | null;
+  contactNumber: string | null;
+  whatsappNumber: string | null;
   role: Role;
 }): SanitizedUser {
   return {
@@ -46,6 +52,8 @@ function sanitize(user: {
     email: user.email,
     name: user.name,
     avatarUrl: user.avatarUrl,
+    contactNumber: user.contactNumber,
+    whatsappNumber: user.whatsappNumber,
     role: user.role,
   };
 }
@@ -57,6 +65,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -114,6 +123,21 @@ export class AuthService {
     const user = await this.validateGoogleUser(profile);
     const tokens = await this.issueTokens(user.id, user.email);
     return { user: sanitize(user), ...tokens };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.usersService.update(userId, dto);
+    return sanitize(user);
+  }
+
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    const avatarUrl = await this.storageService.upload(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+    );
+    const user = await this.usersService.update(userId, { avatarUrl });
+    return sanitize(user);
   }
 
   async refreshTokens(rawRefreshToken: string) {
