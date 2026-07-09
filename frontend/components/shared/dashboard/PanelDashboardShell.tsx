@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, ReactNode, Suspense, useEffect, useState } from "react";
+import { Fragment, ReactNode, Suspense } from "react";
 import { useTheme } from "next-themes";
 import {
   ChevronRight,
@@ -95,7 +95,6 @@ type HeaderAction = {
 
 type PanelDashboardShellProps = {
   children: ReactNode;
-  portalLabel: string;
   panelHomeHref: string;
   navItems: PanelNavItem[];
   user: {
@@ -113,7 +112,6 @@ type PanelDashboardShellProps = {
 
 export default function PanelDashboardShell({
   children,
-  portalLabel,
   panelHomeHref,
   navItems,
   user,
@@ -132,7 +130,6 @@ export default function PanelDashboardShell({
       <SidebarProvider>
         <Suspense fallback={null}>
           <PanelSidebar
-            portalLabel={portalLabel}
             navItems={navItems}
             panelHomeHref={panelHomeHref}
             user={user}
@@ -225,7 +222,6 @@ export default function PanelDashboardShell({
 }
 
 function PanelSidebar({
-  portalLabel,
   navItems,
   panelHomeHref,
   user,
@@ -234,7 +230,6 @@ function PanelSidebar({
   loading,
   userMenuItems,
 }: {
-  portalLabel: string;
   navItems: PanelNavItem[];
   panelHomeHref: string;
   user: PanelDashboardShellProps["user"];
@@ -266,7 +261,6 @@ function PanelSidebar({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Core IT</span>
-                  <span className="truncate text-xs text-muted-foreground">{portalLabel}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -360,12 +354,7 @@ function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const initials = getInitials(user.name);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (loading) {
     return (
@@ -430,11 +419,11 @@ function NavUser({
             </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                {mounted && theme === "dark" ? <Moon /> : <Sun />}
+                {theme === "dark" ? <Moon /> : <Sun />}
                 Theme
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup value={mounted ? theme : undefined} onValueChange={setTheme}>
+                <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                   <DropdownMenuRadioItem value="light">
                     <Sun />
                     Light
