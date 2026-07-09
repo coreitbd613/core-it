@@ -41,7 +41,8 @@ const registrantSchema = z.object({
   years: z.coerce.number().int().min(1).max(10),
 })
 
-type RegistrantFormValues = z.infer<typeof registrantSchema>
+type RegistrantFormInput = z.input<typeof registrantSchema>
+type RegistrantFormValues = z.output<typeof registrantSchema>
 
 export function CheckoutForm() {
   const searchParams = useSearchParams()
@@ -59,7 +60,7 @@ export function CheckoutForm() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<RegistrantFormValues>({
+  } = useForm<RegistrantFormInput, unknown, RegistrantFormValues>({
     resolver: zodResolver(registrantSchema),
     defaultValues: { years: 1 },
   })
