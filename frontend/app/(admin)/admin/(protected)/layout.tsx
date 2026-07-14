@@ -35,7 +35,6 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
 
   return (
     <PanelDashboardShell
-      portalLabel="Admin Portal"
       panelHomeHref="/admin/dashboard"
       navItems={adminNavItems}
       user={{
