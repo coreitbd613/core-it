@@ -153,7 +153,7 @@ export default function PanelDashboardShell({
                       <Fragment key={`${item.href}-${item.label}`}>
                         <BreadcrumbItem className={cn(isLast ? "min-w-0" : "hidden sm:flex", index === 0 && "sm:hidden md:flex")}>
                           {isLast ? (
-                            <BreadcrumbPage className="max-w-[42vw] truncate text-sm font-medium md:max-w-[560px]">
+                            <BreadcrumbPage className="max-w-[42vw] truncate text-sm font-medium md:max-w-140">
                               {item.label}
                             </BreadcrumbPage>
                           ) : (
