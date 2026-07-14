@@ -6,7 +6,7 @@ import { Services12 } from "@/components/services12";
 export default function Home() {
   return (
     <>
-      <SiteHeader overlay />
+      <SiteHeader />
       <main className="flex-1">
         <SiteHero />
         <Services12 />

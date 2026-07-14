@@ -15,16 +15,16 @@ export default function NotFound() {
           <Image
             src="/logo-light.png"
             alt="CORE IT"
-            width={160}
-            height={101}
-            className="h-16 w-auto dark:hidden"
+            width={527}
+            height={135}
+            className="h-10 w-auto dark:hidden"
           />
           <Image
             src="/logo-dark.png"
             alt="CORE IT"
-            width={160}
-            height={101}
-            className="hidden h-16 w-auto dark:block"
+            width={527}
+            height={135}
+            className="hidden h-10 w-auto dark:block"
           />
         </Link>
         <div className="space-y-2">
