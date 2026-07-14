@@ -47,7 +47,7 @@ function HeaderThemeToggle({
   );
 }
 
-export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
+export function SiteHeader() {
   const { resolvedTheme, setTheme } = useTheme();
   const { user, isPending } = useClientAuth();
   const [mounted, setMounted] = useState(false);
@@ -56,60 +56,36 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
     setMounted(true);
   }, []);
 
-  const navText = overlay
-    ? "text-white/80 hover:text-white hover:bg-white/10"
-    : "text-foreground/80 hover:text-foreground hover:bg-muted";
-  const iconText = overlay
-    ? "text-white/80 hover:bg-white/10 hover:text-white"
-    : "text-foreground/80 hover:bg-muted hover:text-foreground";
-  const skeletonPill = overlay ? "bg-white/10" : "bg-muted";
+  const navText = "text-foreground/80 hover:text-foreground hover:bg-muted";
+  const iconText = "text-foreground/80 hover:bg-muted hover:text-foreground";
+  const skeletonPill = "bg-muted";
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 z-50 w-full backdrop-blur-md",
-        overlay
-          ? "border-b border-white/10 bg-black/30"
-          : "border-b border-border bg-background/70"
-      )}
-    >
+    <header className="fixed top-0 z-50 w-full border-b border-border bg-background">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center" aria-label="CORE IT home">
-          {overlay ? (
-            <Image
-              src="/logo-dark.png"
-              alt="CORE IT"
-              width={420}
-              height={264}
-              priority
-              className="h-12 w-auto rounded-sm"
-            />
-          ) : (
-            <>
-              <Image
-                src="/logo-light.png"
-                alt="CORE IT"
-                width={420}
-                height={264}
-                priority
-                className="h-12 w-auto rounded-sm dark:hidden"
-              />
-              <Image
-                src="/logo-dark.png"
-                alt="CORE IT"
-                width={420}
-                height={264}
-                priority
-                className="hidden h-12 w-auto rounded-sm dark:block"
-              />
-            </>
-          )}
+          <Image
+            src="/logo-light.png"
+            alt="CORE IT"
+            width={527}
+            height={135}
+            priority
+            className="h-9 w-auto dark:hidden"
+          />
+          <Image
+            src="/logo-dark.png"
+            alt="CORE IT"
+            width={527}
+            height={135}
+            priority
+            className="hidden h-9 w-auto dark:block"
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => (
             <Button key={link.href} variant="ghost" className={navText} asChild>
-              <a href={link.href}>{link.label}</a>
+              <Link href={link.href}>{link.label}</Link>
             </Button>
           ))}
         </nav>
@@ -166,27 +142,27 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
               <Image
                 src="/logo-light.png"
                 alt="CORE IT"
-                width={420}
-                height={264}
-                className="h-8 w-auto rounded-sm dark:hidden"
+                width={527}
+                height={135}
+                className="h-8 w-auto dark:hidden"
               />
               <Image
                 src="/logo-dark.png"
                 alt="CORE IT"
-                width={420}
-                height={264}
-                className="hidden h-8 w-auto rounded-sm dark:block"
+                width={527}
+                height={135}
+                className="hidden h-8 w-auto dark:block"
               />
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-2">
               {navLinks.map((link) => (
                 <SheetClose key={link.href} asChild>
-                  <a
+                  <Link
                     href={link.href}
                     className="rounded-md px-3 py-2.5 text-base font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </SheetClose>
               ))}
             </nav>

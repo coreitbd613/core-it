@@ -10,6 +10,7 @@ import { FcGoogle } from "react-icons/fc"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { BorderBeam } from "@/components/ui/border-beam"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Field,
@@ -69,21 +70,30 @@ export function LoginForm({
         <Image
           src="/logo-light.png"
           alt="CORE IT"
-          width={160}
-          height={101}
+          width={527}
+          height={135}
           priority
-          className="h-32 w-auto dark:hidden"
+          className="h-10 w-auto dark:hidden"
         />
         <Image
           src="/logo-dark.png"
           alt="CORE IT"
-          width={160}
-          height={101}
+          width={527}
+          height={135}
           priority
-          className="hidden h-32 w-auto dark:block"
+          className="hidden h-10 w-auto dark:block"
         />
       </Link>
-      <Card className="overflow-hidden p-0">
+      <Card className="relative overflow-hidden p-0">
+        <BorderBeam duration={8} size={220} colorFrom="#FD6005" colorTo="#0A2540" />
+        <BorderBeam
+          duration={8}
+          size={220}
+          delay={4}
+          reverse
+          colorFrom="#0A2540"
+          colorTo="#FD6005"
+        />
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" action={formAction}>
             <FieldGroup>

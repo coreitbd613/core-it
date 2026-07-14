@@ -25,8 +25,8 @@ export function DotFieldBackground() {
       bulgeStrength={24}
       glowRadius={0}
       sparkle
-      gradientFrom={isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(10, 37, 64, 0.35)"}
-      gradientTo={isDark ? "rgba(255, 255, 255, 0.07)" : "rgba(10, 37, 64, 0.18)"}
+      gradientFrom={isDark ? "rgba(255, 255, 255, .3)" : "rgba(0, 0, 0, .55)"}
+      gradientTo={isDark ? "rgba(255, 255, 255, .3)" : "rgba(0, 0, 0, .55)"}
     />
   )
 }
