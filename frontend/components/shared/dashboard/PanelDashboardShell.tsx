@@ -3,15 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, ReactNode, Suspense } from "react";
+import { Fragment, ReactNode, Suspense, useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import {
   ChevronRight,
   ChevronsUpDown,
   House,
   LogOut,
-  Moon,
-  Sun,
   User,
 } from "lucide-react";
 
@@ -21,6 +19,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Breadcrumb,
@@ -41,12 +40,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -124,6 +118,12 @@ export default function PanelDashboardShell({
 }: PanelDashboardShellProps) {
   const pathname = usePathname();
   const breadcrumbItems = getBreadcrumbItems(pathname, navItems);
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <TooltipProvider>
@@ -173,6 +173,13 @@ export default function PanelDashboardShell({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {mounted && (
+                <AnimatedThemeToggler
+                  theme={resolvedTheme === "light" ? "light" : "dark"}
+                  onThemeChange={(theme) => setTheme(theme)}
+                  className="flex size-9 items-center justify-center rounded-lg border border-input text-foreground/80 hover:bg-muted hover:text-foreground [&_svg]:size-4"
+                />
+              )}
               <Button asChild variant="outline" size="sm" className="size-9 gap-2 px-0 sm:w-auto sm:px-3">
                 <Link href="/" aria-label="Back to Home">
                   <House className="size-4" />
@@ -353,7 +360,6 @@ function NavUser({
   userMenuItems: UserMenuItem[];
 }) {
   const { isMobile } = useSidebar();
-  const { theme, setTheme } = useTheme();
   const initials = getInitials(user.name);
 
   if (loading) {
@@ -417,24 +423,6 @@ function NavUser({
                 Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                {theme === "dark" ? <Moon /> : <Sun />}
-                Theme
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                  <DropdownMenuRadioItem value="light">
-                    <Sun />
-                    Light
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="dark">
-                    <Moon />
-                    Dark
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
             {userMenuItems.filter((item) => !item.hidden).map((item) => (
               item.href ? (
                 <DropdownMenuItem asChild key={item.label}>

@@ -100,6 +100,16 @@ class EnvironmentVariables {
   @IsNumberString()
   @IsOptional()
   USD_TO_BDT_RATE?: string;
+
+  // Optional at boot so the app still starts before a real Resend key is
+  // filled in; MailService throws if actually called without one.
+  @IsString()
+  @IsOptional()
+  RESEND_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  MAIL_FROM?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

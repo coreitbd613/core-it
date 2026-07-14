@@ -45,4 +45,18 @@ export class UsersService {
   ) {
     return this.prisma.user.update({ where: { id }, data });
   }
+
+  markEmailVerified(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { emailVerified: true, emailVerifiedAt: new Date() },
+    });
+  }
+
+  updatePassword(id: string, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+  }
 }

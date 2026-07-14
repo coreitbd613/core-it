@@ -1,9 +1,16 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { createHash } from 'crypto';
-import { AuthScope, Role } from '../../generated/prisma/client';
+import { createHash, randomBytes } from 'crypto';
+import { AuthScope, AuthTokenType, Role } from '../../generated/prisma/client';
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from '../users/users.service';
@@ -12,6 +19,8 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleProfile } from './strategies/google.strategy';
 
 const SALT_ROUNDS = 10;
+const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
 export type SanitizedUser = {
   id: string;
@@ -36,6 +45,10 @@ export interface TokenPair {
 // CPU cost for a value that's already unguessable.
 function hashToken(rawToken: string): string {
   return createHash('sha256').update(rawToken).digest('hex');
+}
+
+function generateRawToken(): string {
+  return randomBytes(32).toString('hex');
 }
 
 function sanitize(user: {
@@ -66,6 +79,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly mailService: MailService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -76,6 +90,9 @@ export class AuthService {
     const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) {
       return null;
+    }
+    if (!user.emailVerified) {
+      throw new ForbiddenException('Please verify your email before logging in.');
     }
     return sanitize(user);
   }
@@ -93,8 +110,62 @@ export class AuthService {
       name: dto.name,
     });
 
+    await this.sendVerificationEmail(user.id, user.email, user.name);
+    return { user: sanitize(user) };
+  }
+
+  async resendVerification(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user && !user.emailVerified) {
+      await this.sendVerificationEmail(user.id, user.email, user.name);
+    }
+    // Always respond the same way so this endpoint can't be used to probe
+    // which emails are registered.
+    return { ok: true };
+  }
+
+  async verifyEmail(rawToken: string) {
+    const record = await this.consumeAuthToken(rawToken, AuthTokenType.EMAIL_VERIFICATION);
+    if (!record) {
+      throw new BadRequestException('This verification link is invalid or has expired.');
+    }
+
+    const user = await this.usersService.markEmailVerified(record.userId);
     const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
     return { user: sanitize(user), ...tokens };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user && user.password) {
+      const rawToken = await this.createAuthToken(
+        user.id,
+        AuthTokenType.PASSWORD_RESET,
+        PASSWORD_RESET_TTL_MS,
+      );
+      await this.mailService.sendPasswordResetEmail(user.email, user.name, rawToken);
+    }
+    // Always respond the same way so this endpoint can't be used to probe
+    // which emails are registered.
+    return { ok: true };
+  }
+
+  async resetPassword(rawToken: string, newPassword: string) {
+    const record = await this.consumeAuthToken(rawToken, AuthTokenType.PASSWORD_RESET);
+    if (!record) {
+      throw new BadRequestException('This reset link is invalid or has expired.');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await this.usersService.updatePassword(record.userId, hashedPassword);
+
+    // A password reset invalidates every existing session for this user.
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: record.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    return { ok: true };
   }
 
   async login(user: SanitizedUser, scope: AuthScope) {
@@ -207,6 +278,52 @@ export class AuthService {
         data: { revokedAt: new Date() },
       });
     }
+  }
+
+  private async sendVerificationEmail(userId: string, email: string, name: string | null) {
+    const rawToken = await this.createAuthToken(
+      userId,
+      AuthTokenType.EMAIL_VERIFICATION,
+      EMAIL_VERIFICATION_TTL_MS,
+    );
+    await this.mailService.sendVerificationEmail(email, name, rawToken);
+  }
+
+  private async createAuthToken(
+    userId: string,
+    type: AuthTokenType,
+    ttlMs: number,
+  ): Promise<string> {
+    const rawToken = generateRawToken();
+    await this.prisma.authToken.create({
+      data: {
+        userId,
+        type,
+        hash: hashToken(rawToken),
+        expiresAt: new Date(Date.now() + ttlMs),
+      },
+    });
+    return rawToken;
+  }
+
+  private async consumeAuthToken(rawToken: string, type: AuthTokenType) {
+    const record = await this.prisma.authToken.findFirst({
+      where: {
+        type,
+        hash: hashToken(rawToken),
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (!record) {
+      return null;
+    }
+
+    await this.prisma.authToken.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    });
+    return record;
   }
 
   private async issueTokens(

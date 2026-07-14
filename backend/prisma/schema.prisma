@@ -25,19 +25,40 @@ enum AuthScope {
 }
 
 model User {
-  id             String         @id @default(uuid())
-  email          String         @unique
-  password       String?
-  name           String?
-  googleId       String?        @unique
-  avatarUrl      String?
-  contactNumber  String?
-  whatsappNumber String?
-  role           Role           @default(USER)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  refreshTokens  RefreshToken[]
-  domainOrders   DomainOrder[]
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String?
+  name            String?
+  googleId        String?        @unique
+  avatarUrl       String?
+  contactNumber   String?
+  whatsappNumber  String?
+  role            Role           @default(USER)
+  emailVerified   Boolean        @default(false)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  refreshTokens   RefreshToken[]
+  authTokens      AuthToken[]
+  domainOrders    DomainOrder[]
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model AuthToken {
+  id        String        @id @default(uuid())
+  hash      String
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      AuthTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
 }
 
 model RefreshToken {

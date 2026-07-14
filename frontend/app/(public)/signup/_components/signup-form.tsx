@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { FcGoogle } from "react-icons/fc"
+import { MailCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -29,7 +29,9 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter()
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null)
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
 
   async function signupAction(_state: null, formData: FormData) {
     const name = formData.get("name") as string
@@ -58,8 +60,7 @@ export function SignupForm({
         return null
       }
 
-      router.push("/dashboard")
-      router.refresh()
+      setVerificationEmail(email)
     } catch {
       toast.error("Couldn't reach the server. Please try again.")
     }
@@ -68,6 +69,27 @@ export function SignupForm({
   }
 
   const [, formAction, isPending] = useActionState(signupAction, null)
+
+  if (verificationEmail) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card className="relative overflow-hidden">
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <MailCheck className="size-10 text-primary" />
+            <h1 className="text-xl font-semibold">Check your email</h1>
+            <p className="max-w-sm text-muted-foreground">
+              We&apos;ve sent a verification link to{" "}
+              <span className="font-medium text-foreground">{verificationEmail}</span>.
+              Click it to activate your account.
+            </p>
+            <Button asChild className="mt-2">
+              <Link href="/login">Back to login</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -115,6 +137,8 @@ export function SignupForm({
                   type="text"
                   autoComplete="name"
                   placeholder="Jane Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </Field>
               <Field>
@@ -126,6 +150,8 @@ export function SignupForm({
                   autoComplete="email"
                   placeholder="m@example.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </Field>
               <Field>

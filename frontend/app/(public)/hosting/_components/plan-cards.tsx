@@ -28,50 +28,51 @@ export function PlanCards() {
 
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {HOSTING_PLANS.map((plan) => (
-            <Card
-              key={plan.slug}
-              className={
-                plan.popular
-                  ? "relative rounded-xl border-primary/50 ring-1 ring-primary/20"
-                  : "relative rounded-xl"
-              }
-            >
+            <div key={plan.slug} className="relative">
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
                   Most popular
                 </Badge>
               )}
-              <CardContent className="flex flex-col gap-6 py-2">
-                <div>
-                  <h3 className="font-semibold">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <span className="text-2xl font-bold">{formatBDT(plan.priceBdt)}</span>
-                  <span className="text-muted-foreground">/mo</span>
-                  <div className="text-xs text-muted-foreground">
-                    {formatUSD(plan.priceUsd)}/mo
+              <Card
+                className={
+                  plan.popular
+                    ? "rounded-xl border-primary/50 ring-1 ring-primary/20"
+                    : "rounded-xl"
+                }
+              >
+                <CardContent className="flex flex-col gap-6 py-2">
+                  <div>
+                    <h3 className="font-semibold">{plan.name}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
                   </div>
-                </div>
 
-                <Separator />
+                  <Separator />
 
-                <div>
-                  <p className="text-sm font-medium">Key features:</p>
-                  <ul className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
-                    {planFeatures(plan).map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <Check className="size-4 text-primary" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+                  <div>
+                    <span className="text-2xl font-bold">{formatBDT(plan.priceBdt)}</span>
+                    <span className="text-muted-foreground">/mo</span>
+                    <div className="text-xs text-muted-foreground">
+                      {formatUSD(plan.priceUsd)}/mo
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <p className="text-sm font-medium">Key features:</p>
+                    <ul className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
+                      {planFeatures(plan).map((feature) => (
+                        <li key={feature} className="flex items-center gap-2">
+                          <Check className="size-4 text-primary" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
       </div>

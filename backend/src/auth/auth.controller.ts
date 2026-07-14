@@ -29,9 +29,13 @@ import {
   CLIENT_REFRESH_COOKIE,
   REFRESH_COOKIE_PATH,
 } from './auth.constants';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
 import { AdminJwtAuthGuard } from './guards/admin-jwt-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -48,13 +52,38 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
+  async register(@Body() dto: RegisterDto) {
+    const { user } = await this.authService.register(dto);
+    return { user, message: 'Check your email to verify your account.' };
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user, ...tokens } = await this.authService.register(dto);
+    const { user, ...tokens } = await this.authService.verifyEmail(dto.token);
     this.setAuthCookies(res, tokens, AuthScope.CLIENT);
     return user;
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto.email);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 
   @UseGuards(LocalAuthGuard)
