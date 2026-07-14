@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/app/_components/site-header";
 import { SiteHero } from "@/app/_components/site-hero";
+import { SiteFooter } from "@/app/_components/site-footer";
 import { GlobalReach } from "@/components/global-reach";
 import { Services12 } from "@/components/services12";
 
@@ -12,6 +13,7 @@ export default function Home() {
         <Services12 />
         <GlobalReach />
       </main>
+      <SiteFooter />
     </>
   );
 }
