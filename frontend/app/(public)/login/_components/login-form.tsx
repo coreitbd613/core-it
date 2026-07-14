@@ -90,7 +90,6 @@ export function LoginForm({
           duration={8}
           size={220}
           delay={4}
-          reverse
           colorFrom="#0A2540"
           colorTo="#FD6005"
         />

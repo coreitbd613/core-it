@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import {
   Globe,
   LayoutDashboard,
+  Server,
   Settings,
   Users,
 } from "lucide-react"
@@ -17,6 +18,7 @@ import PanelDashboardShell, {
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
   { name: "Domain Orders", href: "/admin/domain-orders", icon: <Globe /> },
+  { name: "Hosting Orders", href: "/admin/hosting-orders", icon: <Server /> },
   { name: "Users", href: "/admin/users", icon: <Users /> },
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },
 ]

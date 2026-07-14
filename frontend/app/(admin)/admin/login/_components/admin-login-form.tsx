@@ -7,6 +7,7 @@ import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { BorderBeam } from "@/components/ui/border-beam"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -54,7 +55,15 @@ export function AdminLoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="relative overflow-hidden">
+        <BorderBeam duration={8} size={220} colorFrom="#FD6005" colorTo="#0A2540" />
+        <BorderBeam
+          duration={8}
+          size={220}
+          delay={4}
+          colorFrom="#0A2540"
+          colorTo="#FD6005"
+        />
         <CardHeader className="text-center">
           <h1 className="text-2xl font-bold">Admin sign in</h1>
           <p className="text-balance text-muted-foreground">

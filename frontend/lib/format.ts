@@ -1,6 +1,7 @@
 const bdtFormatter = new Intl.NumberFormat("en-BD", {
   style: "currency",
   currency: "BDT",
+  currencyDisplay: "narrowSymbol",
   maximumFractionDigits: 0,
 })
 
