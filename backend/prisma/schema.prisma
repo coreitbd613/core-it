@@ -38,7 +38,6 @@ model User {
   updatedAt      DateTime       @updatedAt
   refreshTokens  RefreshToken[]
   domainOrders   DomainOrder[]
-  hostingOrders  HostingOrder[]
 }
 
 model RefreshToken {
@@ -94,40 +93,3 @@ model DomainOrder {
   @@index([status])
 }
 
-enum HostingOrderStatus {
-  PENDING
-  COMPLETED
-  REJECTED
-}
-
-model HostingOrder {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Snapshot of the plan at order time, so a later price/spec change never
-  // rewrites the terms of a past order.
-  planSlug     String
-  planName     String
-  vcpu         Int
-  ramGb        Int
-  storageGb    Int
-  bandwidthTb  Int
-  priceUsd     Decimal
-  priceBdt     Decimal
-
-  status    HostingOrderStatus @default(PENDING)
-  adminNote String?
-
-  fullName String
-  email    String
-  phone    String
-  company  String?
-  notes    String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([status])
-}

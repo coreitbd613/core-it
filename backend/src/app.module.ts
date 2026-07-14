@@ -9,7 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { StorageModule } from './storage/storage.module';
 import { NamecheapModule } from './namecheap/namecheap.module';
 import { DomainModule } from './domains/domain.module';
-import { HostingModule } from './hosting/hosting.module';
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { HostingModule } from './hosting/hosting.module';
     StorageModule,
     NamecheapModule,
     DomainModule,
-    HostingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

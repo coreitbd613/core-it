@@ -1,7 +1,3 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
-
-export type HostingOrderStatus = "PENDING" | "COMPLETED" | "REJECTED"
-
 export type HostingPlan = {
   slug: string
   name: string
@@ -15,106 +11,60 @@ export type HostingPlan = {
   popular?: boolean
 }
 
-export type CreateHostingOrderInput = {
-  planSlug: string
-  fullName: string
-  email: string
-  phone: string
-  company?: string
-  notes?: string
+// Static VPS pricing shown as-is, no backend/third-party lookup.
+const USD_TO_BDT_RATE = 122
+
+function usdToBdt(usd: number): number {
+  return Math.round(usd * USD_TO_BDT_RATE)
 }
 
-export type MyHostingOrder = {
-  id: string
-  planSlug: string
-  planName: string
-  vcpu: number
-  ramGb: number
-  storageGb: number
-  bandwidthTb: number
-  priceUsd: string
-  priceBdt: string
-  status: HostingOrderStatus
-  createdAt: string
-}
+type StaticHostingPlan = Omit<HostingPlan, "priceBdt">
 
-export type AdminHostingOrder = MyHostingOrder & {
-  fullName: string
-  email: string
-  phone: string
-  company: string | null
-  notes: string | null
-  adminNote: string | null
-  updatedAt: string
-  user: { id: string; name: string | null; email: string }
-}
+const STATIC_HOSTING_PLANS: StaticHostingPlan[] = [
+  {
+    slug: "starter",
+    name: "Starter",
+    tagline: "Small sites and side projects",
+    vcpu: 1,
+    ramGb: 2,
+    storageGb: 40,
+    bandwidthTb: 1,
+    priceUsd: 6,
+  },
+  {
+    slug: "standard",
+    name: "Standard",
+    tagline: "Growing apps and small teams",
+    vcpu: 2,
+    ramGb: 4,
+    storageGb: 80,
+    bandwidthTb: 2,
+    priceUsd: 12,
+    popular: true,
+  },
+  {
+    slug: "performance",
+    name: "Performance",
+    tagline: "Production workloads",
+    vcpu: 4,
+    ramGb: 8,
+    storageGb: 160,
+    bandwidthTb: 4,
+    priceUsd: 24,
+  },
+  {
+    slug: "enterprise",
+    name: "Enterprise",
+    tagline: "High-traffic, resource-heavy apps",
+    vcpu: 8,
+    ramGb: 16,
+    storageGb: 320,
+    bandwidthTb: 8,
+    priceUsd: 48,
+  },
+]
 
-async function parseErrorMessage(res: Response, fallback: string) {
-  const body = (await res.json().catch(() => null)) as { message?: string } | null
-  return body?.message ?? fallback
-}
-
-export async function getHostingPlans(): Promise<HostingPlan[]> {
-  const res = await fetch(`${API_URL}/hosting/plans`)
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, "Couldn't load hosting plans."))
-  }
-  return (await res.json()) as HostingPlan[]
-}
-
-export async function createHostingOrder(
-  input: CreateHostingOrderInput,
-): Promise<MyHostingOrder> {
-  const res = await fetch(`${API_URL}/hosting/orders`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  })
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, "Couldn't place your order."))
-  }
-  return (await res.json()) as MyHostingOrder
-}
-
-export async function getMyHostingOrders(): Promise<MyHostingOrder[]> {
-  const res = await fetch(`${API_URL}/hosting/orders/mine`, { credentials: "include" })
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, "Couldn't load your orders."))
-  }
-  return (await res.json()) as MyHostingOrder[]
-}
-
-export async function getAllHostingOrders(): Promise<AdminHostingOrder[]> {
-  const res = await fetch(`${API_URL}/hosting/admin/orders`, { credentials: "include" })
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, "Couldn't load hosting orders."))
-  }
-  return (await res.json()) as AdminHostingOrder[]
-}
-
-export async function getHostingOrder(id: string): Promise<AdminHostingOrder> {
-  const res = await fetch(`${API_URL}/hosting/admin/orders/${id}`, {
-    credentials: "include",
-  })
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, "Couldn't load this order."))
-  }
-  return (await res.json()) as AdminHostingOrder
-}
-
-export async function updateHostingOrderStatus(
-  id: string,
-  input: { status: HostingOrderStatus; adminNote?: string },
-): Promise<AdminHostingOrder> {
-  const res = await fetch(`${API_URL}/hosting/admin/orders/${id}`, {
-    method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  })
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, "Couldn't update this order."))
-  }
-  return (await res.json()) as AdminHostingOrder
-}
+export const HOSTING_PLANS: HostingPlan[] = STATIC_HOSTING_PLANS.map((plan) => ({
+  ...plan,
+  priceBdt: usdToBdt(plan.priceUsd),
+}))
