@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Req,
@@ -120,6 +121,18 @@ export class AuthController {
     );
     this.setAuthCookies(res, tokens, AuthScope.ADMIN);
     return sanitized;
+  }
+
+  @UseGuards(AdminJwtAuthGuard)
+  @Post('admin/login-as/:userId')
+  @HttpCode(HttpStatus.OK)
+  async loginAsCustomer(
+    @Param('userId') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { user, ...tokens } = await this.authService.loginAsCustomer(userId);
+    this.setAuthCookies(res, tokens, AuthScope.CLIENT);
+    return user;
   }
 
   @Get('google')

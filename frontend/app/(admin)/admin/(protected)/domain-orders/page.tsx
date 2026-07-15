@@ -6,7 +6,8 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { useDomainOrders } from "@/hooks/use-domains"
 import { formatBDT, formatUSD } from "@/lib/format"
 import type { AdminDomainOrder, DomainOrderStatus } from "@/lib/domains"
-import { DataTable } from "@/components/shared/data-table/DataTable"
+import { DataTable } from "@/components/shared/data-table/data-table"
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
 
 const STATUS_VARIANT: Record<
@@ -19,7 +20,10 @@ const STATUS_VARIANT: Record<
 }
 
 const columns: ColumnDef<AdminDomainOrder>[] = [
-  { accessorKey: "domainName", header: "Domain", enableSorting: true },
+  {
+    accessorKey: "domainName",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Domain" />,
+  },
   {
     id: "customer",
     header: "Customer",
@@ -51,9 +55,9 @@ const columns: ColumnDef<AdminDomainOrder>[] = [
   },
   {
     id: "createdAt",
-    header: "Submitted",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Submitted" />,
+    accessorFn: (row) => row.createdAt,
     cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
-    enableSorting: true,
   },
 ]
 

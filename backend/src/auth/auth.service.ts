@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -176,6 +177,11 @@ export class AuthService {
   async validateGoogleUser(profile: GoogleProfile) {
     const byGoogleId = await this.usersService.findByGoogleId(profile.googleId);
     if (byGoogleId) {
+      if (profile.avatarUrl && profile.avatarUrl !== byGoogleId.avatarUrl) {
+        return this.usersService.update(byGoogleId.id, {
+          avatarUrl: profile.avatarUrl,
+        });
+      }
       return byGoogleId;
     }
 
@@ -192,6 +198,19 @@ export class AuthService {
 
   async loginWithGoogle(profile: GoogleProfile) {
     const user = await this.validateGoogleUser(profile);
+    const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
+    return { user: sanitize(user), ...tokens };
+  }
+
+  async loginAsCustomer(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Customer not found');
+    }
+    if (user.role === Role.ADMIN) {
+      throw new ForbiddenException("Can't log in as an admin account.");
+    }
+
     const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
     return { user: sanitize(user), ...tokens };
   }

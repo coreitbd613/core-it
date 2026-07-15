@@ -2,7 +2,10 @@
 
 import * as React from "react"
 import { useActionState } from "react"
+import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -13,6 +16,8 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/shared/password-input"
 import { Spinner } from "@/components/ui/spinner"
+import { currentUserKey } from "@/hooks/use-current-user"
+import type { CurrentUser } from "@/lib/auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
@@ -21,6 +26,9 @@ export function AdminLoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const queryClient = useQueryClient()
+  const [email, setEmail] = React.useState("")
+  const [password, setPassword] = React.useState("")
 
   async function adminLoginAction(_state: null, formData: FormData) {
     const email = formData.get("email") as string
@@ -38,9 +46,16 @@ export function AdminLoginForm({
         const body = (await res.json().catch(() => null)) as {
           message?: string
         } | null
-        toast.error(body?.message ?? "Invalid email or password.")
+        const fallback =
+          res.status >= 500
+            ? "Something went wrong on our end. Please try again."
+            : "Invalid email or password."
+        toast.error(body?.message ?? fallback)
         return null
       }
+
+      const user = (await res.json()) as CurrentUser
+      queryClient.setQueryData(currentUserKey("admin"), user)
 
       router.push("/admin/dashboard")
       router.refresh()
@@ -55,6 +70,24 @@ export function AdminLoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Link href="/" className="flex h-10 items-center justify-center" aria-label="CORE IT home">
+        <Image
+          src="/logo-light.png"
+          alt="CORE IT"
+          width={527}
+          height={135}
+          priority
+          className="h-10 w-auto dark:hidden"
+        />
+        <Image
+          src="/logo-dark.png"
+          alt="CORE IT"
+          width={527}
+          height={135}
+          priority
+          className="hidden h-10 w-auto dark:block"
+        />
+      </Link>
       <Card className="relative overflow-hidden">
         <BorderBeam duration={8} size={220} colorFrom="#FD6005" colorTo="#0A2540" />
         <BorderBeam
@@ -82,6 +115,9 @@ export function AdminLoginForm({
                   autoComplete="email"
                   placeholder="admin@example.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isPending}
                 />
               </Field>
               <Field>
@@ -91,6 +127,9 @@ export function AdminLoginForm({
                   name="password"
                   autoComplete="current-password"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isPending}
                 />
               </Field>
               <Field>

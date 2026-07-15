@@ -6,7 +6,8 @@ import { Activity, ShieldCheck, UserPlus, Users } from "lucide-react"
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
-import { DataTable } from "@/components/shared/data-table/DataTable"
+import { DataTable } from "@/components/shared/data-table/data-table"
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
 
 type RecentUser = {
@@ -34,7 +35,10 @@ const mockRecentUsers: RecentUser[] = [
 ]
 
 const columns: ColumnDef<RecentUser>[] = [
-  { accessorKey: "name", header: "Name", enableSorting: true },
+  {
+    accessorKey: "name",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+  },
   { accessorKey: "email", header: "Email" },
   {
     accessorKey: "role",
@@ -45,7 +49,10 @@ const columns: ColumnDef<RecentUser>[] = [
       </Badge>
     ),
   },
-  { accessorKey: "joinedAt", header: "Joined", enableSorting: true },
+  {
+    accessorKey: "joinedAt",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
+  },
 ]
 
 export default function AdminDashboardPage() {

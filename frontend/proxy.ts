@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
-async function getCurrentRole(request: NextRequest): Promise<string | null> {
+async function getCurrentRole(
+  request: NextRequest,
+  scope: "client" | "admin" = "client",
+): Promise<string | null> {
   try {
-    const res = await fetch(`${API_URL}/auth/me`, {
+    const path = scope === "admin" ? "/auth/admin/me" : "/auth/me"
+    const res = await fetch(`${API_URL}${path}`, {
       headers: { cookie: request.headers.get("cookie") ?? "" },
     })
     if (!res.ok) {
@@ -21,7 +25,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    const admin = (await getCurrentRole(request)) === "ADMIN"
+    const admin = (await getCurrentRole(request, "admin")) === "ADMIN"
 
     if (pathname === "/admin") {
       return NextResponse.redirect(

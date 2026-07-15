@@ -261,10 +261,10 @@ function PanelSidebar({
       <SidebarHeader className="mx-auto w-full max-w-5xl">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton  asChild>
+            <SidebarMenuButton asChild>
               <Link href={panelHomeHref}>
                 <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-background ring-1 ring-border">
-                  <Image src="/favicon.jpeg" alt="Core IT" width={32} height={32} className="object-cover" />
+                  <Image src="/logo-icon.png" alt="Core IT" width={32} height={32} className="object-cover" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Core IT</span>

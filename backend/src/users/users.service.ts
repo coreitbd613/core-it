@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Role } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -58,5 +63,48 @@ export class UsersService {
       where: { id },
       data: { password: hashedPassword },
     });
+  }
+
+  async listCustomers() {
+    const users = await this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        contactNumber: true,
+        role: true,
+        emailVerified: true,
+        createdAt: true,
+        domainOrders: {
+          select: { status: true, priceBdt: true },
+        },
+      },
+    });
+
+    return users.map(({ domainOrders, ...user }) => ({
+      ...user,
+      ordersCount: domainOrders.length,
+      totalSpentBdt: domainOrders
+        .filter((order) => order.status === 'COMPLETED')
+        .reduce((sum, order) => sum + Number(order.priceBdt), 0),
+    }));
+  }
+
+  async deleteCustomer(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('Customer not found.');
+    }
+    if (user.role === Role.ADMIN) {
+      throw new ForbiddenException(
+        "Admin accounts can't be deleted from the customers list.",
+      );
+    }
+
+    // Cascades to their domain orders, refresh tokens, and auth tokens
+    // (see the User relations in schema.prisma).
+    await this.prisma.user.delete({ where: { id } });
   }
 }

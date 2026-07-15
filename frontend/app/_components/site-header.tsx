@@ -4,11 +4,12 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { LayoutDashboard, Menu } from "lucide-react";
+import { LayoutDashboard, Menu, ShieldCheck } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { cn } from "@/lib/utils";
 import { useClientAuth } from "@/contexts/client-auth-context";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import {
@@ -51,6 +52,10 @@ function HeaderThemeToggle({
 export function SiteHeader() {
   const { resolvedTheme, setTheme } = useTheme();
   const { user, isPending } = useClientAuth();
+  // Admin sessions use a separate cookie/scope from client sessions, so an
+  // admin can be signed into the panel without a client session existing.
+  const { data: adminUser } = useCurrentUser("admin");
+  const isAdmin = adminUser?.role === "ADMIN";
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -92,6 +97,14 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          {isAdmin && (
+            <Button variant="outline" className="gap-2" asChild>
+              <Link href="/admin/dashboard">
+                <ShieldCheck className="size-4" />
+                Admin
+              </Link>
+            </Button>
+          )}
           {mounted && (
             <HeaderThemeToggle
               resolvedTheme={resolvedTheme}
@@ -126,18 +139,29 @@ export function SiteHeader() {
           )}
         </div>
 
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Open menu"
-              className={cn("border-none bg-transparent md:hidden", iconText)}
-            >
-              <Menu strokeWidth={3} className="size-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-72">
+        <div className="flex items-center gap-1 md:hidden">
+          {mounted && (
+            <HeaderThemeToggle
+              resolvedTheme={resolvedTheme}
+              setTheme={setTheme}
+              className={cn(
+                "flex size-9 items-center justify-center rounded-lg [&_svg]:size-4.5",
+                iconText
+              )}
+            />
+          )}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Open menu"
+                className={cn("border-none bg-transparent", iconText)}
+              >
+                <Menu strokeWidth={3} className="size-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
             <SheetHeader>
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <Image
@@ -168,17 +192,15 @@ export function SiteHeader() {
               ))}
             </nav>
             <div className="mt-auto flex flex-col gap-2 p-4">
-              {mounted && (
-                <div className="mb-1 flex items-center justify-between rounded-lg border border-input px-3 py-2.5">
-                  <span className="text-sm font-medium text-foreground">
-                    {resolvedTheme === "light" ? "Light mode" : "Dark mode"}
-                  </span>
-                  <HeaderThemeToggle
-                    resolvedTheme={resolvedTheme}
-                    setTheme={setTheme}
-                    className="flex size-8 items-center justify-center rounded-md text-foreground hover:bg-muted [&_svg]:size-4"
-                  />
-                </div>
+              {isAdmin && (
+                <SheetClose asChild>
+                  <Button variant="outline" className="gap-2" asChild>
+                    <Link href="/admin/dashboard">
+                      <ShieldCheck className="size-4" />
+                      Admin
+                    </Link>
+                  </Button>
+                </SheetClose>
               )}
               {isPending ? (
                 <div className="flex flex-col gap-2" aria-hidden>
@@ -209,8 +231,9 @@ export function SiteHeader() {
                 </>
               )}
             </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

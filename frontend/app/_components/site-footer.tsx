@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -14,21 +16,25 @@ const socialLinks = [
     label: "Facebook",
     href: "https://www.facebook.com/share/1HNCTGBPzF/",
     icon: FaFacebookF,
+    color: "#1877F2",
   },
   {
     label: "WhatsApp",
     href: "https://wa.me/8801581633810",
     icon: FaWhatsapp,
+    color: "#25D366",
   },
   {
     label: "Instagram",
     href: "#",
     icon: FaInstagram,
+    color: "#E4405F",
   },
   {
     label: "LinkedIn",
     href: "#",
     icon: FaLinkedinIn,
+    color: "#0A66C2",
   },
 ] as const;
 
@@ -65,8 +71,8 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-border bg-background">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
-        <div className="flex flex-col gap-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-12 lg:px-8">
+        <div className="col-span-2 flex flex-col gap-4 lg:col-span-1">
           <Link href="/" className="flex h-8 w-fit items-center" aria-label="CORE IT home">
             <Image
               src="/logo-light.png"
@@ -86,22 +92,17 @@ export function SiteFooter() {
           <p className="max-w-xs text-sm text-muted-foreground">
             Professional software solutions for every business need.
           </p>
-          <Dock
-            className="mx-0 mt-0 h-auto justify-start gap-1 p-1.5"
-            iconSize={36}
-            iconMagnification={48}
-            iconDistance={80}
-          >
-            {socialLinks.map(({ label, href, icon: Icon }) => (
+          <Dock className="mx-0 mt-0 justify-start gap-1">
+            {socialLinks.map(({ label, href, icon: Icon, color }) => (
               <DockIcon key={label}>
                 <Link
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="flex size-full items-center justify-center rounded-full text-foreground/70 transition-colors hover:text-foreground"
+                  className="flex size-full items-center justify-center"
                 >
-                  <Icon className="size-4" />
+                  <Icon className="size-full" style={{ color }} />
                 </Link>
               </DockIcon>
             ))}

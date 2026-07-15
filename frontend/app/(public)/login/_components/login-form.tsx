@@ -5,6 +5,7 @@ import { useActionState, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { FcGoogle } from "react-icons/fc"
 
@@ -22,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/shared/password-input"
 import { Spinner } from "@/components/ui/spinner"
+import { currentUserKey } from "@/hooks/use-current-user"
+import type { CurrentUser } from "@/lib/auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
@@ -32,6 +35,7 @@ export function LoginForm({
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get("redirect")
+  const queryClient = useQueryClient()
   const [email, setEmail] = useState("")
 
   async function loginAction(_state: null, formData: FormData) {
@@ -50,9 +54,16 @@ export function LoginForm({
         const body = (await res.json().catch(() => null)) as {
           message?: string
         } | null
-        toast.error(body?.message ?? "Invalid email or password.")
+        const fallback =
+          res.status >= 500
+            ? "Something went wrong on our end. Please try again."
+            : "Invalid email or password."
+        toast.error(body?.message ?? fallback)
         return null
       }
+
+      const user = (await res.json()) as CurrentUser
+      queryClient.setQueryData(currentUserKey("client"), user)
 
       router.push(redirect ?? "/dashboard")
       router.refresh()
@@ -114,6 +125,7 @@ export function LoginForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isPending}
                 />
               </Field>
               <Field>
@@ -131,6 +143,7 @@ export function LoginForm({
                   name="password"
                   autoComplete="current-password"
                   required
+                  disabled={isPending}
                 />
               </Field>
               <Field>

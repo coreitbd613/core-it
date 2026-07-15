@@ -6,7 +6,8 @@ import { Bell, CheckCircle2, Clock, ListTodo } from "lucide-react"
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
-import { DataTable } from "@/components/shared/data-table/DataTable"
+import { DataTable } from "@/components/shared/data-table/data-table"
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
 
 type ActivityRow = {
@@ -38,7 +39,10 @@ const statusVariant: Record<ActivityRow["status"], "default" | "secondary" | "ou
 }
 
 const columns: ColumnDef<ActivityRow>[] = [
-  { accessorKey: "activity", header: "Activity", enableSorting: true },
+  {
+    accessorKey: "activity",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Activity" />,
+  },
   {
     accessorKey: "status",
     header: "Status",
@@ -46,7 +50,10 @@ const columns: ColumnDef<ActivityRow>[] = [
       <Badge variant={statusVariant[row.original.status]}>{row.original.status}</Badge>
     ),
   },
-  { accessorKey: "updatedAt", header: "Updated", enableSorting: true },
+  {
+    accessorKey: "updatedAt",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
+  },
 ]
 
 export default function UserDashboardPage() {
