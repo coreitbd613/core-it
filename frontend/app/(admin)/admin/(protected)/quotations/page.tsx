@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { FileTextIcon, PlusIcon } from "lucide-react"
-import type { ColumnDef } from "@tanstack/react-table"
+import { FileTextIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { toast } from "sonner"
+import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
 import DashboardStatsGrid, {
   type DashboardStatItem,
@@ -11,8 +12,20 @@ import DashboardStatsGrid, {
 import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
+import { createSelectionColumn } from "@/components/shared/data-table/data-table-select-column"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { formatBDT } from "@/lib/format"
 import {
   mockQuotations,
@@ -24,7 +37,11 @@ import {
 
 export default function AdminQuotationsPage() {
   const [search, setSearch] = useState("")
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [, forceRerender] = useState(0)
   const quotations = mockQuotations
+  const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+  const selectedCount = selectedIds.length
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const sent = quotations.filter((q) => q.status === "SENT").length
@@ -36,8 +53,19 @@ export default function AdminQuotationsPage() {
     ]
   }, [quotations])
 
+  function handleBulkDelete() {
+    for (const id of selectedIds) {
+      const index = mockQuotations.findIndex((q) => q.id === id)
+      if (index !== -1) mockQuotations.splice(index, 1)
+    }
+    setRowSelection({})
+    forceRerender((n) => n + 1)
+    toast.success(`Deleted ${selectedIds.length} draft quotation${selectedIds.length > 1 ? "s" : ""}.`)
+  }
+
   const columns = useMemo<ColumnDef<Quotation>[]>(
     () => [
+      createSelectionColumn<Quotation>(),
       {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Quotation" />,
@@ -98,6 +126,34 @@ export default function AdminQuotationsPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search quotations..."
+        bulkActions={
+          selectedCount > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2Icon />
+                  Delete ({selectedCount})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Delete {selectedCount} draft quotation{selectedCount > 1 ? "s" : ""}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This can&apos;t be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={handleBulkDelete}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )
+        }
       />
 
       <DataTable
@@ -106,7 +162,9 @@ export default function AdminQuotationsPage() {
         getRowId={(row) => row.id}
         emptyMessage="No quotations yet."
         globalFilter={search}
-        enableRowSelection={false}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        enableRowSelection={(row) => row.status === "DRAFT"}
       />
     </div>
   )

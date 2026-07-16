@@ -103,6 +103,8 @@ type PanelDashboardShellProps = {
   headerActions?: HeaderAction[];
   footer?: ReactNode;
   sidebarFooterExtra?: ReactNode;
+  search?: ReactNode;
+  notifications?: ReactNode;
 };
 
 export default function PanelDashboardShell({
@@ -117,6 +119,8 @@ export default function PanelDashboardShell({
   headerActions = [],
   footer,
   sidebarFooterExtra,
+  search,
+  notifications,
 }: PanelDashboardShellProps) {
   const pathname = usePathname();
   const breadcrumbItems = getBreadcrumbItems(pathname, navItems);
@@ -176,6 +180,8 @@ export default function PanelDashboardShell({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {search}
+              {notifications}
               {mounted && (
                 <AnimatedThemeToggler
                   theme={resolvedTheme === "light" ? "light" : "dark"}

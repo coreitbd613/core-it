@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { useRef, useState } from "react"
-import { Building2, Camera, Globe, Mail, MapPin } from "lucide-react"
+import { Building2, Camera, Globe, Landmark, Mail, MapPin, ScrollText } from "lucide-react"
+import { FaFacebook } from "react-icons/fa"
 import { toast } from "sonner"
 
 import { useMockRole } from "@/contexts/mock-role-context"
@@ -16,7 +17,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -43,6 +43,14 @@ type CompanyProfile = {
   postalCode: string
   country: string
   taxId: string
+  tradeLicense: string
+  tin: string
+  bin: string
+  bkashNumber: string
+  nagadNumber: string
+  rocketNumber: string
+  whatsappBusiness: string
+  facebookPage: string
 }
 
 const initialProfile: CompanyProfile = {
@@ -60,6 +68,14 @@ const initialProfile: CompanyProfile = {
   postalCode: "",
   country: "BD",
   taxId: "",
+  tradeLicense: "",
+  tin: "",
+  bin: "",
+  bkashNumber: "",
+  nagadNumber: "",
+  rocketNumber: "",
+  whatsappBusiness: "",
+  facebookPage: "",
 }
 
 function getInitials(name: string) {
@@ -126,12 +142,9 @@ export default function CompanySettingsPage() {
       </div>
 
       <fieldset disabled={!canManageCompany} className="contents">
-      <Card className="max-w-3xl">
-        <CardHeader>
-          <CardTitle>Company details</CardTitle>
-          <CardDescription>Your logo, name, and how clients/Core IT reach you.</CardDescription>
-        </CardHeader>
-
+      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
+      <div className="flex flex-col gap-6 lg:col-span-2">
+      <Card>
         <CardContent className="flex flex-col gap-6">
           <div className="flex items-center gap-5">
             <button
@@ -252,7 +265,7 @@ export default function CompanySettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="max-w-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Billing address</CardTitle>
           <CardDescription>Used on invoices and statements.</CardDescription>
@@ -344,16 +357,138 @@ export default function CompanySettingsPage() {
             </Field>
           </FieldGroup>
         </CardContent>
-
-        {canManageCompany && (
-          <CardFooter className="justify-end border-t">
-            <Button type="submit" disabled={!isDirty || isSaving}>
-              {isSaving && <Spinner className="size-4" />}
-              Save changes
-            </Button>
-          </CardFooter>
-        )}
       </Card>
+      </div>
+
+      <div className="flex flex-col gap-6 lg:col-span-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Legal & tax</CardTitle>
+            <CardDescription>Shown on invoices and used for compliance.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="company-trade-license">Trade license number</FieldLabel>
+                <div className="relative">
+                  <ScrollText className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-trade-license"
+                    value={form.tradeLicense}
+                    onChange={(e) => update("tradeLicense", e.target.value)}
+                    placeholder="Optional"
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-tin">TIN</FieldLabel>
+                <Input
+                  id="company-tin"
+                  value={form.tin}
+                  onChange={(e) => update("tin", e.target.value)}
+                  placeholder="Taxpayer Identification Number"
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-bin">BIN</FieldLabel>
+                <Input
+                  id="company-bin"
+                  value={form.bin}
+                  onChange={(e) => update("bin", e.target.value)}
+                  placeholder="Business Identification Number"
+                />
+                <FieldDescription>VAT registration number.</FieldDescription>
+              </Field>
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Payments & social</CardTitle>
+            <CardDescription>How clients can pay you and find you online.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="company-bkash">bKash number</FieldLabel>
+                <div className="relative">
+                  <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-bkash"
+                    value={form.bkashNumber}
+                    onChange={(e) => update("bkashNumber", e.target.value)}
+                    placeholder="01XXXXXXXXX"
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-nagad">Nagad number</FieldLabel>
+                <div className="relative">
+                  <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-nagad"
+                    value={form.nagadNumber}
+                    onChange={(e) => update("nagadNumber", e.target.value)}
+                    placeholder="01XXXXXXXXX"
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-rocket">Rocket number</FieldLabel>
+                <div className="relative">
+                  <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-rocket"
+                    value={form.rocketNumber}
+                    onChange={(e) => update("rocketNumber", e.target.value)}
+                    placeholder="01XXXXXXXXX"
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+
+              <Separator />
+
+              <Field>
+                <FieldLabel htmlFor="company-whatsapp-business">WhatsApp business number</FieldLabel>
+                <PhoneNumberInput
+                  id="company-whatsapp-business"
+                  value={form.whatsappBusiness}
+                  onChange={(value) => update("whatsappBusiness", value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-facebook">Facebook page</FieldLabel>
+                <div className="relative">
+                  <FaFacebook className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-facebook"
+                    type="url"
+                    value={form.facebookPage}
+                    onChange={(e) => update("facebookPage", e.target.value)}
+                    placeholder="https://facebook.com/..."
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+            </FieldGroup>
+          </CardContent>
+        </Card>
+      </div>
+      </div>
+
+      {canManageCompany && (
+        <div className="flex justify-end border-t pt-6">
+          <Button type="submit" disabled={!isDirty || isSaving}>
+            {isSaving && <Spinner className="size-4" />}
+            Save changes
+          </Button>
+        </div>
+      )}
       </fieldset>
     </form>
   )

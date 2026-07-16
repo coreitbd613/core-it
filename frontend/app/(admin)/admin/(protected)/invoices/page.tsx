@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertTriangleIcon, PlusIcon, ReceiptIcon, WalletIcon } from "lucide-react"
-import type { ColumnDef } from "@tanstack/react-table"
+import { AlertTriangleIcon, PlusIcon, ReceiptIcon, Trash2Icon, WalletIcon } from "lucide-react"
+import { toast } from "sonner"
+import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
 import DashboardStatsGrid, {
   type DashboardStatItem,
@@ -11,8 +12,20 @@ import DashboardStatsGrid, {
 import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
+import { createSelectionColumn } from "@/components/shared/data-table/data-table-select-column"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -26,7 +39,21 @@ import {
 
 export default function AdminInvoicesPage() {
   const [search, setSearch] = useState("")
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [, forceRerender] = useState(0)
   const invoices = mockInvoices
+  const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+  const selectedCount = selectedIds.length
+
+  function handleBulkDelete() {
+    for (const id of selectedIds) {
+      const index = mockInvoices.findIndex((inv) => inv.id === id)
+      if (index !== -1) mockInvoices.splice(index, 1)
+    }
+    setRowSelection({})
+    forceRerender((n) => n + 1)
+    toast.success(`Deleted ${selectedIds.length} draft invoice${selectedIds.length > 1 ? "s" : ""}.`)
+  }
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const outstanding = invoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
@@ -40,6 +67,7 @@ export default function AdminInvoicesPage() {
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
+      createSelectionColumn<Invoice>(),
       {
         accessorKey: "number",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Invoice" />,
@@ -115,6 +143,34 @@ export default function AdminInvoicesPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search invoices..."
+        bulkActions={
+          selectedCount > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2Icon />
+                  Delete ({selectedCount})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Delete {selectedCount} draft invoice{selectedCount > 1 ? "s" : ""}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This can&apos;t be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={handleBulkDelete}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )
+        }
       />
 
       <DataTable
@@ -123,7 +179,9 @@ export default function AdminInvoicesPage() {
         getRowId={(row) => row.id}
         emptyMessage="No invoices yet."
         globalFilter={search}
-        enableRowSelection={false}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        enableRowSelection={(row) => deriveInvoiceStatus(row) === "DRAFT"}
       />
     </div>
   )

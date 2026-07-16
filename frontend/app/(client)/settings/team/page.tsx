@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import { ClockIcon, CrownIcon, ShieldAlertIcon, Trash2Icon, UsersIcon } from "lucide-react"
 import { toast } from "sonner"
-import type { ColumnDef } from "@tanstack/react-table"
+import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
 import { useMockRole } from "@/contexts/mock-role-context"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
@@ -13,12 +13,14 @@ import DashboardStatsGrid, {
 import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
+import { createSelectionColumn } from "@/components/shared/data-table/data-table-select-column"
 import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/shared/data-table/data-table-row-actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -26,6 +28,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import { InviteMemberDialog } from "./_components/invite-member-dialog"
 import {
@@ -41,6 +54,9 @@ export default function TeamSettingsPage() {
   const { canManageTeam } = useMockRole()
   const [members, setMembers] = useState<TeamMember[]>(mockTeamMembers)
   const [search, setSearch] = useState("")
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+  const selectedCount = selectedIds.length
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const active = members.filter((m) => m.status === "ACTIVE").length
@@ -77,8 +93,15 @@ export default function TeamSettingsPage() {
     toast.success(`Removed ${member.name} from the team.`)
   }
 
+  function handleBulkRemove() {
+    setMembers((prev) => prev.filter((m) => !selectedIds.includes(m.id)))
+    setRowSelection({})
+    toast.success(`Removed ${selectedIds.length} member${selectedIds.length > 1 ? "s" : ""}.`)
+  }
+
   const columns = useMemo<ColumnDef<TeamMember>[]>(
     () => [
+      createSelectionColumn<TeamMember>(),
       {
         accessorKey: "name",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
@@ -202,6 +225,34 @@ export default function TeamSettingsPage() {
         onSearchChange={setSearch}
         searchPlaceholder="Search members..."
         actions={<InviteMemberDialog onInvite={handleInvite} />}
+        bulkActions={
+          selectedCount > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2Icon />
+                  Remove ({selectedCount})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Remove {selectedCount} member{selectedCount > 1 ? "s" : ""}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    They&apos;ll immediately lose access to this company&apos;s workspace.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={handleBulkRemove}>
+                    Remove
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )
+        }
       />
 
       <DataTable
@@ -210,7 +261,9 @@ export default function TeamSettingsPage() {
         getRowId={(row) => row.id}
         emptyMessage="No team members yet."
         globalFilter={search}
-        enableRowSelection={false}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        enableRowSelection={(row) => row.role !== "OWNER"}
       />
     </div>
   )
