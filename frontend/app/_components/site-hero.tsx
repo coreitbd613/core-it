@@ -58,6 +58,7 @@ export function SiteHero() {
           <Button
             
             variant="outline"
+            size="lg"
             className="border-white/25 bg-white/5 font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
             asChild
           >

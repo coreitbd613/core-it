@@ -109,10 +109,10 @@ export default function TermsPage() {
         <p>
           If you have any questions about these Terms, contact us at{" "}
           <a
-            href="mailto:legal@coreit.com"
+            href="mailto:legal@coreitbd.com"
             className="underline underline-offset-4"
           >
-            legal@coreit.com
+            legal@coreitbd.com
           </a>
           .
         </p>

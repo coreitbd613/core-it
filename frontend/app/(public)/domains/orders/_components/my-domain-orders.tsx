@@ -1,9 +1,12 @@
 "use client"
 
+import Link from "next/link"
+
 import { useMyDomainOrders } from "@/hooks/use-domains"
 import { formatBDT } from "@/lib/format"
 import type { DomainOrderStatus, MyDomainOrder } from "@/lib/domains"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -47,7 +50,7 @@ export function MyDomainOrders() {
     <div className="mt-8 flex flex-col gap-3">
       {orders.map((order: MyDomainOrder) => (
         <Card key={order.id} className="rounded-lg">
-          <CardContent className="flex items-center justify-between gap-4 py-4">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
             <div>
               <div className="font-medium">{order.domainName}</div>
               <div className="text-xs text-muted-foreground">
@@ -55,9 +58,21 @@ export function MyDomainOrders() {
                 {formatBDT(Number(order.priceBdt))}/yr
               </div>
             </div>
-            <Badge variant={STATUS_VARIANT[order.status]}>
-              {STATUS_LABEL[order.status]}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {order.status === "COMPLETED" && (
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/domains/${order.id}/dns`}>Manage DNS</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/domains/${order.id}/email-forwarding`}>Email forwarding</Link>
+                  </Button>
+                </>
+              )}
+              <Badge variant={STATUS_VARIANT[order.status]}>
+                {STATUS_LABEL[order.status]}
+              </Badge>
+            </div>
           </CardContent>
         </Card>
       ))}

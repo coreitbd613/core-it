@@ -102,6 +102,7 @@ type PanelDashboardShellProps = {
   userMenuItems?: UserMenuItem[];
   headerActions?: HeaderAction[];
   footer?: ReactNode;
+  sidebarFooterExtra?: ReactNode;
 };
 
 export default function PanelDashboardShell({
@@ -115,6 +116,7 @@ export default function PanelDashboardShell({
   userMenuItems = [],
   headerActions = [],
   footer,
+  sidebarFooterExtra,
 }: PanelDashboardShellProps) {
   const pathname = usePathname();
   const breadcrumbItems = getBreadcrumbItems(pathname, navItems);
@@ -137,6 +139,7 @@ export default function PanelDashboardShell({
             onLogout={onLogout}
             loading={loading}
             userMenuItems={userMenuItems}
+            sidebarFooterExtra={sidebarFooterExtra}
           />
         </Suspense>
         <SidebarInset className="min-w-0 bg-muted/20">
@@ -236,6 +239,7 @@ function PanelSidebar({
   onLogout,
   loading,
   userMenuItems,
+  sidebarFooterExtra,
 }: {
   navItems: PanelNavItem[];
   panelHomeHref: string;
@@ -244,6 +248,7 @@ function PanelSidebar({
   onLogout: () => void;
   loading: boolean;
   userMenuItems: UserMenuItem[];
+  sidebarFooterExtra?: ReactNode;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -339,6 +344,7 @@ function PanelSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {sidebarFooterExtra}
         <NavUser user={user} profileHref={profileHref} onLogout={onLogout} loading={loading} userMenuItems={userMenuItems} />
       </SidebarFooter>
       <SidebarRail />

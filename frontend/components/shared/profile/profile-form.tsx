@@ -2,9 +2,8 @@
 
 import * as React from "react"
 import { useEffect, useRef, useState } from "react"
-import { Camera, Mail, Phone } from "lucide-react"
+import { Camera, Mail } from "lucide-react"
 import { toast } from "sonner"
-import { FaWhatsapp } from "react-icons/fa"
 
 import {
   useCurrentUser,
@@ -36,6 +35,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { PhoneNumberInput } from "@/components/shared/phone-number-input"
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024
 
@@ -210,34 +210,20 @@ export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
             <div className="grid gap-5 sm:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="profile-contact">Contact number</FieldLabel>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="profile-contact"
-                    type="tel"
-                    value={contactNumber}
-                    onChange={(event) => setContactNumber(event.target.value)}
-                    placeholder="+880 1XXX-XXXXXX"
-                    autoComplete="tel"
-                    className="pl-9"
-                  />
-                </div>
+                <PhoneNumberInput
+                  id="profile-contact"
+                  value={contactNumber}
+                  onChange={setContactNumber}
+                />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="profile-whatsapp">WhatsApp number</FieldLabel>
-                <div className="relative">
-                  <FaWhatsapp className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="profile-whatsapp"
-                    type="tel"
-                    value={whatsappNumber}
-                    onChange={(event) => setWhatsappNumber(event.target.value)}
-                    placeholder="+880 1XXX-XXXXXX"
-                    autoComplete="tel"
-                    className="pl-9"
-                  />
-                </div>
+                <PhoneNumberInput
+                  id="profile-whatsapp"
+                  value={whatsappNumber}
+                  onChange={setWhatsappNumber}
+                />
               </Field>
             </div>
           </FieldGroup>

@@ -144,10 +144,10 @@ export default function PrivacyPage() {
           If you have any questions about this Privacy Policy or how we
           handle your information, contact us at{" "}
           <a
-            href="mailto:privacy@coreit.com"
+            href="mailto:privacy@coreitbd.com"
             className="underline underline-offset-4"
           >
-            privacy@coreit.com
+            privacy@coreitbd.com
           </a>
           .
         </p>

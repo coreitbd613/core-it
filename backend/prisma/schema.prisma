@@ -41,6 +41,56 @@ model User {
   refreshTokens   RefreshToken[]
   authTokens      AuthToken[]
   domainOrders    DomainOrder[]
+  memberships     Membership[]
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  BILLING
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+
+  billingEmail  String?
+  billingPhone  String?
+  billingAddress String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships Membership[]
+}
+
+model Membership {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  role   MembershipRole   @default(MEMBER)
+  status MembershipStatus @default(ACTIVE)
+
+  invitedEmail String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
 }
 
 enum AuthTokenType {

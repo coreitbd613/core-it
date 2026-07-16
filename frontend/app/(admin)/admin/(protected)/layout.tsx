@@ -3,8 +3,10 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
+  FileTextIcon,
   Globe,
   LayoutDashboard,
+  ReceiptIcon,
   Settings,
   Users,
 } from "lucide-react"
@@ -16,6 +18,16 @@ import PanelDashboardShell, {
 
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
+  { name: "Proposals", href: "/admin/proposals", icon: <FileTextIcon /> },
+  {
+    name: "Billing",
+    href: "/admin/quotations",
+    icon: <ReceiptIcon />,
+    children: [
+      { name: "Quotations", href: "/admin/quotations" },
+      { name: "Invoices", href: "/admin/invoices" },
+    ],
+  },
   { name: "Domain Orders", href: "/admin/domain-orders", icon: <Globe /> },
   { name: "Customers", href: "/admin/customers", icon: <Users /> },
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },

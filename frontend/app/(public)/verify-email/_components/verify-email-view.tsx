@@ -65,7 +65,7 @@ export function VerifyEmailView() {
       return
     }
     const timeout = setTimeout(() => {
-      router.push("/dashboard")
+      router.push("/onboarding")
       router.refresh()
     }, 1500)
     return () => clearTimeout(timeout)
@@ -103,7 +103,7 @@ export function VerifyEmailView() {
             <CheckCircle2 className="size-10 text-green-600 dark:text-green-500" />
             <h1 className="text-xl font-semibold">Email verified</h1>
             <p className="max-w-sm text-muted-foreground">
-              Your account is active. Redirecting you to your dashboard...
+              Your account is active. Let&apos;s set up your company...
             </p>
           </>
         )}

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { CheckCircle2 } from "lucide-react"
@@ -17,6 +17,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { CountrySelect } from "@/components/shared/country-select"
+import { CitySelect, StateSelect } from "@/components/shared/location-select"
+import { PhoneNumberInput } from "@/components/shared/phone-number-input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
@@ -35,8 +38,7 @@ const registrantSchema = z.object({
   registrantPhone: z
     .string()
     .trim()
-    .min(7, "Enter a valid phone number")
-    .regex(/^\+?[0-9\s\-()]{7,20}$/, "Enter a valid phone number"),
+    .regex(/^\+[1-9]\d{6,14}$/, "Enter a valid phone number"),
   registrantEmail: z.email("Enter a valid email"),
   years: z.coerce.number().int().min(1).max(10),
 })
@@ -57,13 +59,19 @@ export function CheckoutForm() {
 
   const {
     register,
+    control,
+    watch,
+    setValue,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<RegistrantFormInput, unknown, RegistrantFormValues>({
     resolver: zodResolver(registrantSchema),
-    defaultValues: { years: 1 },
+    defaultValues: { years: 1, registrantPhone: "", registrantCountry: "BD" },
   })
+
+  const registrantCountry = watch("registrantCountry") ?? ""
+  const registrantStateProvince = watch("registrantStateProvince") ?? ""
 
   useEffect(() => {
     if (user) {
@@ -180,45 +188,89 @@ export function CheckoutForm() {
               <Input id="registrantAddress2" {...register("registrantAddress2")} />
             </Field>
 
+            <Field data-invalid={Boolean(errors.registrantCountry)}>
+              <FieldLabel htmlFor="registrantCountry">Country</FieldLabel>
+              <Controller
+                name="registrantCountry"
+                control={control}
+                render={({ field }) => (
+                  <CountrySelect
+                    id="registrantCountry"
+                    value={field.value ?? ""}
+                    onChange={(isoCode) => {
+                      field.onChange(isoCode)
+                      setValue("registrantStateProvince", "")
+                      setValue("registrantCity", "")
+                    }}
+                    aria-invalid={Boolean(errors.registrantCountry)}
+                  />
+                )}
+              />
+            </Field>
+
             <div className="grid gap-5 sm:grid-cols-2">
-              <Field data-invalid={Boolean(errors.registrantCity)}>
-                <FieldLabel htmlFor="registrantCity">City</FieldLabel>
-                <Input id="registrantCity" {...register("registrantCity")} />
-              </Field>
               <Field data-invalid={Boolean(errors.registrantStateProvince)}>
                 <FieldLabel htmlFor="registrantStateProvince">
                   State / Province
                 </FieldLabel>
-                <Input
-                  id="registrantStateProvince"
-                  {...register("registrantStateProvince")}
+                <Controller
+                  name="registrantStateProvince"
+                  control={control}
+                  render={({ field }) => (
+                    <StateSelect
+                      id="registrantStateProvince"
+                      countryIso={registrantCountry}
+                      value={field.value ?? ""}
+                      onChange={(value) => {
+                        field.onChange(value)
+                        setValue("registrantCity", "")
+                      }}
+                      onBlur={field.onBlur}
+                      aria-invalid={Boolean(errors.registrantStateProvince)}
+                    />
+                  )}
+                />
+              </Field>
+              <Field data-invalid={Boolean(errors.registrantCity)}>
+                <FieldLabel htmlFor="registrantCity">City</FieldLabel>
+                <Controller
+                  name="registrantCity"
+                  control={control}
+                  render={({ field }) => (
+                    <CitySelect
+                      id="registrantCity"
+                      countryIso={registrantCountry}
+                      stateName={registrantStateProvince}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      aria-invalid={Boolean(errors.registrantCity)}
+                    />
+                  )}
                 />
               </Field>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field data-invalid={Boolean(errors.registrantPostalCode)}>
-                <FieldLabel htmlFor="registrantPostalCode">Postal code</FieldLabel>
-                <Input id="registrantPostalCode" {...register("registrantPostalCode")} />
-              </Field>
-              <Field data-invalid={Boolean(errors.registrantCountry)}>
-                <FieldLabel htmlFor="registrantCountry">Country</FieldLabel>
-                <Input
-                  id="registrantCountry"
-                  placeholder="BD"
-                  {...register("registrantCountry")}
-                />
-              </Field>
-            </div>
+            <Field data-invalid={Boolean(errors.registrantPostalCode)}>
+              <FieldLabel htmlFor="registrantPostalCode">Postal code</FieldLabel>
+              <Input id="registrantPostalCode" className="max-w-xs" {...register("registrantPostalCode")} />
+            </Field>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field data-invalid={Boolean(errors.registrantPhone)}>
                 <FieldLabel htmlFor="registrantPhone">Phone</FieldLabel>
-                <Input
-                  id="registrantPhone"
-                  type="tel"
-                  placeholder="+880 1XXX-XXXXXX"
-                  {...register("registrantPhone")}
+                <Controller
+                  name="registrantPhone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneNumberInput
+                      id="registrantPhone"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      aria-invalid={Boolean(errors.registrantPhone)}
+                    />
+                  )}
                 />
               </Field>
               <Field data-invalid={Boolean(errors.registrantEmail)}>
