@@ -18,6 +18,11 @@ export type UpdateProfileInput = {
   whatsappNumber?: string
 }
 
+export type ChangePasswordInput = {
+  currentPassword: string
+  newPassword: string
+}
+
 function authPath(scope: AuthScope, path: string): string {
   const prefix = scope === "admin" ? "/auth/admin" : "/auth"
   return `${API_URL}${prefix}${path}`
@@ -68,6 +73,22 @@ export async function uploadAvatar(file: File, scope: AuthScope = "client"): Pro
     throw new Error(body?.message ?? "Couldn't upload your photo.")
   }
   return (await res.json()) as CurrentUser
+}
+
+export async function changePassword(
+  input: ChangePasswordInput,
+  scope: AuthScope = "client",
+): Promise<void> {
+  const res = await fetch(authPath(scope, "/me/password"), {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null
+    throw new Error(body?.message ?? "Couldn't change your password.")
+  }
 }
 
 export async function logout(scope: AuthScope = "client"): Promise<void> {

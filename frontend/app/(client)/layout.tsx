@@ -4,15 +4,17 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
+  Building2Icon,
+  FileSignatureIcon,
   FileTextIcon,
   FolderKanbanIcon,
   GlobeIcon,
   LayoutDashboard,
-  ReceiptIcon,
   ReceiptTextIcon,
-  Settings,
+  ScrollTextIcon,
   ShieldIcon,
   User,
+  UsersIcon,
 } from "lucide-react"
 
 import { useClientAuth } from "@/contexts/client-auth-context"
@@ -24,9 +26,9 @@ import PanelDashboardShell, {
 import { GlobalSearch, type SearchItem } from "@/components/shared/dashboard/global-search"
 import { NotificationsBell } from "@/components/shared/dashboard/notifications-bell"
 import { getClientNotifications } from "@/lib/mock/notifications"
+import { mockContracts } from "@/lib/mock/contracts"
 import { mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
-import { mockQuotations } from "@/lib/mock/quotations"
 import { mockInvoices } from "@/lib/mock/invoices"
 
 import { MockRoleSwitcher } from "./_components/mock-role-switcher"
@@ -39,11 +41,11 @@ function buildSearchItems(): SearchItem[] {
     { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/proposals", icon: <FileTextIcon className="size-4" /> },
     { id: "nav-projects", group: "Go to", label: "Projects", href: "/projects", icon: <FolderKanbanIcon className="size-4" /> },
     { id: "nav-domains", group: "Go to", label: "Domains", href: "/domains/orders", icon: <GlobeIcon className="size-4" /> },
-    { id: "nav-quotations", group: "Go to", label: "Quotations", href: "/quotations", icon: <ReceiptIcon className="size-4" /> },
+    { id: "nav-contracts", group: "Go to", label: "Contracts", href: "/contracts", icon: <FileSignatureIcon className="size-4" /> },
     { id: "nav-invoices", group: "Go to", label: "Invoices", href: "/invoices", icon: <ReceiptTextIcon className="size-4" /> },
-    { id: "nav-statements", group: "Go to", label: "Statements", href: "/statements", icon: <ReceiptIcon className="size-4" /> },
-    { id: "nav-company", group: "Go to", label: "Company settings", href: "/settings/company", icon: <Settings className="size-4" /> },
-    { id: "nav-team", group: "Go to", label: "Team", href: "/settings/team", icon: <Settings className="size-4" /> },
+    { id: "nav-statements", group: "Go to", label: "Statements", href: "/statements", icon: <ScrollTextIcon className="size-4" /> },
+    { id: "nav-company", group: "Go to", label: "Company settings", href: "/settings/company", icon: <Building2Icon className="size-4" /> },
+    { id: "nav-team", group: "Go to", label: "Team", href: "/settings/team", icon: <UsersIcon className="size-4" /> },
     { id: "nav-profile", group: "Go to", label: "Profile", href: "/profile", icon: <User className="size-4" /> },
   ]
 
@@ -65,15 +67,6 @@ function buildSearchItems(): SearchItem[] {
       href: `/projects/${p.id}`,
     }))
 
-  const quotationEntries: SearchItem[] = mockQuotations
-    .filter((q) => q.organizationId === CURRENT_ORG_ID)
-    .map((q) => ({
-      id: `quotation-${q.id}`,
-      group: "Quotations",
-      label: q.title,
-      href: `/quotations/${q.id}`,
-    }))
-
   const invoiceEntries: SearchItem[] = mockInvoices
     .filter((inv) => inv.organizationId === CURRENT_ORG_ID)
     .map((inv) => ({
@@ -83,7 +76,22 @@ function buildSearchItems(): SearchItem[] {
       href: `/invoices/${inv.id}`,
     }))
 
-  return [...navEntries, ...proposalEntries, ...projectEntries, ...quotationEntries, ...invoiceEntries]
+  const contractEntries: SearchItem[] = mockContracts
+    .filter((c) => c.organizationId === CURRENT_ORG_ID)
+    .map((c) => ({
+      id: `contract-${c.id}`,
+      group: "Contracts",
+      label: c.title,
+      href: `/contracts/${c.id}`,
+    }))
+
+  return [
+    ...navEntries,
+    ...proposalEntries,
+    ...projectEntries,
+    ...invoiceEntries,
+    ...contractEntries,
+  ]
 }
 
 function buildNavItems(canManageTeam: boolean, canViewBilling: boolean): PanelNavItem[] {
@@ -94,27 +102,13 @@ function buildNavItems(canManageTeam: boolean, canViewBilling: boolean): PanelNa
     { name: "Domains", href: "/domains/orders", icon: <GlobeIcon /> },
     ...(canViewBilling
       ? [
-          {
-            name: "Billing",
-            href: "/quotations",
-            icon: <ReceiptIcon />,
-            children: [
-              { name: "Quotations", href: "/quotations" },
-              { name: "Invoices", href: "/invoices" },
-              { name: "Statements", href: "/statements" },
-            ],
-          },
+          { name: "Contracts", href: "/contracts", icon: <FileSignatureIcon /> },
+          { name: "Invoices", href: "/invoices", icon: <ReceiptTextIcon /> },
+          { name: "Statements", href: "/statements", icon: <ScrollTextIcon /> },
         ]
       : []),
-    {
-      name: "Settings",
-      href: "/settings/company",
-      icon: <Settings />,
-      children: [
-        { name: "Company", href: "/settings/company" },
-        ...(canManageTeam ? [{ name: "Team", href: "/settings/team" }] : []),
-      ],
-    },
+    { name: "Company", href: "/settings/company", icon: <Building2Icon /> },
+    ...(canManageTeam ? [{ name: "Team", href: "/settings/team", icon: <UsersIcon /> }] : []),
     { name: "Profile", href: "/profile", icon: <User /> },
   ]
 }

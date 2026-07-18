@@ -30,6 +30,7 @@ import {
   CLIENT_REFRESH_COOKIE,
   REFRESH_COOKIE_PATH,
 } from './auth.constants';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -249,6 +250,19 @@ export class AuthController {
     return this.authService.updateAvatar(user.id, file);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @CurrentUser() user: SanitizedUser,
+    @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.changePassword(user.id, dto);
+    this.clearAuthCookies(res, AuthScope.CLIENT);
+    return result;
+  }
+
   @UseGuards(AdminJwtAuthGuard)
   @Get('admin/me')
   adminMe(@CurrentUser() user: SanitizedUser) {
@@ -280,6 +294,19 @@ export class AuthController {
       throw new BadRequestException('File must be an image');
     }
     return this.authService.updateAvatar(user.id, file);
+  }
+
+  @UseGuards(AdminJwtAuthGuard)
+  @Patch('admin/me/password')
+  @HttpCode(HttpStatus.OK)
+  async changeAdminPassword(
+    @CurrentUser() user: SanitizedUser,
+    @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.changePassword(user.id, dto);
+    this.clearAuthCookies(res, AuthScope.ADMIN);
+    return result;
   }
 
   private baseCookieOptions(): CookieOptions {

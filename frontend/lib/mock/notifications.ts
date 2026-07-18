@@ -1,6 +1,6 @@
 import type { NotificationItem } from "@/components/shared/dashboard/notifications-bell"
+import { mockContracts } from "@/lib/mock/contracts"
 import { mockProposals } from "@/lib/mock/proposals"
-import { mockQuotations } from "@/lib/mock/quotations"
 import { deriveInvoiceStatus, mockInvoices } from "@/lib/mock/invoices"
 import { mockRevisionRequests, mockProjects } from "@/lib/mock/projects"
 
@@ -19,18 +19,6 @@ export function getClientNotifications(organizationId: string): NotificationItem
     }
   }
 
-  for (const q of mockQuotations.filter((q) => q.organizationId === organizationId)) {
-    if (q.status === "SENT" && q.sentAt) {
-      items.push({
-        id: `quotation-${q.id}`,
-        title: "New quotation awaiting your response",
-        description: q.title,
-        href: `/quotations/${q.id}`,
-        createdAt: q.sentAt,
-      })
-    }
-  }
-
   for (const inv of mockInvoices.filter((inv) => inv.organizationId === organizationId)) {
     const status = deriveInvoiceStatus(inv)
     if (status === "OVERDUE") {
@@ -40,6 +28,18 @@ export function getClientNotifications(organizationId: string): NotificationItem
         description: `${inv.number} was due ${new Date(inv.dueAt).toLocaleDateString()}`,
         href: `/invoices/${inv.id}`,
         createdAt: inv.dueAt,
+      })
+    }
+  }
+
+  for (const c of mockContracts.filter((c) => c.organizationId === organizationId)) {
+    if (c.status === "SENT") {
+      items.push({
+        id: `contract-sent-${c.id}`,
+        title: "A contract is ready for your signature",
+        description: c.title,
+        href: `/contracts/${c.id}`,
+        createdAt: c.sentAt,
       })
     }
   }
@@ -76,13 +76,25 @@ export function getAdminNotifications(): NotificationItem[] {
     })
   }
 
-  for (const q of mockQuotations.filter((q) => q.status === "ACCEPTED")) {
+  for (const p of mockProposals.filter((p) => p.status === "APPROVED" && !p.contractId)) {
     items.push({
-      id: `quotation-accepted-${q.id}`,
-      title: `Quotation accepted — ready to convert`,
-      description: `${q.title} (${q.organizationName})`,
-      href: `/admin/quotations/${q.id}`,
-      createdAt: q.respondedAt ?? q.sentAt ?? new Date().toISOString().slice(0, 10),
+      id: `proposal-approved-${p.id}`,
+      title: `Proposal approved — send a contract`,
+      description: `${p.title} (${p.organizationName})`,
+      href: `/admin/proposals/${p.id}`,
+      createdAt: p.respondedAt ?? p.sentAt ?? new Date().toISOString().slice(0, 10),
+    })
+  }
+
+  for (const c of mockContracts.filter((c) => c.status === "SIGNED")) {
+    const relatedProposal = mockProposals.find((p) => p.id === c.proposalId)
+    if (relatedProposal?.convertedInvoiceId) continue
+    items.push({
+      id: `contract-signed-${c.id}`,
+      title: `Contract signed — ready to convert to invoice`,
+      description: `${c.title} (${c.organizationName})`,
+      href: `/admin/proposals/${c.proposalId}`,
+      createdAt: c.signedAt ?? c.sentAt,
     })
   }
 

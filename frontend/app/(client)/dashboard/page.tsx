@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import Link from "next/link"
 import type { ColumnDef } from "@tanstack/react-table"
-import { AlertTriangleIcon, FileTextIcon, SendIcon, WalletIcon } from "lucide-react"
+import { AlertTriangleIcon, FileSignatureIcon, FileTextIcon, WalletIcon } from "lucide-react"
 
 import DashboardStatsGrid, {
   type DashboardStatItem,
@@ -12,8 +12,8 @@ import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
 import { formatBDT } from "@/lib/format"
+import { mockContracts } from "@/lib/mock/contracts"
 import { mockProposals } from "@/lib/mock/proposals"
-import { mockQuotations } from "@/lib/mock/quotations"
 import { deriveInvoiceStatus, invoiceBalanceBdt, mockInvoices } from "@/lib/mock/invoices"
 
 const CURRENT_ORG_ID = "org-1"
@@ -54,27 +54,27 @@ export default function UserDashboardPage() {
     () => mockProposals.filter((p) => p.organizationId === CURRENT_ORG_ID),
     []
   )
-  const quotations = useMemo(
-    () => mockQuotations.filter((q) => q.organizationId === CURRENT_ORG_ID),
-    []
-  )
   const invoices = useMemo(
     () => mockInvoices.filter((inv) => inv.organizationId === CURRENT_ORG_ID),
+    []
+  )
+  const contracts = useMemo(
+    () => mockContracts.filter((c) => c.organizationId === CURRENT_ORG_ID),
     []
   )
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const openProposals = proposals.filter((p) => p.status === "SENT").length
-    const openQuotations = quotations.filter((q) => q.status === "SENT").length
+    const pendingContracts = contracts.filter((c) => c.status === "SENT").length
     const outstanding = invoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
     const overdue = invoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
     return [
       { label: "Open Proposals", value: openProposals, icon: FileTextIcon, tone: "primary" },
-      { label: "Pending Quotations", value: openQuotations, icon: SendIcon, tone: "chart2" },
+      { label: "Contracts to Sign", value: pendingContracts, icon: FileSignatureIcon, tone: "chart2" },
       { label: "Outstanding Balance", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
       { label: "Overdue Invoices", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
     ]
-  }, [proposals, quotations, invoices])
+  }, [proposals, contracts, invoices])
 
   const activity = useMemo<ActivityRow[]>(() => {
     const rows: ActivityRow[] = []
@@ -91,17 +91,15 @@ export default function UserDashboardPage() {
         })
       }
     }
-    for (const q of quotations) {
-      if (q.sentAt) {
-        rows.push({
-          id: `quotation-sent-${q.id}`,
-          activity: `Quotation sent: ${q.title}`,
-          status: q.status === "SENT" ? "Awaiting response" : q.status,
-          statusVariant: q.status === "SENT" ? "secondary" : "outline",
-          updatedAt: q.respondedAt ?? q.sentAt,
-          href: `/quotations/${q.id}`,
-        })
-      }
+    for (const c of contracts) {
+      rows.push({
+        id: `contract-${c.id}`,
+        activity: `Contract: ${c.title}`,
+        status: c.status === "SENT" ? "Awaiting signature" : "Signed",
+        statusVariant: c.status === "SENT" ? "secondary" : "default",
+        updatedAt: c.signedAt ?? c.sentAt,
+        href: `/contracts/${c.id}`,
+      })
     }
     for (const inv of invoices) {
       rows.push({
@@ -127,7 +125,7 @@ export default function UserDashboardPage() {
     return rows
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 8)
-  }, [proposals, quotations, invoices])
+  }, [proposals, contracts, invoices])
 
   return (
     <div className="flex flex-col gap-6">

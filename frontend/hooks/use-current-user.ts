@@ -7,10 +7,12 @@ import {
 } from "@tanstack/react-query"
 
 import {
+  changePassword,
   getCurrentUser,
   updateProfile,
   uploadAvatar,
   type AuthScope,
+  type ChangePasswordInput,
   type CurrentUser,
   type UpdateProfileInput,
 } from "@/lib/auth"
@@ -34,6 +36,12 @@ export function useUpdateProfile(scope: AuthScope = "client") {
     onSuccess: (user: CurrentUser) => {
       queryClient.setQueryData(currentUserKey(scope), user)
     },
+  })
+}
+
+export function useChangePassword(scope: AuthScope = "client") {
+  return useMutation({
+    mutationFn: (input: ChangePasswordInput) => changePassword(input, scope),
   })
 }
 

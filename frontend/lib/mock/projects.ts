@@ -17,6 +17,7 @@ export type Project = {
   organizationName: string
   name: string
   proposalId: string | null
+  contractId: string | null
   status: ProjectStatus
   startedAt: string
   updatedAt: string
@@ -61,6 +62,7 @@ export const mockProjects: Project[] = [
     organizationName: "Acme Corp",
     name: "Monthly maintenance retainer",
     proposalId: "prop-2",
+    contractId: null,
     status: "IN_PROGRESS",
     startedAt: "2026-06-23",
     updatedAt: "2026-07-10",
@@ -71,6 +73,7 @@ export const mockProjects: Project[] = [
     organizationName: "Acme Corp",
     name: "E-commerce platform revamp",
     proposalId: "prop-1",
+    contractId: null,
     status: "PLANNING",
     startedAt: "2026-07-12",
     updatedAt: "2026-07-12",
@@ -81,9 +84,21 @@ export const mockProjects: Project[] = [
     organizationName: "Bay Traders Ltd",
     name: "Company website redesign",
     proposalId: null,
+    contractId: null,
     status: "REVIEW",
     startedAt: "2026-05-20",
     updatedAt: "2026-07-05",
+  },
+  {
+    id: "proj-4",
+    organizationId: "org-1",
+    organizationName: "Acme Corp",
+    name: "Q3 hosting & maintenance",
+    proposalId: null,
+    contractId: "contract-1",
+    status: "PLANNING",
+    startedAt: "2026-07-07",
+    updatedAt: "2026-07-07",
   },
 ]
 

@@ -15,6 +15,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UsersService } from '../users/users.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleProfile } from './strategies/google.strategy';
@@ -163,6 +164,31 @@ export class AuthService {
     // A password reset invalidates every existing session for this user.
     await this.prisma.refreshToken.updateMany({
       where: { userId: record.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    return { ok: true };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.usersService.findById(userId);
+    if (!user || !user.password) {
+      throw new BadRequestException(
+        "Your account doesn't have a password yet — you signed in with Google.",
+      );
+    }
+
+    const currentMatches = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!currentMatches) {
+      throw new UnauthorizedException('Current password is incorrect.');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+    await this.usersService.updatePassword(userId, hashedPassword);
+
+    // Changing the password invalidates every existing session for this user.
+    await this.prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
 

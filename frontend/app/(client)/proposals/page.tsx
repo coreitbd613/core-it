@@ -2,7 +2,18 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { CheckCircle2Icon, ClockIcon, FileTextIcon, XCircleIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import {
+  CheckIcon,
+  CheckCircle2Icon,
+  ClockIcon,
+  DownloadIcon,
+  EyeIcon,
+  FileTextIcon,
+  XCircleIcon,
+  XIcon,
+} from "lucide-react"
+import { toast } from "sonner"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import DashboardStatsGrid, {
@@ -11,9 +22,15 @@ import DashboardStatsGrid, {
 import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
+import {
+  DataTableRowActions,
+  type DataTableRowAction,
+} from "@/components/shared/data-table/data-table-row-actions"
 import { Badge } from "@/components/ui/badge"
+import { downloadProposalPdf } from "@/components/shared/proposal-pdf"
 import { formatBDT } from "@/lib/format"
 import {
+  deriveProposalStatus,
   mockProposals,
   proposalStatusLabels,
   proposalStatusVariant,
@@ -26,11 +43,20 @@ import {
 const CURRENT_ORG_ID = "org-1"
 
 export default function ProposalsPage() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
+  const [, forceRerender] = useState(0)
   const proposals = useMemo(
     () => mockProposals.filter((p) => p.organizationId === CURRENT_ORG_ID),
     []
   )
+
+  function respond(proposal: Proposal, status: "APPROVED" | "REJECTED") {
+    proposal.status = status
+    proposal.respondedAt = new Date().toISOString().slice(0, 10)
+    forceRerender((n) => n + 1)
+    toast.success(status === "APPROVED" ? "Proposal approved." : "Proposal rejected.")
+  }
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const pending = proposals.filter((p) => p.status === "SENT").length
@@ -46,6 +72,13 @@ export default function ProposalsPage() {
 
   const columns = useMemo<ColumnDef<Proposal>[]>(
     () => [
+      {
+        accessorKey: "proposalNumber",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Number" />,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">{row.original.proposalNumber}</span>
+        ),
+      },
       {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Proposal" />,
@@ -66,13 +99,12 @@ export default function ProposalsPage() {
         ),
       },
       {
-        accessorKey: "status",
+        id: "status",
         header: "Status",
-        cell: ({ row }) => (
-          <Badge variant={proposalStatusVariant[row.original.status]}>
-            {proposalStatusLabels[row.original.status]}
-          </Badge>
-        ),
+        cell: ({ row }) => {
+          const status = deriveProposalStatus(row.original)
+          return <Badge variant={proposalStatusVariant[status]}>{proposalStatusLabels[status]}</Badge>
+        },
       },
       {
         id: "sentAt",
@@ -80,6 +112,54 @@ export default function ProposalsPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Sent" />,
         cell: ({ row }) =>
           row.original.sentAt ? new Date(row.original.sentAt).toLocaleDateString() : "—",
+      },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => {
+          const status = deriveProposalStatus(row.original)
+          const canRespond = status === "SENT" || status === "VIEWED"
+          const actions: DataTableRowAction[] = [
+            {
+              label: "View",
+              icon: <EyeIcon />,
+              onClick: () => router.push(`/proposals/${row.original.id}`),
+            },
+          ]
+
+          if (canRespond) {
+            actions.push({
+              label: "Approve",
+              icon: <CheckIcon />,
+              separatorBefore: true,
+              onClick: () => respond(row.original, "APPROVED"),
+            })
+            actions.push({
+              label: "Reject",
+              icon: <XIcon />,
+              destructive: true,
+              confirm: {
+                title: `Reject ${row.original.title}?`,
+                description:
+                  "Core IT will be notified. You can ask them to send a revised proposal later.",
+                confirmLabel: "Reject",
+              },
+              onClick: () => respond(row.original, "REJECTED"),
+            })
+          }
+
+          actions.push({
+            label: "Download PDF",
+            icon: <DownloadIcon />,
+            separatorBefore: true,
+            onClick: () => {
+              void downloadProposalPdf(row.original)
+            },
+          })
+
+          return <DataTableRowActions actions={actions} />
+        },
+        size: 40,
       },
     ],
     []

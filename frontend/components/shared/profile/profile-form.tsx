@@ -2,15 +2,18 @@
 
 import * as React from "react"
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Camera, Mail } from "lucide-react"
 import { toast } from "sonner"
 
 import {
+  useChangePassword,
   useCurrentUser,
   useUpdateProfile,
   useUploadAvatar,
 } from "@/hooks/use-current-user"
-import type { AuthScope } from "@/lib/auth"
+import { logout, type AuthScope } from "@/lib/auth"
+import { PasswordInput } from "@/components/shared/password-input"
 import {
   Avatar,
   AvatarFallback,
@@ -46,14 +49,20 @@ function getInitials(name: string) {
 }
 
 export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
+  const router = useRouter()
   const { data: user, isPending } = useCurrentUser(scope)
   const updateProfile = useUpdateProfile(scope)
   const uploadAvatar = useUploadAvatar(scope)
+  const changePassword = useChangePassword(scope)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [name, setName] = useState("")
   const [contactNumber, setContactNumber] = useState("")
   const [whatsappNumber, setWhatsappNumber] = useState("")
+
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
 
   useEffect(() => {
     if (!user) return
@@ -116,9 +125,31 @@ export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
     )
   }
 
+  function handleChangePassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords don't match.")
+      return
+    }
+
+    changePassword.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: async () => {
+          toast.success("Password changed. Please sign in again.")
+          await logout(scope)
+          router.push(scope === "admin" ? "/admin/login" : "/login")
+          router.refresh()
+        },
+        onError: (error) => toast.error(error.message),
+      },
+    )
+  }
+
   const initials = getInitials(user.name ?? user.email)
 
   return (
+    <div className="flex flex-col gap-6">
     <form onSubmit={handleSubmit}>
       <Card className="max-w-2xl">
         <CardHeader>
@@ -237,6 +268,74 @@ export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
         </CardFooter>
       </Card>
     </form>
+
+    <form onSubmit={handleChangePassword}>
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Change password</CardTitle>
+          <CardDescription>
+            Changing your password signs you out of all devices.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="current-password">Current password</FieldLabel>
+              <PasswordInput
+                id="current-password"
+                name="currentPassword"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </Field>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="new-password">New password</FieldLabel>
+                <PasswordInput
+                  id="new-password"
+                  name="newPassword"
+                  autoComplete="new-password"
+                  minLength={8}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="confirm-new-password">Confirm new password</FieldLabel>
+                <PasswordInput
+                  id="confirm-new-password"
+                  name="confirmNewPassword"
+                  autoComplete="new-password"
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </Field>
+            </div>
+            <FieldDescription>Must be at least 8 characters long.</FieldDescription>
+          </FieldGroup>
+        </CardContent>
+
+        <CardFooter className="justify-end border-t">
+          <Button
+            type="submit"
+            disabled={
+              !currentPassword || !newPassword || !confirmPassword || changePassword.isPending
+            }
+          >
+            {changePassword.isPending && <Spinner className="size-4" />}
+            Change password
+          </Button>
+        </CardFooter>
+      </Card>
+    </form>
+    </div>
   )
 }
 

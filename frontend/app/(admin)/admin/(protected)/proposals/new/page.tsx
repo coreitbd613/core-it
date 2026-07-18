@@ -23,10 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/shared/rich-text-editor"
 import { formatBDT } from "@/lib/format"
 import { mockOrganizations } from "@/lib/mock/organizations"
-import { mockProposals, type ProposalLineItem } from "@/lib/mock/proposals"
+import {
+  mockProposals,
+  nextProposalNumber,
+  proposalGrandTotalBdt,
+  proposalTotalBdt,
+  type ProposalLineItem,
+} from "@/lib/mock/proposals"
 
 type DraftLineItem = ProposalLineItem
 
@@ -34,14 +40,29 @@ function newLineItem(): DraftLineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, unitPriceBdt: 0 }
 }
 
+function defaultValidUntil() {
+  const date = new Date()
+  date.setDate(date.getDate() + 30)
+  return date.toISOString().slice(0, 10)
+}
+
 export default function NewProposalPage() {
   const router = useRouter()
   const [organizationId, setOrganizationId] = React.useState(mockOrganizations[0]?.id ?? "")
+  const [proposalNumber] = React.useState(() => nextProposalNumber())
   const [title, setTitle] = React.useState("")
-  const [description, setDescription] = React.useState("")
+  const [descriptionHtml, setDescriptionHtml] = React.useState("")
   const [lineItems, setLineItems] = React.useState<DraftLineItem[]>([newLineItem()])
+  const [taxPercent, setTaxPercent] = React.useState(0)
+  const [discountPercent, setDiscountPercent] = React.useState(0)
+  const [paymentTerms, setPaymentTerms] = React.useState("")
+  const [timeline, setTimeline] = React.useState("")
+  const [validUntil, setValidUntil] = React.useState(defaultValidUntil())
 
-  const total = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceBdt, 0)
+  const subtotal = proposalTotalBdt({ lineItems })
+  const total = proposalGrandTotalBdt({ lineItems, taxPercent, discountPercent })
+  const discountAmount = subtotal * (discountPercent / 100)
+  const taxAmount = (subtotal - discountAmount) * (taxPercent / 100)
 
   function updateLineItem<K extends keyof DraftLineItem>(id: string, key: K, value: DraftLineItem[K]) {
     setLineItems((prev) => prev.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
@@ -62,13 +83,22 @@ export default function NewProposalPage() {
       id: crypto.randomUUID(),
       organizationId: organization.id,
       organizationName: organization.name,
+      proposalNumber,
       title: title.trim(),
-      description: description.trim(),
+      descriptionHtml,
       lineItems,
+      taxPercent,
+      discountPercent,
+      paymentTerms: paymentTerms.trim(),
+      timeline: timeline.trim(),
+      validUntil: validUntil || null,
       status,
       createdBy: "Core IT",
       sentAt: status === "SENT" ? new Date().toISOString().slice(0, 10) : null,
       respondedAt: null,
+      viewedAt: null,
+      contractId: null,
+      convertedInvoiceId: null,
     })
 
     toast.success(status === "SENT" ? "Proposal sent." : "Proposal saved as draft.")
@@ -82,126 +112,234 @@ export default function NewProposalPage() {
         <p className="text-muted-foreground">Build a proposal and send it to a company.</p>
       </div>
 
-      <Card className="max-w-3xl">
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-          <CardDescription>Who this is for and what it covers.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="proposal-org">Company</FieldLabel>
-              <Select value={organizationId} onValueChange={setOrganizationId}>
-                <SelectTrigger id="proposal-org" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockOrganizations.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="proposal-title">Title</FieldLabel>
-              <Input
-                id="proposal-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="E-commerce platform revamp"
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="proposal-description">Scope description</FieldLabel>
-              <Textarea
-                id="proposal-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what's included in this proposal."
-                rows={3}
-              />
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Client</CardTitle>
+              <CardDescription>Who this proposal is for.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Field>
+                <FieldLabel htmlFor="proposal-org">Company</FieldLabel>
+                <Select value={organizationId} onValueChange={setOrganizationId}>
+                  <SelectTrigger id="proposal-org" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockOrganizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </CardContent>
+          </Card>
 
-      <Card className="max-w-3xl">
-        <CardHeader>
-          <CardTitle>Line items</CardTitle>
-          <CardDescription>Add each deliverable and its price.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {lineItems.map((item) => (
-            <div
-              key={item.id}
-              className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_5rem_8rem_2.5rem]"
-            >
-              <Field className="col-span-2 sm:col-span-1">
-                <FieldLabel className="text-xs">Description</FieldLabel>
-                <Input
-                  value={item.description}
-                  onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
-                  placeholder="e.g. Frontend development"
-                />
-              </Field>
-              <Field>
-                <FieldLabel className="text-xs">Qty</FieldLabel>
-                <Input
-                  type="number"
-                  min={1}
-                  value={item.quantity}
-                  onChange={(e) => updateLineItem(item.id, "quantity", Number(e.target.value) || 1)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel className="text-xs">Unit price (BDT)</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  value={item.unitPriceBdt}
-                  onChange={(e) =>
-                    updateLineItem(item.id, "unitPriceBdt", Number(e.target.value) || 0)
-                  }
-                />
-              </Field>
+          <Card>
+            <CardHeader>
+              <CardTitle>Proposal details</CardTitle>
+              <CardDescription>Title, number, and scope of work.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="proposal-title">Title</FieldLabel>
+                    <Input
+                      id="proposal-title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="E-commerce platform revamp"
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="proposal-number">Proposal number</FieldLabel>
+                    <Input id="proposal-number" value={proposalNumber} disabled />
+                  </Field>
+                </div>
+                <Field>
+                  <FieldLabel htmlFor="proposal-description">Scope</FieldLabel>
+                  <RichTextEditor
+                    id="proposal-description"
+                    value={descriptionHtml}
+                    onChange={setDescriptionHtml}
+                    placeholder="Describe the problem, what you'll build, and your approach."
+                  />
+                </Field>
+              </FieldGroup>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Line items</CardTitle>
+              <CardDescription>Add each deliverable and its price.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {lineItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_5rem_8rem_2.5rem]"
+                >
+                  <Field className="col-span-2 sm:col-span-1">
+                    <FieldLabel className="text-xs">Description</FieldLabel>
+                    <Input
+                      value={item.description}
+                      onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+                      placeholder="e.g. Frontend development"
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-xs">Qty</FieldLabel>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(e) => updateLineItem(item.id, "quantity", Number(e.target.value) || 1)}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-xs">Unit price (BDT)</FieldLabel>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={item.unitPriceBdt}
+                      onChange={(e) =>
+                        updateLineItem(item.id, "unitPriceBdt", Number(e.target.value) || 0)
+                      }
+                    />
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeLineItem(item.id)}
+                    disabled={lineItems.length === 1}
+                    aria-label="Remove line item"
+                  >
+                    <Trash2Icon />
+                  </Button>
+                </div>
+              ))}
+
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeLineItem(item.id)}
-                disabled={lineItems.length === 1}
-                aria-label="Remove line item"
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                onClick={() => setLineItems((prev) => [...prev, newLineItem()])}
               >
-                <Trash2Icon />
+                <PlusIcon />
+                Add line item
               </Button>
-            </div>
-          ))}
+            </CardContent>
+          </Card>
+        </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-fit"
-            onClick={() => setLineItems((prev) => [...prev, newLineItem()])}
-          >
-            <PlusIcon />
-            Add line item
-          </Button>
-        </CardContent>
-        <CardFooter className="items-center justify-between border-t">
-          <span className="text-sm font-semibold text-foreground">
-            Total: {formatBDT(total)}
-          </span>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handleSubmit("DRAFT")}>
-              Save as draft
-            </Button>
-            <Button onClick={() => handleSubmit("SENT")}>Send to company</Button>
-          </div>
-        </CardFooter>
-      </Card>
+        <div className="flex flex-col gap-6 lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pricing summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="proposal-tax">Tax (%)</FieldLabel>
+                  <Input
+                    id="proposal-tax"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={taxPercent}
+                    onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="proposal-discount">Discount (%)</FieldLabel>
+                  <Input
+                    id="proposal-discount"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                  />
+                </Field>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-4">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span className="tabular-nums">{formatBDT(subtotal)}</span>
+                </div>
+                {discountPercent > 0 && (
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Discount ({discountPercent}%)</span>
+                    <span className="tabular-nums">-{formatBDT(discountAmount)}</span>
+                  </div>
+                )}
+                {taxPercent > 0 && (
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Tax ({taxPercent}%)</span>
+                    <span className="tabular-nums">{formatBDT(taxAmount)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t pt-1.5 text-sm font-semibold text-foreground">
+                  <span>Total</span>
+                  <span className="tabular-nums">{formatBDT(total)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Terms</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="proposal-payment-terms">Payment terms</FieldLabel>
+                  <Input
+                    id="proposal-payment-terms"
+                    value={paymentTerms}
+                    onChange={(e) => setPaymentTerms(e.target.value)}
+                    placeholder="e.g. 50% advance, 50% on delivery"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="proposal-timeline">Timeline</FieldLabel>
+                  <Input
+                    id="proposal-timeline"
+                    value={timeline}
+                    onChange={(e) => setTimeline(e.target.value)}
+                    placeholder="e.g. 4-6 weeks from advance payment"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="proposal-valid-until">Valid until</FieldLabel>
+                  <Input
+                    id="proposal-valid-until"
+                    type="date"
+                    value={validUntil}
+                    onChange={(e) => setValidUntil(e.target.value)}
+                  />
+                </Field>
+              </FieldGroup>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 border-t pt-6">
+        <Button variant="outline" onClick={() => handleSubmit("DRAFT")}>
+          Save as draft
+        </Button>
+        <Button onClick={() => handleSubmit("SENT")}>Send to company</Button>
+      </div>
     </div>
   )
 }

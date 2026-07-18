@@ -3,11 +3,11 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
+  FileSignatureIcon,
   FileTextIcon,
   FolderKanbanIcon,
   Globe,
   LayoutDashboard,
-  ReceiptIcon,
   ReceiptTextIcon,
   Settings,
   Users,
@@ -20,24 +20,17 @@ import PanelDashboardShell, {
 import { GlobalSearch, type SearchItem } from "@/components/shared/dashboard/global-search"
 import { NotificationsBell } from "@/components/shared/dashboard/notifications-bell"
 import { getAdminNotifications } from "@/lib/mock/notifications"
+import { mockContracts } from "@/lib/mock/contracts"
 import { mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
-import { mockQuotations } from "@/lib/mock/quotations"
 import { mockInvoices } from "@/lib/mock/invoices"
 
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
   { name: "Proposals", href: "/admin/proposals", icon: <FileTextIcon /> },
   { name: "Projects", href: "/admin/projects", icon: <FolderKanbanIcon /> },
-  {
-    name: "Billing",
-    href: "/admin/quotations",
-    icon: <ReceiptIcon />,
-    children: [
-      { name: "Quotations", href: "/admin/quotations" },
-      { name: "Invoices", href: "/admin/invoices" },
-    ],
-  },
+  { name: "Contracts", href: "/admin/contracts", icon: <FileSignatureIcon /> },
+  { name: "Invoices", href: "/admin/invoices", icon: <ReceiptTextIcon /> },
   { name: "Domain Orders", href: "/admin/domain-orders", icon: <Globe /> },
   { name: "Customers", href: "/admin/customers", icon: <Users /> },
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },
@@ -48,7 +41,7 @@ function buildAdminSearchItems(): SearchItem[] {
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="size-4" /> },
     { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/admin/proposals", icon: <FileTextIcon className="size-4" /> },
     { id: "nav-projects", group: "Go to", label: "Projects", href: "/admin/projects", icon: <FolderKanbanIcon className="size-4" /> },
-    { id: "nav-quotations", group: "Go to", label: "Quotations", href: "/admin/quotations", icon: <ReceiptIcon className="size-4" /> },
+    { id: "nav-contracts", group: "Go to", label: "Contracts", href: "/admin/contracts", icon: <FileSignatureIcon className="size-4" /> },
     { id: "nav-invoices", group: "Go to", label: "Invoices", href: "/admin/invoices", icon: <ReceiptTextIcon className="size-4" /> },
     { id: "nav-domain-orders", group: "Go to", label: "Domain Orders", href: "/admin/domain-orders", icon: <Globe className="size-4" /> },
     { id: "nav-customers", group: "Go to", label: "Customers", href: "/admin/customers", icon: <Users className="size-4" /> },
@@ -71,14 +64,6 @@ function buildAdminSearchItems(): SearchItem[] {
     href: `/admin/projects/${p.id}`,
   }))
 
-  const quotationEntries: SearchItem[] = mockQuotations.map((q) => ({
-    id: `quotation-${q.id}`,
-    group: "Quotations",
-    label: q.title,
-    description: q.organizationName,
-    href: `/admin/quotations/${q.id}`,
-  }))
-
   const invoiceEntries: SearchItem[] = mockInvoices.map((inv) => ({
     id: `invoice-${inv.id}`,
     group: "Invoices",
@@ -87,7 +72,21 @@ function buildAdminSearchItems(): SearchItem[] {
     href: `/admin/invoices/${inv.id}`,
   }))
 
-  return [...navEntries, ...proposalEntries, ...projectEntries, ...quotationEntries, ...invoiceEntries]
+  const contractEntries: SearchItem[] = mockContracts.map((c) => ({
+    id: `contract-${c.id}`,
+    group: "Contracts",
+    label: c.title,
+    description: c.organizationName,
+    href: `/admin/contracts/${c.id}`,
+  }))
+
+  return [
+    ...navEntries,
+    ...proposalEntries,
+    ...projectEntries,
+    ...invoiceEntries,
+    ...contractEntries,
+  ]
 }
 
 function AdminProtectedShell({ children }: { children: React.ReactNode }) {
