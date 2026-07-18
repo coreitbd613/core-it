@@ -48,7 +48,7 @@ export default function InvoicesPage() {
         accessorKey: "number",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Invoice" />,
         cell: ({ row }) => (
-          <Link href={`/invoices/${row.original.id}`} className="font-medium text-foreground hover:underline">
+          <Link href={`/portal/invoices/${row.original.id}`} className="font-medium text-foreground hover:underline">
             {row.original.number}
           </Link>
         ),

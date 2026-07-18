@@ -66,7 +66,7 @@ export default function ProposalDetailPage() {
           </EmptyMedia>
           <EmptyTitle>Proposal not found</EmptyTitle>
           <EmptyDescription>
-            It may have been removed. <Link href="/proposals">Back to proposals</Link>
+            It may have been removed. <Link href="/portal/proposals">Back to proposals</Link>
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -94,7 +94,7 @@ export default function ProposalDetailPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/proposals" aria-label="Back to proposals">
+          <Link href="/portal/proposals" aria-label="Back to proposals">
             <ArrowLeftIcon />
           </Link>
         </Button>
@@ -179,7 +179,7 @@ export default function ProposalDetailPage() {
               {contract.status === "SIGNED" ? (
                 <>
                   Contract signed —{" "}
-                  <Link href={`/contracts/${contract.id}`} className="underline">
+                  <Link href={`/portal/contracts/${contract.id}`} className="underline">
                     view contract
                   </Link>
                   .
@@ -187,7 +187,7 @@ export default function ProposalDetailPage() {
               ) : (
                 <>
                   A contract is ready for your signature —{" "}
-                  <Link href={`/contracts/${contract.id}`} className="underline">
+                  <Link href={`/portal/contracts/${contract.id}`} className="underline">
                     review and sign
                   </Link>{" "}
                   ({contractStatusLabels[contract.status].toLowerCase()}).
@@ -199,7 +199,7 @@ export default function ProposalDetailPage() {
           {proposal.convertedInvoiceId && (
             <p className="mt-4 text-sm text-muted-foreground">
               This proposal was converted to{" "}
-              <Link href={`/invoices/${proposal.convertedInvoiceId}`} className="underline">
+              <Link href={`/portal/invoices/${proposal.convertedInvoiceId}`} className="underline">
                 an invoice
               </Link>
               .

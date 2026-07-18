@@ -37,16 +37,16 @@ const CURRENT_ORG_ID = "org-1"
 
 function buildSearchItems(): SearchItem[] {
   const navEntries: SearchItem[] = [
-    { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="size-4" /> },
-    { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/proposals", icon: <FileTextIcon className="size-4" /> },
-    { id: "nav-projects", group: "Go to", label: "Projects", href: "/projects", icon: <FolderKanbanIcon className="size-4" /> },
+    { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard className="size-4" /> },
+    { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/portal/proposals", icon: <FileTextIcon className="size-4" /> },
+    { id: "nav-projects", group: "Go to", label: "Projects", href: "/portal/projects", icon: <FolderKanbanIcon className="size-4" /> },
     { id: "nav-domains", group: "Go to", label: "Domains", href: "/domains/orders", icon: <GlobeIcon className="size-4" /> },
-    { id: "nav-contracts", group: "Go to", label: "Contracts", href: "/contracts", icon: <FileSignatureIcon className="size-4" /> },
-    { id: "nav-invoices", group: "Go to", label: "Invoices", href: "/invoices", icon: <ReceiptTextIcon className="size-4" /> },
-    { id: "nav-statements", group: "Go to", label: "Statements", href: "/statements", icon: <ScrollTextIcon className="size-4" /> },
-    { id: "nav-company", group: "Go to", label: "Company settings", href: "/settings/company", icon: <Building2Icon className="size-4" /> },
-    { id: "nav-team", group: "Go to", label: "Team", href: "/settings/team", icon: <UsersIcon className="size-4" /> },
-    { id: "nav-profile", group: "Go to", label: "Profile", href: "/profile", icon: <User className="size-4" /> },
+    { id: "nav-contracts", group: "Go to", label: "Contracts", href: "/portal/contracts", icon: <FileSignatureIcon className="size-4" /> },
+    { id: "nav-invoices", group: "Go to", label: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon className="size-4" /> },
+    { id: "nav-statements", group: "Go to", label: "Statements", href: "/portal/statements", icon: <ScrollTextIcon className="size-4" /> },
+    { id: "nav-company", group: "Go to", label: "Company settings", href: "/portal/settings/company", icon: <Building2Icon className="size-4" /> },
+    { id: "nav-team", group: "Go to", label: "Team", href: "/portal/settings/team", icon: <UsersIcon className="size-4" /> },
+    { id: "nav-profile", group: "Go to", label: "Profile", href: "/portal/profile", icon: <User className="size-4" /> },
   ]
 
   const proposalEntries: SearchItem[] = mockProposals
@@ -55,7 +55,7 @@ function buildSearchItems(): SearchItem[] {
       id: `proposal-${p.id}`,
       group: "Proposals",
       label: p.title,
-      href: `/proposals/${p.id}`,
+      href: `/portal/proposals/${p.id}`,
     }))
 
   const projectEntries: SearchItem[] = mockProjects
@@ -64,7 +64,7 @@ function buildSearchItems(): SearchItem[] {
       id: `project-${p.id}`,
       group: "Projects",
       label: p.name,
-      href: `/projects/${p.id}`,
+      href: `/portal/projects/${p.id}`,
     }))
 
   const invoiceEntries: SearchItem[] = mockInvoices
@@ -73,7 +73,7 @@ function buildSearchItems(): SearchItem[] {
       id: `invoice-${inv.id}`,
       group: "Invoices",
       label: inv.number,
-      href: `/invoices/${inv.id}`,
+      href: `/portal/invoices/${inv.id}`,
     }))
 
   const contractEntries: SearchItem[] = mockContracts
@@ -82,7 +82,7 @@ function buildSearchItems(): SearchItem[] {
       id: `contract-${c.id}`,
       group: "Contracts",
       label: c.title,
-      href: `/contracts/${c.id}`,
+      href: `/portal/contracts/${c.id}`,
     }))
 
   return [
@@ -96,20 +96,20 @@ function buildSearchItems(): SearchItem[] {
 
 function buildNavItems(canManageTeam: boolean, canViewBilling: boolean): PanelNavItem[] {
   return [
-    { name: "Dashboard", href: "/dashboard", icon: <LayoutDashboard /> },
-    { name: "Proposals", href: "/proposals", icon: <FileTextIcon /> },
-    { name: "Projects", href: "/projects", icon: <FolderKanbanIcon /> },
+    { name: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard /> },
+    { name: "Proposals", href: "/portal/proposals", icon: <FileTextIcon /> },
+    { name: "Projects", href: "/portal/projects", icon: <FolderKanbanIcon /> },
     { name: "Domains", href: "/domains/orders", icon: <GlobeIcon /> },
     ...(canViewBilling
       ? [
-          { name: "Contracts", href: "/contracts", icon: <FileSignatureIcon /> },
-          { name: "Invoices", href: "/invoices", icon: <ReceiptTextIcon /> },
-          { name: "Statements", href: "/statements", icon: <ScrollTextIcon /> },
+          { name: "Contracts", href: "/portal/contracts", icon: <FileSignatureIcon /> },
+          { name: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon /> },
+          { name: "Statements", href: "/portal/statements", icon: <ScrollTextIcon /> },
         ]
       : []),
-    { name: "Company", href: "/settings/company", icon: <Building2Icon /> },
-    ...(canManageTeam ? [{ name: "Team", href: "/settings/team", icon: <UsersIcon /> }] : []),
-    { name: "Profile", href: "/profile", icon: <User /> },
+    { name: "Company", href: "/portal/settings/company", icon: <Building2Icon /> },
+    ...(canManageTeam ? [{ name: "Team", href: "/portal/settings/team", icon: <UsersIcon /> }] : []),
+    { name: "Profile", href: "/portal/profile", icon: <User /> },
   ]
 }
 
@@ -138,14 +138,14 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <PanelDashboardShell
-      panelHomeHref="/dashboard"
+      panelHomeHref="/portal/dashboard"
       navItems={buildNavItems(canManageTeam, canViewBilling)}
       user={{
         name: user?.name ?? "User",
         email: user?.email ?? "",
         avatar: user?.avatarUrl,
       }}
-      profileHref="/profile"
+      profileHref="/portal/profile"
       onLogout={handleLogout}
       loading={isPending}
       search={<GlobalSearch items={buildSearchItems()} />}

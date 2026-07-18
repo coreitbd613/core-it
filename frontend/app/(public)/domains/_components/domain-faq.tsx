@@ -31,25 +31,27 @@ const faqs = [
 export function DomainFaq() {
   return (
     <section className="border-t border-border bg-muted/30">
-      <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Frequently asked questions
-          </h2>
-        </div>
+      <div className="mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center">
+            <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              Frequently asked questions
+            </h2>
+          </div>
 
-        <Accordion type="single" collapsible className="mt-8">
-          {faqs.map((faq) => (
-            <AccordionItem key={faq.question} value={faq.question}>
-              <AccordionTrigger className="text-base">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+          <Accordion type="single" collapsible className="mt-12">
+            {faqs.map((faq) => (
+              <AccordionItem key={faq.question} value={faq.question}>
+                <AccordionTrigger className="text-lg">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </section>
   )

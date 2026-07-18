@@ -38,7 +38,7 @@ export default function ContractDetailPage() {
           </EmptyMedia>
           <EmptyTitle>Contract not found</EmptyTitle>
           <EmptyDescription>
-            <Link href="/contracts">Back to contracts</Link>
+            <Link href="/portal/contracts">Back to contracts</Link>
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -70,14 +70,14 @@ export default function ContractDetailPage() {
     })
 
     toast.success("Contract signed — your project has started.")
-    router.push(`/projects/${projectId}`)
+    router.push(`/portal/projects/${projectId}`)
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/contracts" aria-label="Back to contracts">
+          <Link href="/portal/contracts" aria-label="Back to contracts">
             <ArrowLeftIcon />
           </Link>
         </Button>

@@ -83,7 +83,7 @@ export default function ProposalsPage() {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Proposal" />,
         cell: ({ row }) => (
-          <Link href={`/proposals/${row.original.id}`} className="font-medium text-foreground hover:underline">
+          <Link href={`/portal/proposals/${row.original.id}`} className="font-medium text-foreground hover:underline">
             {row.original.title}
           </Link>
         ),
@@ -123,7 +123,7 @@ export default function ProposalsPage() {
             {
               label: "View",
               icon: <EyeIcon />,
-              onClick: () => router.push(`/proposals/${row.original.id}`),
+              onClick: () => router.push(`/portal/proposals/${row.original.id}`),
             },
           ]
 

@@ -13,7 +13,7 @@ export function getClientNotifications(organizationId: string): NotificationItem
         id: `proposal-${p.id}`,
         title: "New proposal awaiting your response",
         description: p.title,
-        href: `/proposals/${p.id}`,
+        href: `/portal/proposals/${p.id}`,
         createdAt: p.sentAt,
       })
     }
@@ -26,7 +26,7 @@ export function getClientNotifications(organizationId: string): NotificationItem
         id: `invoice-overdue-${inv.id}`,
         title: "Invoice overdue",
         description: `${inv.number} was due ${new Date(inv.dueAt).toLocaleDateString()}`,
-        href: `/invoices/${inv.id}`,
+        href: `/portal/invoices/${inv.id}`,
         createdAt: inv.dueAt,
       })
     }
@@ -38,7 +38,7 @@ export function getClientNotifications(organizationId: string): NotificationItem
         id: `contract-sent-${c.id}`,
         title: "A contract is ready for your signature",
         description: c.title,
-        href: `/contracts/${c.id}`,
+        href: `/portal/contracts/${c.id}`,
         createdAt: c.sentAt,
       })
     }
@@ -53,7 +53,7 @@ export function getClientNotifications(organizationId: string): NotificationItem
         id: `revision-done-${r.id}`,
         title: "Your revision request was completed",
         description: r.description,
-        href: `/projects/${r.projectId}`,
+        href: `/portal/projects/${r.projectId}`,
         createdAt: r.respondedAt,
       })
     }

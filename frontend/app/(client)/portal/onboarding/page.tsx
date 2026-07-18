@@ -27,7 +27,7 @@ export default function OnboardingPage() {
     // real POST that creates the Organization + Membership(OWNER).
     await new Promise((resolve) => setTimeout(resolve, 400))
     toast.success(`${companyName} is ready.`)
-    router.push("/dashboard")
+    router.push("/portal/dashboard")
   }
 
   return (

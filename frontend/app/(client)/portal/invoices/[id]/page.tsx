@@ -37,7 +37,7 @@ export default function InvoiceDetailPage() {
           </EmptyMedia>
           <EmptyTitle>Invoice not found</EmptyTitle>
           <EmptyDescription>
-            <Link href="/invoices">Back to invoices</Link>
+            <Link href="/portal/invoices">Back to invoices</Link>
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -52,7 +52,7 @@ export default function InvoiceDetailPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/invoices" aria-label="Back to invoices">
+          <Link href="/portal/invoices" aria-label="Back to invoices">
             <ArrowLeftIcon />
           </Link>
         </Button>

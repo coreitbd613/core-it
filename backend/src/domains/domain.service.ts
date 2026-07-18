@@ -89,7 +89,9 @@ export class DomainService {
       }),
     );
 
-    return results.sort((a, b) => Number(b.available) - Number(a.available));
+    // Keep the COMMON_TLDS priority order (.com first, etc.) regardless of
+    // availability — taken domains shouldn't get bumped to the bottom.
+    return results;
   }
 
   async createOrder(userId: string, dto: CreateDomainOrderDto) {

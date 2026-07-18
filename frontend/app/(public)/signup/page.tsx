@@ -1,6 +1,14 @@
+import type { Metadata } from "next"
 import { DotFieldBackground } from "@/components/shared/dot-field-background"
 
 import { SignupForm } from "./_components/signup-form"
+
+export const metadata: Metadata = {
+  title: "Sign Up",
+  description:
+    "Create your CORE IT account and get your own CRM & ERP company profile in minutes.",
+  alternates: { canonical: "/signup" },
+}
 
 export default function SignupPage() {
   return (

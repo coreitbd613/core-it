@@ -16,7 +16,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/shared/password-input"
 import { Spinner } from "@/components/ui/spinner"
-import { roleLabels, type MemberRole } from "@/app/(client)/settings/team/_components/team-mock-data"
+import { roleLabels, type MemberRole } from "@/app/(client)/portal/settings/team/_components/team-mock-data"
 
 // Mock only — no backend lookup yet. Once approved, this becomes a real
 // GET against the pending Membership by invite token.
@@ -73,7 +73,7 @@ export function AcceptInviteView({ token }: { token: string }) {
     setIsPending(true)
     setTimeout(() => {
       toast.success(`Welcome to ${invite.companyName}.`)
-      router.push("/dashboard")
+      router.push("/portal/dashboard")
     }, 400)
   }
 

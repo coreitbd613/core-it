@@ -47,7 +47,7 @@ export default function ProjectDetailPage() {
           </EmptyMedia>
           <EmptyTitle>Project not found</EmptyTitle>
           <EmptyDescription>
-            <Link href="/projects">Back to projects</Link>
+            <Link href="/portal/projects">Back to projects</Link>
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -80,7 +80,7 @@ export default function ProjectDetailPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/projects" aria-label="Back to projects">
+          <Link href="/portal/projects" aria-label="Back to projects">
             <ArrowLeftIcon />
           </Link>
         </Button>
@@ -89,7 +89,7 @@ export default function ProjectDetailPage() {
           {linkedProposal && (
             <p className="text-muted-foreground">
               From proposal{" "}
-              <Link href={`/proposals/${linkedProposal.id}`} className="underline">
+              <Link href={`/portal/proposals/${linkedProposal.id}`} className="underline">
                 {linkedProposal.title}
               </Link>
             </p>

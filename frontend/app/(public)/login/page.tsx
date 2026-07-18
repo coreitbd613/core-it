@@ -1,7 +1,15 @@
 import { Suspense } from "react"
+import type { Metadata } from "next"
 import { DotFieldBackground } from "@/components/shared/dot-field-background"
 
 import { LoginForm } from "./_components/login-form"
+
+export const metadata: Metadata = {
+  title: "Log In",
+  description: "Log in to your CORE IT account to manage your services.",
+  alternates: { canonical: "/login" },
+  robots: { index: false, follow: true },
+}
 
 export default function LoginPage() {
   return (

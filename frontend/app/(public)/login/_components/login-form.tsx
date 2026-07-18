@@ -65,7 +65,7 @@ export function LoginForm({
       const user = (await res.json()) as CurrentUser
       queryClient.setQueryData(currentUserKey("client"), user)
 
-      router.push(redirect ?? "/dashboard")
+      router.push(redirect ?? "/portal/dashboard")
       router.refresh()
     } catch {
       toast.error("Couldn't reach the server. Please try again.")

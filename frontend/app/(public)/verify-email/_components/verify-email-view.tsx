@@ -65,7 +65,7 @@ export function VerifyEmailView() {
       return
     }
     const timeout = setTimeout(() => {
-      router.push("/onboarding")
+      router.push("/portal/onboarding")
       router.refresh()
     }, 1500)
     return () => clearTimeout(timeout)

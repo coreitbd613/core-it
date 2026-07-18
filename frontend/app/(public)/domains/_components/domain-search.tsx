@@ -44,19 +44,19 @@ export function DomainSearch() {
     <div className="mt-10">
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center gap-2 overflow-hidden rounded-xl border border-input bg-background p-1.5 transition-shadow focus-within:ring-3 focus-within:ring-ring/30"
+        className="relative flex items-center gap-2 overflow-hidden rounded-xl border border-input bg-background p-2 transition-shadow focus-within:ring-3 focus-within:ring-ring/30"
       >
         <BorderBeam size={140} duration={7} colorFrom="#FD6005" colorTo="#0A2540" />
-        <Search className="ml-2 size-4 shrink-0 text-muted-foreground" />
+        <Search className="ml-3 size-5 shrink-0 text-muted-foreground" />
         <Input
           id={DOMAIN_SEARCH_INPUT_ID}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="yourbusiness.com"
-          className="h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none focus-visible:ring-0"
+          className="h-12 flex-1 border-0 bg-transparent px-1 text-lg shadow-none focus-visible:ring-0"
           autoFocus
         />
-        <Button type="submit" size="lg" className="gap-2" disabled={!query.trim()}>
+        <Button type="submit" size="lg" className="h-12 gap-2 px-6 text-base" disabled={!query.trim()}>
           <Search className="size-4" />
           Search
         </Button>
@@ -89,13 +89,13 @@ export function DomainSearch() {
                 key={result.domain}
                 className={
                   isTopMatch
-                    ? "rounded-lg border-primary/40 ring-1 ring-primary/15"
-                    : "rounded-lg"
+                    ? "rounded-xl border-primary/40 ring-1 ring-primary/15"
+                    : "rounded-xl"
                 }
               >
-                <CardContent className="flex items-center justify-between gap-4 py-4">
+                <CardContent className="flex items-center justify-between gap-4 py-5">
                   <div className="flex items-center gap-3">
-                    <span className="font-medium">{result.domain}</span>
+                    <span className="text-lg font-medium">{result.domain}</span>
                     {isTopMatch && (
                       <Badge className="gap-1">
                         <Sparkles className="size-3" />
@@ -116,17 +116,17 @@ export function DomainSearch() {
                   {result.available ? (
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="font-semibold">
+                        <div className="text-lg font-semibold">
                           {formatBDT(result.priceBdt)}
                           <span className="text-muted-foreground font-normal">
                             /yr
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-sm text-muted-foreground">
                           {formatUSD(result.priceUsd)}
                         </div>
                       </div>
-                      <Button onClick={() => handleBuy(result)}>Buy</Button>
+                      <Button size="lg" onClick={() => handleBuy(result)}>Buy</Button>
                     </div>
                   ) : null}
                 </CardContent>

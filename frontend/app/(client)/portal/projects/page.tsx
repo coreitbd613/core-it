@@ -46,7 +46,7 @@ export default function ProjectsPage() {
         accessorKey: "name",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Project" />,
         cell: ({ row }) => (
-          <Link href={`/projects/${row.original.id}`} className="font-medium text-foreground hover:underline">
+          <Link href={`/portal/projects/${row.original.id}`} className="font-medium text-foreground hover:underline">
             {row.original.name}
           </Link>
         ),

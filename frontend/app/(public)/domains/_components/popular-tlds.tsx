@@ -30,40 +30,40 @@ export function PopularTlds() {
 
   return (
     <section className="border-t border-border">
-      <div className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
             Popular extensions
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-3 text-lg text-muted-foreground">
             Live pricing, straight from the registry.
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {priced.map(({ tld, result }) => (
             <button
               key={tld}
               type="button"
               onClick={focusSearch}
-              className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
+              className="group flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-6 text-left transition-colors hover:border-primary/40 hover:bg-muted/50"
             >
               <div className="flex w-full items-center justify-between">
-                <span className="text-lg font-semibold">.{tld}</span>
+                <span className="text-2xl font-semibold">.{tld}</span>
                 {tld === "com" && (
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-xs">
                     Popular
                   </Badge>
                 )}
               </div>
 
               {isFetching ? (
-                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-5 w-20" />
               ) : isError || !result || !result.available ? (
                 <span className="text-sm text-muted-foreground">Search to see price</span>
               ) : (
                 <div>
-                  <span className="font-medium">{formatBDT(result.priceBdt)}</span>
+                  <span className="text-lg font-medium">{formatBDT(result.priceBdt)}</span>
                   <span className="text-muted-foreground"> /yr</span>
                 </div>
               )}

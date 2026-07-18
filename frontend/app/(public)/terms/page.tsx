@@ -1,4 +1,11 @@
+import type { Metadata } from "next"
 import { LegalPageShell } from "@/components/shared/legal-page-shell"
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Read the terms that govern your use of CORE IT's websites, products, and services.",
+  alternates: { canonical: "/terms" },
+}
 
 export default function TermsPage() {
   return (

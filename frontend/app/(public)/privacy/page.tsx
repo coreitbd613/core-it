@@ -1,4 +1,11 @@
+import type { Metadata } from "next"
 import { LegalPageShell } from "@/components/shared/legal-page-shell"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Learn how CORE IT collects, uses, and protects your information.",
+  alternates: { canonical: "/privacy" },
+}
 
 export default function PrivacyPage() {
   return (

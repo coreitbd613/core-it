@@ -71,7 +71,7 @@ export default function StatementsPage() {
         header: "Description",
         cell: ({ row }) =>
           row.original.invoiceId ? (
-            <Link href={`/invoices/${row.original.invoiceId}`} className="hover:underline">
+            <Link href={`/portal/invoices/${row.original.invoiceId}`} className="hover:underline">
               {row.original.description}
             </Link>
           ) : (

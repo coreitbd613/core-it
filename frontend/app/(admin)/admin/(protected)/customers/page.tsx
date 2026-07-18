@@ -167,7 +167,7 @@ export default function AdminCustomersPage() {
               onClick: async () => {
                 try {
                   await loginAsCustomer(row.original.id)
-                  window.open("/dashboard", "_blank")
+                  window.open("/portal/dashboard", "_blank")
                 } catch (error) {
                   toast.error(
                     error instanceof Error

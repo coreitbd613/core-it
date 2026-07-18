@@ -8,10 +8,19 @@ import { LayoutDashboard, Menu, ShieldCheck } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { cn } from "@/lib/utils";
+import { services } from "@/lib/services";
 import { useClientAuth } from "@/contexts/client-auth-context";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import {
   Sheet,
   SheetClose,
@@ -22,7 +31,6 @@ import {
 } from "@/components/ui/sheet";
 
 const navLinks = [
-  { label: "Services", href: "/#services" },
   { label: "Solutions", href: "/#solutions" },
   { label: "Work", href: "/#work" },
   { label: "Domains", href: "/domains" },
@@ -89,6 +97,38 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className={cn("bg-transparent", navText)}>
+                  Services
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[720px] grid-cols-2 gap-2 p-3">
+                    {services.map((service) => (
+                      <li key={service.title}>
+                        <NavigationMenuLink asChild>
+                          <Link href="/#services" className="flex-row items-start gap-4 p-3">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                              <service.icon className="size-6" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-base font-semibold text-foreground">
+                                {service.title}
+                              </span>
+                              <span className="text-sm leading-relaxed text-muted-foreground">
+                                {service.description}
+                              </span>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
           {navLinks.map((link) => (
             <Button key={link.href} variant="ghost" className={navText} asChild>
               <Link href={link.href}>{link.label}</Link>
@@ -122,7 +162,7 @@ export function SiteHeader() {
             </div>
           ) : user ? (
             <Button className="gap-2" asChild>
-              <Link href="/dashboard">
+              <Link href="/portal/dashboard">
                 <LayoutDashboard className="size-4" />
                 Dashboard
               </Link>
@@ -180,6 +220,14 @@ export function SiteHeader() {
               />
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-2">
+              <SheetClose asChild>
+                <Link
+                  href="/#services"
+                  className="rounded-md px-3 py-2.5 text-base font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  Services
+                </Link>
+              </SheetClose>
               {navLinks.map((link) => (
                 <SheetClose key={link.href} asChild>
                   <Link
@@ -210,7 +258,7 @@ export function SiteHeader() {
               ) : user ? (
                 <SheetClose asChild>
                   <Button className="gap-2" asChild>
-                    <Link href="/dashboard">
+                    <Link href="/portal/dashboard">
                       <LayoutDashboard className="size-4" />
                       Dashboard
                     </Link>

@@ -42,7 +42,7 @@ export default function ContractsPage() {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Contract" />,
         cell: ({ row }) => (
-          <Link href={`/contracts/${row.original.id}`} className="font-medium text-foreground hover:underline">
+          <Link href={`/portal/contracts/${row.original.id}`} className="font-medium text-foreground hover:underline">
             {row.original.title}
           </Link>
         ),

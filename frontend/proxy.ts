@@ -21,6 +21,14 @@ async function getCurrentRole(
   }
 }
 
+// Never let search engines index the private CRM/ERP portals — everything this
+// proxy matches lives behind a login, so it has no business showing up in
+// search results.
+function withNoIndex(response: NextResponse) {
+  response.headers.set("X-Robots-Tag", "noindex, nofollow")
+  return response
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -28,40 +36,44 @@ export async function proxy(request: NextRequest) {
     const admin = (await getCurrentRole(request, "admin")) === "ADMIN"
 
     if (pathname === "/admin") {
-      return NextResponse.redirect(
-        new URL(admin ? "/admin/dashboard" : "/admin/login", request.url),
+      return withNoIndex(
+        NextResponse.redirect(
+          new URL(admin ? "/admin/dashboard" : "/admin/login", request.url),
+        ),
       )
     }
 
     if (pathname === "/admin/login") {
-      return admin
-        ? NextResponse.redirect(new URL("/admin/dashboard", request.url))
-        : NextResponse.next()
+      return withNoIndex(
+        admin
+          ? NextResponse.redirect(new URL("/admin/dashboard", request.url))
+          : NextResponse.next(),
+      )
     }
 
     if (!admin) {
-      return NextResponse.redirect(new URL("/admin/login", request.url))
+      return withNoIndex(NextResponse.redirect(new URL("/admin/login", request.url)))
     }
 
-    return NextResponse.next()
+    return withNoIndex(NextResponse.next())
   }
 
-  // /dashboard and /profile just require any logged-in user (ADMIN or USER).
+  // Invite acceptance is how a brand-new teammate creates their account —
+  // they aren't logged in yet, so it can't require a session like the rest
+  // of the portal. Still noindexed since it's a private, token-gated page.
+  if (pathname.startsWith("/portal/invite")) {
+    return withNoIndex(NextResponse.next())
+  }
+
+  // Everything else under /portal just requires any logged-in user (ADMIN or USER).
   const role = await getCurrentRole(request)
   if (!role) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    return withNoIndex(NextResponse.redirect(new URL("/login", request.url)))
   }
 
-  return NextResponse.next()
+  return withNoIndex(NextResponse.next())
 }
 
 export const config = {
-  matcher: [
-    "/admin",
-    "/admin/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
-    "/profile",
-    "/profile/:path*",
-  ],
+  matcher: ["/admin", "/admin/:path*", "/portal", "/portal/:path*"],
 }
