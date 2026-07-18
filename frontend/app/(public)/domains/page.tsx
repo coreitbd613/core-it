@@ -22,7 +22,7 @@ export default function DomainsPage() {
           <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
             Find your{" "}
             <SparklesText
-              as={<span className="inline" />}
+              as="span"
               className="inline text-5xl font-bold tracking-tight sm:text-6xl"
               colors={{ first: "#FD6005", second: "#0A2540" }}
               sparklesCount={6}

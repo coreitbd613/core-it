@@ -3,6 +3,7 @@ import { SiteHero } from "@/app/_components/site-hero";
 import { SiteFooter } from "@/app/_components/site-footer";
 import { GlobalReach } from "@/components/global-reach";
 import { ServicesGrid } from "@/components/services-grid";
+import { WhatWeDo } from "@/components/what-we-do";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
         <SiteHero />
         <ServicesGrid />
         <GlobalReach />
+        <WhatWeDo />
       </main>
       <SiteFooter />
     </>
