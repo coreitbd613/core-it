@@ -19,6 +19,7 @@ import {
   invoiceStatusLabels,
   invoiceStatusVariant,
   invoiceTotalBdt,
+  invoiceTypeLabels,
   mockInvoices,
   type Invoice,
 } from "@/lib/mock/invoices"
@@ -33,8 +34,9 @@ export default function InvoicesPage() {
   )
 
   const stats = useMemo<DashboardStatItem[]>(() => {
-    const outstanding = invoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
-    const overdue = invoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+    const activeInvoices = invoices.filter((inv) => deriveInvoiceStatus(inv) !== "CANCELLED")
+    const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
+    const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
     return [
       { label: "Total Invoices", value: invoices.length, icon: ReceiptIcon, tone: "primary" },
       { label: "Outstanding Balance", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
@@ -51,6 +53,16 @@ export default function InvoicesPage() {
           <Link href={`/portal/invoices/${row.original.id}`} className="font-medium text-foreground hover:underline">
             {row.original.number}
           </Link>
+        ),
+      },
+      {
+        id: "type",
+        accessorFn: (row) => row.type,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {invoiceTypeLabels[row.original.type]}
+          </span>
         ),
       },
       {

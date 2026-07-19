@@ -1,3 +1,5 @@
+import { authFetch } from "@/lib/auth"
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
 export type AdminCustomer = {
@@ -19,7 +21,7 @@ async function parseErrorMessage(res: Response, fallback: string) {
 }
 
 export async function getAdminCustomers(): Promise<AdminCustomer[]> {
-  const res = await fetch(`${API_URL}/users/admin/customers`, { credentials: "include" })
+  const res = await authFetch(`${API_URL}/users/admin/customers`, {}, "admin")
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, "Couldn't load customers."))
   }
@@ -27,20 +29,22 @@ export async function getAdminCustomers(): Promise<AdminCustomer[]> {
 }
 
 export async function deleteAdminCustomer(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/users/admin/customers/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  })
+  const res = await authFetch(
+    `${API_URL}/users/admin/customers/${id}`,
+    { method: "DELETE" },
+    "admin",
+  )
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, "Couldn't delete this customer."))
   }
 }
 
 export async function loginAsCustomer(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/admin/login-as/${id}`, {
-    method: "POST",
-    credentials: "include",
-  })
+  const res = await authFetch(
+    `${API_URL}/auth/admin/login-as/${id}`,
+    { method: "POST" },
+    "admin",
+  )
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, "Couldn't log in as this customer."))
   }

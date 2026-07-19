@@ -385,12 +385,14 @@ export class AuthService {
         '15m',
       ) as JwtSignOptions['expiresIn'],
     });
+    const refreshExpiresIn =
+      scope === AuthScope.CLIENT
+        ? this.configService.get<string>('CLIENT_REFRESH_EXPIRES_IN', '365d')
+        : this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
+
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get<string>(
-        'JWT_REFRESH_EXPIRES_IN',
-        '7d',
-      ) as JwtSignOptions['expiresIn'],
+      expiresIn: refreshExpiresIn as JwtSignOptions['expiresIn'],
     });
 
     const accessDecoded = this.jwtService.decode(accessToken) as { exp: number };

@@ -5,10 +5,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowRightIcon,
+  CopyPlusIcon,
   DownloadIcon,
   EyeIcon,
   FileSignatureIcon,
   FileTextIcon,
+  PencilIcon,
   PlusIcon,
   SendIcon,
   Trash2Icon,
@@ -46,7 +48,10 @@ import { generateContractTerms, mockContracts } from "@/lib/mock/contracts"
 import { mockInvoices } from "@/lib/mock/invoices"
 import {
   deriveProposalStatus,
+  isLatestProposalVersion,
+  latestProposalVersions,
   mockProposals,
+  nextProposalNumber,
   proposalStatusLabels,
   proposalStatusVariant,
   proposalTotalBdt,
@@ -62,7 +67,7 @@ export default function AdminProposalsPage() {
   const [search, setSearch] = useState("")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [, forceRerender] = useState(0)
-  const proposals = mockProposals
+  const proposals = latestProposalVersions(mockProposals)
   const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
   const selectedCount = selectedIds.length
 
@@ -103,6 +108,9 @@ export default function AdminProposalsPage() {
       number: nextInvoiceNumber(),
       organizationId: proposal.organizationId,
       organizationName: proposal.organizationName,
+      type: "FINAL",
+      proposalId: proposal.id,
+      voidReason: null,
       lineItems: proposal.lineItems.map((item) => ({ ...item, id: crypto.randomUUID() })),
       payments: [],
       status: "SENT",
@@ -113,6 +121,36 @@ export default function AdminProposalsPage() {
     proposal.convertedInvoiceId = invoiceId
     router.push(`/admin/invoices/${invoiceId}`)
     toast.success("Converted to invoice.")
+  }
+
+  function handleCreateRevision(proposal: Proposal) {
+    const id = crypto.randomUUID()
+    mockProposals.unshift({
+      id,
+      organizationId: proposal.organizationId,
+      organizationName: proposal.organizationName,
+      proposalNumber: nextProposalNumber(),
+      title: proposal.title,
+      descriptionHtml: proposal.descriptionHtml,
+      lineItems: proposal.lineItems.map((item) => ({ ...item, id: crypto.randomUUID() })),
+      taxPercent: proposal.taxPercent,
+      discountPercent: proposal.discountPercent,
+      paymentTerms: proposal.paymentTerms,
+      timeline: proposal.timeline,
+      termsHtml: proposal.termsHtml,
+      validUntil: proposal.validUntil,
+      versionGroupId: proposal.versionGroupId,
+      version: proposal.version + 1,
+      status: "DRAFT",
+      createdBy: "Core IT",
+      sentAt: null,
+      respondedAt: null,
+      viewedAt: null,
+      contractId: null,
+      convertedInvoiceId: null,
+    })
+    toast.success("Revision created — edit and send when ready.")
+    router.push(`/admin/proposals/${id}/edit`)
   }
 
   function handleDelete(proposal: Proposal) {
@@ -158,12 +196,19 @@ export default function AdminProposalsPage() {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Proposal" />,
         cell: ({ row }) => (
-          <Link
-            href={`/admin/proposals/${row.original.id}`}
-            className="font-medium text-foreground hover:underline"
-          >
-            {row.original.title}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/admin/proposals/${row.original.id}`}
+              className="font-medium text-foreground hover:underline"
+            >
+              {row.original.title}
+            </Link>
+            {row.original.version > 1 && (
+              <Badge variant="outline" className="text-[10px]">
+                v{row.original.version}
+              </Badge>
+            )}
+          </div>
         ),
       },
       {
@@ -224,9 +269,14 @@ export default function AdminProposalsPage() {
 
           if (proposal.status === "DRAFT") {
             actions.push({
+              label: "Edit",
+              icon: <PencilIcon />,
+              separatorBefore: true,
+              onClick: () => router.push(`/admin/proposals/${proposal.id}/edit`),
+            })
+            actions.push({
               label: "Send to company",
               icon: <SendIcon />,
-              separatorBefore: true,
               onClick: () => handleSend(proposal),
             })
           }
@@ -246,6 +296,18 @@ export default function AdminProposalsPage() {
               icon: <ArrowRightIcon />,
               separatorBefore: true,
               onClick: () => handleConvert(proposal),
+            })
+          }
+
+          if (
+            isLatestProposalVersion(proposal, mockProposals) &&
+            (proposal.status === "SENT" || proposal.status === "VIEWED" || proposal.status === "REJECTED")
+          ) {
+            actions.push({
+              label: "Create revision",
+              icon: <CopyPlusIcon />,
+              separatorBefore: true,
+              onClick: () => handleCreateRevision(proposal),
             })
           }
 

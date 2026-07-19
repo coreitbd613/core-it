@@ -31,6 +31,8 @@ import { downloadProposalPdf } from "@/components/shared/proposal-pdf"
 import { formatBDT } from "@/lib/format"
 import {
   deriveProposalStatus,
+  isLatestProposalVersion,
+  latestProposalVersions,
   mockProposals,
   proposalStatusLabels,
   proposalStatusVariant,
@@ -47,7 +49,7 @@ export default function ProposalsPage() {
   const [search, setSearch] = useState("")
   const [, forceRerender] = useState(0)
   const proposals = useMemo(
-    () => mockProposals.filter((p) => p.organizationId === CURRENT_ORG_ID),
+    () => latestProposalVersions(mockProposals.filter((p) => p.organizationId === CURRENT_ORG_ID)),
     []
   )
 
@@ -83,9 +85,16 @@ export default function ProposalsPage() {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Proposal" />,
         cell: ({ row }) => (
-          <Link href={`/portal/proposals/${row.original.id}`} className="font-medium text-foreground hover:underline">
-            {row.original.title}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/portal/proposals/${row.original.id}`} className="font-medium text-foreground hover:underline">
+              {row.original.title}
+            </Link>
+            {row.original.version > 1 && (
+              <Badge variant="outline" className="text-[10px]">
+                v{row.original.version}
+              </Badge>
+            )}
+          </div>
         ),
       },
       {
@@ -118,7 +127,9 @@ export default function ProposalsPage() {
         header: "",
         cell: ({ row }) => {
           const status = deriveProposalStatus(row.original)
-          const canRespond = status === "SENT" || status === "VIEWED"
+          const canRespond =
+            isLatestProposalVersion(row.original, mockProposals) &&
+            (status === "SENT" || status === "VIEWED")
           const actions: DataTableRowAction[] = [
             {
               label: "View",

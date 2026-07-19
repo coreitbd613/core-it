@@ -1,5 +1,13 @@
-export type InvoiceStatus = "DRAFT" | "SENT" | "PARTIALLY_PAID" | "PAID" | "OVERDUE"
+export type InvoiceStatus =
+  | "DRAFT"
+  | "SENT"
+  | "VIEWED"
+  | "PARTIALLY_PAID"
+  | "PAID"
+  | "OVERDUE"
+  | "CANCELLED"
 export type PaymentMethod = "BANK_TRANSFER" | "CASH" | "OTHER"
+export type InvoiceType = "ADVANCE" | "MILESTONE" | "FINAL" | "RECURRING"
 
 export type InvoiceLineItem = {
   id: string
@@ -22,6 +30,9 @@ export type Invoice = {
   number: string
   organizationId: string
   organizationName: string
+  type: InvoiceType
+  proposalId: string | null
+  voidReason: string | null
   lineItems: InvoiceLineItem[]
   payments: Payment[]
   status: InvoiceStatus
@@ -32,9 +43,11 @@ export type Invoice = {
 export const invoiceStatusLabels: Record<InvoiceStatus, string> = {
   DRAFT: "Draft",
   SENT: "Sent",
+  VIEWED: "Viewed",
   PARTIALLY_PAID: "Partially paid",
   PAID: "Paid",
   OVERDUE: "Overdue",
+  CANCELLED: "Cancelled",
 }
 
 export const invoiceStatusVariant: Record<
@@ -43,9 +56,18 @@ export const invoiceStatusVariant: Record<
 > = {
   DRAFT: "outline",
   SENT: "secondary",
+  VIEWED: "secondary",
   PARTIALLY_PAID: "secondary",
   PAID: "default",
   OVERDUE: "destructive",
+  CANCELLED: "destructive",
+}
+
+export const invoiceTypeLabels: Record<InvoiceType, string> = {
+  ADVANCE: "Advance",
+  MILESTONE: "Milestone",
+  FINAL: "Final",
+  RECURRING: "Recurring",
 }
 
 export const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -68,12 +90,13 @@ export function invoiceBalanceBdt(invoice: Pick<Invoice, "lineItems" | "payments
 
 /** Recomputes status from payments vs total, matching how the real backend would derive it. */
 export function deriveInvoiceStatus(invoice: Invoice): InvoiceStatus {
+  if (invoice.status === "CANCELLED") return "CANCELLED"
   if (invoice.status === "DRAFT") return "DRAFT"
   const balance = invoiceBalanceBdt(invoice)
   if (balance <= 0) return "PAID"
   if (invoicePaidBdt(invoice) > 0) return "PARTIALLY_PAID"
   if (new Date(invoice.dueAt) < new Date()) return "OVERDUE"
-  return "SENT"
+  return invoice.status
 }
 
 export const mockInvoices: Invoice[] = [
@@ -82,6 +105,9 @@ export const mockInvoices: Invoice[] = [
     number: "INV-2026-001",
     organizationId: "org-1",
     organizationName: "Acme Corp",
+    type: "MILESTONE",
+    proposalId: null,
+    voidReason: null,
     lineItems: [{ id: "ili-1", description: "5 revision credits", quantity: 1, unitPriceBdt: 15000 }],
     payments: [
       {
@@ -102,6 +128,9 @@ export const mockInvoices: Invoice[] = [
     number: "INV-2026-002",
     organizationId: "org-1",
     organizationName: "Acme Corp",
+    type: "RECURRING",
+    proposalId: null,
+    voidReason: null,
     lineItems: [
       { id: "ili-2", description: "Maintenance retainer (Jul)", quantity: 1, unitPriceBdt: 25000 },
     ],
@@ -124,6 +153,9 @@ export const mockInvoices: Invoice[] = [
     number: "INV-2026-003",
     organizationId: "org-2",
     organizationName: "Bay Traders Ltd",
+    type: "MILESTONE",
+    proposalId: null,
+    voidReason: null,
     lineItems: [
       { id: "ili-3", description: "System design", quantity: 1, unitPriceBdt: 40000 },
       { id: "ili-4", description: "Development (milestone 1)", quantity: 1, unitPriceBdt: 100000 },

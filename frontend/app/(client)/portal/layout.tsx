@@ -27,7 +27,7 @@ import { GlobalSearch, type SearchItem } from "@/components/shared/dashboard/glo
 import { NotificationsBell } from "@/components/shared/dashboard/notifications-bell"
 import { getClientNotifications } from "@/lib/mock/notifications"
 import { mockContracts } from "@/lib/mock/contracts"
-import { mockProposals } from "@/lib/mock/proposals"
+import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
 import { mockInvoices } from "@/lib/mock/invoices"
 
@@ -49,8 +49,9 @@ function buildSearchItems(): SearchItem[] {
     { id: "nav-profile", group: "Go to", label: "Profile", href: "/portal/profile", icon: <User className="size-4" /> },
   ]
 
-  const proposalEntries: SearchItem[] = mockProposals
-    .filter((p) => p.organizationId === CURRENT_ORG_ID)
+  const proposalEntries: SearchItem[] = latestProposalVersions(
+    mockProposals.filter((p) => p.organizationId === CURRENT_ORG_ID)
+  )
     .map((p) => ({
       id: `proposal-${p.id}`,
       group: "Proposals",

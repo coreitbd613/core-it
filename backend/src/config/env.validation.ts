@@ -43,6 +43,12 @@ class EnvironmentVariables {
   @IsOptional()
   JWT_REFRESH_EXPIRES_IN?: string;
 
+  // Client sessions intentionally outlive admin sessions — customers
+  // shouldn't be forced to log back in, admins should be re-verified sooner.
+  @IsString()
+  @IsOptional()
+  CLIENT_REFRESH_EXPIRES_IN?: string;
+
   // Left optional on purpose: the app must still boot (and email/password
   // auth must still work) before real Google OAuth credentials are filled
   // in. GoogleStrategy falls back to placeholder values when these are unset.

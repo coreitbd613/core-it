@@ -3,9 +3,20 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeftIcon, SendIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, BanIcon, SendIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Textarea } from "@/components/ui/textarea"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -23,16 +35,19 @@ import {
   invoiceStatusLabels,
   invoiceStatusVariant,
   invoiceTotalBdt,
+  invoiceTypeLabels,
   mockInvoices,
   paymentMethodLabels,
   type PaymentMethod,
 } from "@/lib/mock/invoices"
+import { mockProposals } from "@/lib/mock/proposals"
 
 import { RecordPaymentDialog } from "./_components/record-payment-dialog"
 
 export default function AdminInvoiceDetailPage() {
   const params = useParams<{ id: string }>()
   const [, forceRerender] = React.useState(0)
+  const [voidReason, setVoidReason] = React.useState("")
 
   const invoice = mockInvoices.find((inv) => inv.id === params.id)
 
@@ -55,11 +70,23 @@ export default function AdminInvoiceDetailPage() {
   const total = invoiceTotalBdt(invoice)
   const balance = invoiceBalanceBdt(invoice)
   const status = deriveInvoiceStatus(invoice)
+  const relatedProposal = invoice.proposalId
+    ? mockProposals.find((p) => p.id === invoice.proposalId)
+    : null
+  const canVoid = status !== "DRAFT" && status !== "CANCELLED" && status !== "PAID"
 
   function handleSend() {
     invoice!.status = "SENT"
     forceRerender((n) => n + 1)
     toast.success(`Sent to ${invoice!.organizationName}.`)
+  }
+
+  function handleVoid() {
+    invoice!.status = "CANCELLED"
+    invoice!.voidReason = voidReason.trim()
+    setVoidReason("")
+    forceRerender((n) => n + 1)
+    toast.success("Invoice voided.")
   }
 
   function handleRecordPayment(amount: number, method: PaymentMethod, note: string) {
@@ -85,11 +112,48 @@ export default function AdminInvoiceDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{invoice.number}</h1>
-          <p className="text-muted-foreground">{invoice.organizationName}</p>
+          <p className="text-muted-foreground">
+            {invoice.organizationName} · {invoiceTypeLabels[invoice.type]}
+          </p>
         </div>
-        <Badge variant={invoiceStatusVariant[status]} className="ml-auto">
-          {invoiceStatusLabels[status]}
-        </Badge>
+        <div className="ml-auto flex items-center gap-2">
+          <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
+          {canVoid && (
+            <AlertDialog onOpenChange={(open) => !open && setVoidReason("")}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <BanIcon />
+                  Void
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Void this invoice?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    The invoice stays on record as cancelled — it won&apos;t be deleted, and
+                    can&apos;t be sent or paid afterward.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Textarea
+                  value={voidReason}
+                  onChange={(e) => setVoidReason(e.target.value)}
+                  placeholder="Reason for voiding this invoice..."
+                  rows={3}
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    disabled={!voidReason.trim()}
+                    onClick={handleVoid}
+                  >
+                    Void invoice
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </div>
 
       <Card className="max-w-3xl">
@@ -122,6 +186,23 @@ export default function AdminInvoiceDetailPage() {
               </span>
             </div>
           </div>
+
+          {relatedProposal && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Created from proposal{" "}
+              <Link href={`/admin/proposals/${relatedProposal.id}`} className="underline">
+                {relatedProposal.proposalNumber}
+              </Link>
+              .
+            </p>
+          )}
+
+          {invoice.status === "CANCELLED" && invoice.voidReason && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Void reason:</span>{" "}
+              {invoice.voidReason}
+            </p>
+          )}
         </CardContent>
         {invoice.status === "DRAFT" && (
           <CardFooter className="justify-end border-t">
@@ -136,7 +217,7 @@ export default function AdminInvoiceDetailPage() {
       <Card className="max-w-3xl">
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>Payment history</CardTitle>
-          {balance > 0 && invoice.status !== "DRAFT" && (
+          {balance > 0 && invoice.status !== "DRAFT" && invoice.status !== "CANCELLED" && (
             <RecordPaymentDialog maxAmount={balance} onRecord={handleRecordPayment} />
           )}
         </CardHeader>

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import type { MemberRole } from "@/app/(client)/settings/team/_components/team-mock-data"
+import type { MemberRole } from "@/app/(client)/portal/settings/team/_components/team-mock-data"
 
 const STORAGE_KEY = "core-it:mock-membership-role"
 

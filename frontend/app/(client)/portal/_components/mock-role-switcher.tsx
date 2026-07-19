@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { roleLabels, type MemberRole } from "@/app/(client)/settings/team/_components/team-mock-data"
+import { roleLabels, type MemberRole } from "@/app/(client)/portal/settings/team/_components/team-mock-data"
 
 const allRoles: MemberRole[] = ["OWNER", "ADMIN", "MANAGER", "MEMBER", "BILLING"]
 

@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeftIcon, DownloadIcon, XIcon } from "lucide-react"
@@ -20,13 +21,24 @@ import {
   invoiceStatusLabels,
   invoiceStatusVariant,
   invoiceTotalBdt,
+  invoiceTypeLabels,
   mockInvoices,
   paymentMethodLabels,
 } from "@/lib/mock/invoices"
+import { mockProposals } from "@/lib/mock/proposals"
 
 export default function InvoiceDetailPage() {
   const params = useParams<{ id: string }>()
+  const [, forceRerender] = React.useState(0)
   const invoice = mockInvoices.find((inv) => inv.id === params.id)
+
+  React.useEffect(() => {
+    if (invoice && invoice.status === "SENT") {
+      invoice.status = "VIEWED"
+      forceRerender((n) => n + 1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice])
 
   if (!invoice) {
     return (
@@ -47,6 +59,9 @@ export default function InvoiceDetailPage() {
   const total = invoiceTotalBdt(invoice)
   const balance = invoiceBalanceBdt(invoice)
   const status = deriveInvoiceStatus(invoice)
+  const relatedProposal = invoice.proposalId
+    ? mockProposals.find((p) => p.id === invoice.proposalId)
+    : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,7 +71,10 @@ export default function InvoiceDetailPage() {
             <ArrowLeftIcon />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">{invoice.number}</h1>
+        <div>
+          <h1 className="text-2xl font-bold">{invoice.number}</h1>
+          <p className="text-muted-foreground">{invoiceTypeLabels[invoice.type]}</p>
+        </div>
         <Badge variant={invoiceStatusVariant[status]} className="ml-auto">
           {invoiceStatusLabels[status]}
         </Badge>
@@ -96,6 +114,23 @@ export default function InvoiceDetailPage() {
               </span>
             </div>
           </div>
+
+          {relatedProposal && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Created from proposal{" "}
+              <Link href={`/portal/proposals/${relatedProposal.id}`} className="underline">
+                {relatedProposal.proposalNumber}
+              </Link>
+              .
+            </p>
+          )}
+
+          {invoice.status === "CANCELLED" && invoice.voidReason && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Void reason:</span>{" "}
+              {invoice.voidReason}
+            </p>
+          )}
         </CardContent>
       </Card>
 

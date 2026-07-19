@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertTriangleIcon, PlusIcon, ReceiptIcon, Trash2Icon, WalletIcon } from "lucide-react"
+import {
+  AlertTriangleIcon,
+  PlusIcon,
+  ReceiptIcon,
+  Trash2Icon,
+  TrendingUpIcon,
+  WalletIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
@@ -26,6 +33,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -33,15 +47,30 @@ import {
   invoiceStatusLabels,
   invoiceStatusVariant,
   invoiceTotalBdt,
+  invoiceTypeLabels,
   mockInvoices,
   type Invoice,
+  type InvoiceStatus,
+  type InvoiceType,
 } from "@/lib/mock/invoices"
 
 export default function AdminInvoicesPage() {
   const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
+  const [typeFilter, setTypeFilter] = useState<InvoiceType | "ALL">("ALL")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const [, forceRerender] = useState(0)
-  const invoices = mockInvoices
+  const [renderTick, forceRerender] = useState(0)
+
+  const invoices = useMemo(
+    () =>
+      mockInvoices.filter((inv) => {
+        if (statusFilter !== "ALL" && deriveInvoiceStatus(inv) !== statusFilter) return false
+        if (typeFilter !== "ALL" && inv.type !== typeFilter) return false
+        return true
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [statusFilter, typeFilter, renderTick]
+  )
   const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
   const selectedCount = selectedIds.length
 
@@ -56,14 +85,34 @@ export default function AdminInvoicesPage() {
   }
 
   const stats = useMemo<DashboardStatItem[]>(() => {
-    const outstanding = invoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
-    const overdue = invoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+    const activeInvoices = mockInvoices.filter(
+      (inv) => deriveInvoiceStatus(inv) !== "CANCELLED"
+    )
+    const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
+    const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+
+    const now = new Date()
+    const collectedThisMonth = mockInvoices.reduce((sum, inv) => {
+      const monthPayments = inv.payments.filter((payment) => {
+        const paidAt = new Date(payment.paidAt)
+        return paidAt.getFullYear() === now.getFullYear() && paidAt.getMonth() === now.getMonth()
+      })
+      return sum + monthPayments.reduce((paymentSum, payment) => paymentSum + payment.amountBdt, 0)
+    }, 0)
+
     return [
-      { label: "Total Invoices", value: invoices.length, icon: ReceiptIcon, tone: "primary" },
+      { label: "Total Invoices", value: mockInvoices.length, icon: ReceiptIcon, tone: "primary" },
       { label: "Outstanding", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
       { label: "Overdue", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
+      {
+        label: "Collected this month",
+        value: formatBDT(collectedThisMonth),
+        icon: TrendingUpIcon,
+        tone: "primary",
+      },
     ]
-  }, [invoices])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderTick])
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -83,6 +132,16 @@ export default function AdminInvoicesPage() {
       {
         accessorKey: "organizationName",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
+      },
+      {
+        id: "type",
+        accessorFn: (row) => row.type,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {invoiceTypeLabels[row.original.type]}
+          </span>
+        ),
       },
       {
         id: "total",
@@ -143,6 +202,47 @@ export default function AdminInvoicesPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search invoices..."
+        showReset={statusFilter !== "ALL" || typeFilter !== "ALL"}
+        onReset={() => {
+          setStatusFilter("ALL")
+          setTypeFilter("ALL")
+        }}
+        filters={
+          <>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All statuses</SelectItem>
+                {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {invoiceStatusLabels[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={typeFilter}
+              onValueChange={(value) => setTypeFilter(value as InvoiceType | "ALL")}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All types</SelectItem>
+                {(Object.keys(invoiceTypeLabels) as InvoiceType[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {invoiceTypeLabels[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
         bulkActions={
           selectedCount > 0 && (
             <AlertDialog>

@@ -66,8 +66,9 @@ export default function AdminDashboardPage() {
 
   const businessStats = useMemo<DashboardStatItem[]>(() => {
     const openProposals = mockProposals.filter((p) => p.status === "SENT").length
-    const outstanding = mockInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
-    const overdue = mockInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+    const activeInvoices = mockInvoices.filter((inv) => deriveInvoiceStatus(inv) !== "CANCELLED")
+    const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
+    const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
     return [
       { label: "Active Companies", value: mockOrganizations.length, icon: Building2Icon, tone: "primary" },
       { label: "Open Proposals", value: openProposals, icon: FileTextIcon, tone: "chart2" },

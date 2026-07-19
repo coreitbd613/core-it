@@ -128,6 +128,11 @@ function ProposalDocument({ proposal }: { proposal: Proposal }) {
             <Text>{new Date(proposal.validUntil).toLocaleDateString()}</Text>
           </View>
         )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Terms & Conditions</Text>
+          <Text style={styles.paragraph}>{stripHtml(proposal.termsHtml)}</Text>
+        </View>
       </Page>
     </Document>
   )

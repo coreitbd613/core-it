@@ -1,4 +1,6 @@
-export type ProposalStatus = "DRAFT" | "SENT" | "VIEWED" | "APPROVED" | "REJECTED" | "EXPIRED"
+import { defaultProposalTermsHtml } from "./proposal-terms"
+
+export type ProposalStatus = "DRAFT" | "SENT" | "VIEWED" | "APPROVED" | "REJECTED"
 
 export type ProposalLineItem = {
   id: string
@@ -19,7 +21,10 @@ export type Proposal = {
   discountPercent: number
   paymentTerms: string
   timeline: string
+  termsHtml: string
   validUntil: string | null
+  versionGroupId: string
+  version: number
   status: ProposalStatus
   createdBy: string
   sentAt: string | null
@@ -35,7 +40,6 @@ export const proposalStatusLabels: Record<ProposalStatus, string> = {
   VIEWED: "Viewed",
   APPROVED: "Approved",
   REJECTED: "Rejected",
-  EXPIRED: "Expired",
 }
 
 export const proposalStatusVariant: Record<
@@ -47,7 +51,6 @@ export const proposalStatusVariant: Record<
   VIEWED: "secondary",
   APPROVED: "default",
   REJECTED: "destructive",
-  EXPIRED: "destructive",
 }
 
 export function proposalTotalBdt(proposal: Pick<Proposal, "lineItems">): number {
@@ -62,16 +65,40 @@ export function proposalGrandTotalBdt(
   return afterDiscount + afterDiscount * (proposal.taxPercent / 100)
 }
 
-/** Recomputes EXPIRED from the validity date, matching how deriveInvoiceStatus works. */
 export function deriveProposalStatus(proposal: Proposal): ProposalStatus {
-  if (
-    (proposal.status === "SENT" || proposal.status === "VIEWED") &&
-    proposal.validUntil &&
-    new Date(proposal.validUntil) < new Date()
-  ) {
-    return "EXPIRED"
-  }
   return proposal.status
+}
+
+/** True unless a later revision exists in the same version lineage. */
+export function isLatestProposalVersion(
+  proposal: Proposal,
+  allProposals: Proposal[] = mockProposals
+): boolean {
+  return !allProposals.some(
+    (p) => p.versionGroupId === proposal.versionGroupId && p.version > proposal.version
+  )
+}
+
+/** Collapses a list of proposals down to just the latest revision per lineage. */
+export function latestProposalVersions(proposals: Proposal[]): Proposal[] {
+  const latestByGroup = new Map<string, Proposal>()
+  for (const p of proposals) {
+    const current = latestByGroup.get(p.versionGroupId)
+    if (!current || p.version > current.version) {
+      latestByGroup.set(p.versionGroupId, p)
+    }
+  }
+  return proposals.filter((p) => latestByGroup.get(p.versionGroupId) === p)
+}
+
+/** All revisions sharing a lineage, oldest first. */
+export function proposalVersionHistory(
+  proposal: Proposal,
+  allProposals: Proposal[] = mockProposals
+): Proposal[] {
+  return allProposals
+    .filter((p) => p.versionGroupId === proposal.versionGroupId)
+    .sort((a, b) => a.version - b.version)
 }
 
 let proposalNumberSeq = 6
@@ -99,7 +126,10 @@ export const mockProposals: Proposal[] = [
     discountPercent: 0,
     paymentTerms: "50% advance, 50% on delivery",
     timeline: "6-8 weeks from advance payment",
+    termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-08-10",
+    versionGroupId: "prop-1",
+    version: 1,
     status: "SENT",
     createdBy: "Core IT",
     sentAt: "2026-07-10",
@@ -122,7 +152,10 @@ export const mockProposals: Proposal[] = [
     discountPercent: 0,
     paymentTerms: "Billed monthly in advance",
     timeline: "Ongoing, starts immediately",
+    termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-07-20",
+    versionGroupId: "prop-2",
+    version: 1,
     status: "APPROVED",
     createdBy: "Core IT",
     sentAt: "2026-06-20",
@@ -147,7 +180,10 @@ export const mockProposals: Proposal[] = [
     discountPercent: 0,
     paymentTerms: "40% advance, 30% mid-project, 30% on delivery",
     timeline: "10-12 weeks from advance payment",
+    termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-06-15",
+    versionGroupId: "prop-3",
+    version: 1,
     status: "REJECTED",
     createdBy: "Core IT",
     sentAt: "2026-05-15",
@@ -171,7 +207,10 @@ export const mockProposals: Proposal[] = [
     discountPercent: 0,
     paymentTerms: "50% advance, 50% on delivery",
     timeline: "4-6 weeks from advance payment",
+    termsHtml: defaultProposalTermsHtml,
     validUntil: null,
+    versionGroupId: "prop-4",
+    version: 1,
     status: "DRAFT",
     createdBy: "Core IT",
     sentAt: null,
@@ -195,7 +234,10 @@ export const mockProposals: Proposal[] = [
     discountPercent: 0,
     paymentTerms: "100% advance",
     timeline: "Starts immediately upon signing",
+    termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-08-05",
+    versionGroupId: "prop-5",
+    version: 1,
     status: "APPROVED",
     createdBy: "Core IT",
     sentAt: "2026-07-05",
@@ -218,7 +260,10 @@ export const mockProposals: Proposal[] = [
     discountPercent: 0,
     paymentTerms: "50% advance, 50% on delivery",
     timeline: "2 weeks from advance payment",
+    termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-08-11",
+    versionGroupId: "prop-6",
+    version: 1,
     status: "APPROVED",
     createdBy: "Core IT",
     sentAt: "2026-07-11",

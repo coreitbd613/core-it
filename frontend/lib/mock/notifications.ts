@@ -1,13 +1,15 @@
 import type { NotificationItem } from "@/components/shared/dashboard/notifications-bell"
 import { mockContracts } from "@/lib/mock/contracts"
-import { mockProposals } from "@/lib/mock/proposals"
+import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { deriveInvoiceStatus, mockInvoices } from "@/lib/mock/invoices"
 import { mockRevisionRequests, mockProjects } from "@/lib/mock/projects"
 
 export function getClientNotifications(organizationId: string): NotificationItem[] {
   const items: NotificationItem[] = []
 
-  for (const p of mockProposals.filter((p) => p.organizationId === organizationId)) {
+  for (const p of latestProposalVersions(
+    mockProposals.filter((p) => p.organizationId === organizationId)
+  )) {
     if (p.status === "SENT" && p.sentAt) {
       items.push({
         id: `proposal-${p.id}`,
@@ -76,7 +78,9 @@ export function getAdminNotifications(): NotificationItem[] {
     })
   }
 
-  for (const p of mockProposals.filter((p) => p.status === "APPROVED" && !p.contractId)) {
+  for (const p of latestProposalVersions(mockProposals).filter(
+    (p) => p.status === "APPROVED" && !p.contractId
+  )) {
     items.push({
       id: `proposal-approved-${p.id}`,
       title: `Proposal approved — send a contract`,

@@ -24,7 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { formatBDT } from "@/lib/format"
-import { mockInvoices, type InvoiceLineItem } from "@/lib/mock/invoices"
+import {
+  invoiceTypeLabels,
+  mockInvoices,
+  type InvoiceLineItem,
+  type InvoiceType,
+} from "@/lib/mock/invoices"
 import { mockOrganizations } from "@/lib/mock/organizations"
 
 function newLineItem(): InvoiceLineItem {
@@ -44,6 +49,7 @@ function defaultDueDate() {
 export default function NewInvoicePage() {
   const router = useRouter()
   const [organizationId, setOrganizationId] = React.useState(mockOrganizations[0]?.id ?? "")
+  const [type, setType] = React.useState<InvoiceType>("FINAL")
   const [dueAt, setDueAt] = React.useState(defaultDueDate())
   const [lineItems, setLineItems] = React.useState<InvoiceLineItem[]>([newLineItem()])
 
@@ -70,6 +76,9 @@ export default function NewInvoicePage() {
       number: nextInvoiceNumber(),
       organizationId: organization.id,
       organizationName: organization.name,
+      type,
+      proposalId: null,
+      voidReason: null,
       lineItems,
       payments: [],
       status,
@@ -119,6 +128,21 @@ export default function NewInvoicePage() {
                   value={dueAt}
                   onChange={(e) => setDueAt(e.target.value)}
                 />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="invoice-type">Type</FieldLabel>
+                <Select value={type} onValueChange={(value) => setType(value as InvoiceType)}>
+                  <SelectTrigger id="invoice-type" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(invoiceTypeLabels) as InvoiceType[]).map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {invoiceTypeLabels[key]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
             </div>
           </FieldGroup>

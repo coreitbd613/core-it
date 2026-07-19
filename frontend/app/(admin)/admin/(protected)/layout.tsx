@@ -21,7 +21,7 @@ import { GlobalSearch, type SearchItem } from "@/components/shared/dashboard/glo
 import { NotificationsBell } from "@/components/shared/dashboard/notifications-bell"
 import { getAdminNotifications } from "@/lib/mock/notifications"
 import { mockContracts } from "@/lib/mock/contracts"
-import { mockProposals } from "@/lib/mock/proposals"
+import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
 import { mockInvoices } from "@/lib/mock/invoices"
 
@@ -48,7 +48,7 @@ function buildAdminSearchItems(): SearchItem[] {
     { id: "nav-settings", group: "Go to", label: "Settings", href: "/admin/settings", icon: <Settings className="size-4" /> },
   ]
 
-  const proposalEntries: SearchItem[] = mockProposals.map((p) => ({
+  const proposalEntries: SearchItem[] = latestProposalVersions(mockProposals).map((p) => ({
     id: `proposal-${p.id}`,
     group: "Proposals",
     label: p.title,
