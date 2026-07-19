@@ -72,7 +72,7 @@ export function AcceptInviteView({ token }: { token: string }) {
 
     setIsPending(true)
     setTimeout(() => {
-      toast.success(`Welcome to ${invite.companyName}.`)
+      toast.success(`Welcome to ${invite!.companyName}.`)
       router.push("/portal/dashboard")
     }, 400)
   }
