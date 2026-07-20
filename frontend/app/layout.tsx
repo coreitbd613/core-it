@@ -57,8 +57,9 @@ const organizationJsonLd = {
   logo: `${SITE_URL}/logo-dark.png`,
   description: SITE_DESCRIPTION,
   sameAs: [
-    "https://www.facebook.com/share/1HNCTGBPzF/",
+    "https://www.facebook.com/coreitbd",
     "https://wa.me/8801581633810",
+    "https://www.linkedin.com/company/core-it-bd",
   ],
 };
 

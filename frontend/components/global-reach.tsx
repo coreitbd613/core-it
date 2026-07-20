@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Globe as GlobeIcon } from "lucide-react";
 
 import { Globe } from "@/components/ui/globe";
@@ -11,6 +12,8 @@ interface GlobalReachProps {
 }
 
 const GlobalReach = ({ className }: GlobalReachProps) => {
+  const router = useRouter();
+
   return (
     <section
       id="global-reach"
@@ -51,7 +54,7 @@ const GlobalReach = ({ className }: GlobalReachProps) => {
 
           <InteractiveHoverButton
             className="mt-10 h-12 w-fit rounded-lg px-8 text-base"
-            onClick={() => document.getElementById("contact")?.scrollIntoView()}
+            onClick={() => router.push("/contact")}
           >
             Contact Us
           </InteractiveHoverButton>

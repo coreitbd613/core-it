@@ -88,7 +88,7 @@ export default function UserDashboardPage() {
           status: p.status === "SENT" ? "Awaiting response" : p.status,
           statusVariant: p.status === "SENT" ? "secondary" : "outline",
           updatedAt: p.respondedAt ?? p.sentAt,
-          href: `/proposals/${p.id}`,
+          href: `/portal/proposals/${p.id}`,
         })
       }
     }
@@ -99,7 +99,7 @@ export default function UserDashboardPage() {
         status: c.status === "SENT" ? "Awaiting signature" : "Signed",
         statusVariant: c.status === "SENT" ? "secondary" : "default",
         updatedAt: c.signedAt ?? c.sentAt,
-        href: `/contracts/${c.id}`,
+        href: `/portal/contracts/${c.id}`,
       })
     }
     for (const inv of invoices) {
@@ -109,7 +109,7 @@ export default function UserDashboardPage() {
         status: deriveInvoiceStatus(inv),
         statusVariant: deriveInvoiceStatus(inv) === "OVERDUE" ? "destructive" : "secondary",
         updatedAt: inv.issuedAt,
-        href: `/invoices/${inv.id}`,
+        href: `/portal/invoices/${inv.id}`,
       })
       for (const payment of inv.payments) {
         rows.push({
@@ -118,7 +118,7 @@ export default function UserDashboardPage() {
           status: "Paid",
           statusVariant: "default",
           updatedAt: payment.paidAt,
-          href: `/invoices/${inv.id}`,
+          href: `/portal/invoices/${inv.id}`,
         })
       }
     }

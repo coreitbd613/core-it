@@ -12,6 +12,13 @@ import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -22,27 +29,40 @@ import {
   invoiceTypeLabels,
   mockInvoices,
   type Invoice,
+  type InvoiceStatus,
+  type InvoiceType,
 } from "@/lib/mock/invoices"
 
 const CURRENT_ORG_ID = "org-1"
 
 export default function InvoicesPage() {
   const [search, setSearch] = useState("")
-  const invoices = useMemo(
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
+  const [typeFilter, setTypeFilter] = useState<InvoiceType | "ALL">("ALL")
+  const orgInvoices = useMemo(
     () => mockInvoices.filter((inv) => inv.organizationId === CURRENT_ORG_ID),
     []
   )
+  const invoices = useMemo(
+    () =>
+      orgInvoices.filter((inv) => {
+        if (statusFilter !== "ALL" && deriveInvoiceStatus(inv) !== statusFilter) return false
+        if (typeFilter !== "ALL" && inv.type !== typeFilter) return false
+        return true
+      }),
+    [orgInvoices, statusFilter, typeFilter]
+  )
 
   const stats = useMemo<DashboardStatItem[]>(() => {
-    const activeInvoices = invoices.filter((inv) => deriveInvoiceStatus(inv) !== "CANCELLED")
+    const activeInvoices = orgInvoices.filter((inv) => deriveInvoiceStatus(inv) !== "CANCELLED")
     const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
     const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
     return [
-      { label: "Total Invoices", value: invoices.length, icon: ReceiptIcon, tone: "primary" },
+      { label: "Total Invoices", value: orgInvoices.length, icon: ReceiptIcon, tone: "primary" },
       { label: "Outstanding Balance", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
       { label: "Overdue", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
     ]
-  }, [invoices])
+  }, [orgInvoices])
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -116,6 +136,47 @@ export default function InvoicesPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search invoices..."
+        showReset={statusFilter !== "ALL" || typeFilter !== "ALL"}
+        onReset={() => {
+          setStatusFilter("ALL")
+          setTypeFilter("ALL")
+        }}
+        filters={
+          <>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All statuses</SelectItem>
+                {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {invoiceStatusLabels[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={typeFilter}
+              onValueChange={(value) => setTypeFilter(value as InvoiceType | "ALL")}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All types</SelectItem>
+                {(Object.keys(invoiceTypeLabels) as InvoiceType[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {invoiceTypeLabels[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
       />
 
       <DataTable
