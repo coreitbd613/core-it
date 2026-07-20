@@ -80,7 +80,13 @@
   0% {
     background-position: 0%;}
   100% {
-    background-position: 200%;}}}
+    background-position: 200%;}}
+  --animate-gradient-drift: gradient-drift 18s ease-in-out infinite alternate;
+  @keyframes gradient-drift {
+  0% {
+    background-position: 20% 20%, 80% 70%;}
+  100% {
+    background-position: 30% 30%, 70% 60%;}}}
 
 :root {
   --background: #F6F4EE;
@@ -183,3 +189,9 @@
 ::view-transition-old(root), ::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gradient-drift {
+    animation: none;
+  }
+}
