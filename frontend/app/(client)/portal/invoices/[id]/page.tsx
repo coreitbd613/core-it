@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeftIcon, DownloadIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, XIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { InvoiceDownloadButton } from "@/components/shared/invoice-pdf"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -38,7 +39,7 @@ export default function InvoiceDetailPage() {
       forceRerender((n) => n + 1)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invoice])
+  }, [invoice?.id])
 
   if (!invoice) {
     return (
@@ -73,15 +74,16 @@ export default function InvoiceDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{invoice.number}</h1>
-          <p className="text-muted-foreground">{invoiceTypeLabels[invoice.type]}</p>
+          <p className="text-muted-foreground">
+            {invoiceTypeLabels[invoice.type]} · Issued{" "}
+            {new Date(invoice.issuedAt).toLocaleDateString()} · Due{" "}
+            {new Date(invoice.dueAt).toLocaleDateString()}
+          </p>
         </div>
         <Badge variant={invoiceStatusVariant[status]} className="ml-auto">
           {invoiceStatusLabels[status]}
         </Badge>
-        <Button variant="outline" size="sm" disabled>
-          <DownloadIcon />
-          Download PDF
-        </Button>
+        <InvoiceDownloadButton invoice={invoice} />
       </div>
 
       <Card className="max-w-3xl">

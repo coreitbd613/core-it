@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Textarea } from "@/components/ui/textarea"
+import { InvoiceDownloadButton } from "@/components/shared/invoice-pdf"
+import { useAdminAuth } from "@/contexts/admin-auth-context"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -46,6 +48,7 @@ import { RecordPaymentDialog } from "./_components/record-payment-dialog"
 
 export default function AdminInvoiceDetailPage() {
   const params = useParams<{ id: string }>()
+  const { user } = useAdminAuth()
   const [, forceRerender] = React.useState(0)
   const [voidReason, setVoidReason] = React.useState("")
 
@@ -95,7 +98,7 @@ export default function AdminInvoiceDetailPage() {
       amountBdt: amount,
       method,
       note,
-      recordedBy: "Core IT",
+      recordedBy: user?.name ?? user?.email ?? "Core IT",
       paidAt: new Date().toISOString().slice(0, 10),
     })
     forceRerender((n) => n + 1)
@@ -118,6 +121,7 @@ export default function AdminInvoiceDetailPage() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
+          <InvoiceDownloadButton invoice={invoice} />
           {canVoid && (
             <AlertDialog onOpenChange={(open) => !open && setVoidReason("")}>
               <AlertDialogTrigger asChild>
