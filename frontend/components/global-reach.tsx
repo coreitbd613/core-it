@@ -53,7 +53,7 @@ const GlobalReach = ({ className }: GlobalReachProps) => {
           </p>
 
           <InteractiveHoverButton
-            className="mt-10 h-12 w-fit rounded-lg border-transparent bg-white px-8 text-base text-neutral-900 shadow-md"
+            className="mt-10 h-12 w-fit rounded-lg border-border bg-card px-8 text-base text-card-foreground shadow-md"
             onClick={() => router.push("/contact")}
           >
             Contact Us
