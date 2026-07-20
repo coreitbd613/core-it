@@ -1,34 +1,41 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { Orb } from "@/components/ui/orb";
+import { SpecularButton } from "@/components/ui/specular-button";
 
 export function SiteHero() {
   return (
-    <section className="sticky top-0 z-0 h-screen overflow-hidden">
-      {/* Looping video background */}
-      <video
-        className="absolute inset-0 size-full object-cover"
-        src="/hero.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-      />
-
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/45" />
-
-      {/* Orange radial glow from bottom */}
+    <section className="bg-background sticky top-0 z-0 h-screen overflow-hidden">
+      {/* Slowly drifting light gradient background */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="animate-gradient-drift pointer-events-none absolute inset-0"
         style={{
-          background:
-            "radial-gradient(ellipse 80% 55% at 50% 100%, color-mix(in oklch, #FD6005 30%, transparent), transparent)",
+          backgroundImage:
+            "radial-gradient(ellipse 60% 50% at center, color-mix(in oklch, var(--primary) 18%, transparent), transparent 70%), radial-gradient(ellipse 55% 45% at center, color-mix(in oklch, var(--brand-navy) 10%, transparent), transparent 70%)",
+          backgroundRepeat: "no-repeat, no-repeat",
+          backgroundSize: "80% 80%, 70% 70%",
+          backgroundPosition: "20% 20%, 80% 70%",
         }}
       />
+
+      {/* Orb glow, centered behind the headline — hidden on small screens to keep the
+          hero light on low-end/mobile devices. Orb's shader fills its whole canvas with
+          a flat color outside the sphere (no real transparency), so the container is
+          masked to fade that fill to transparent at the edges. Sized via inline style
+          (not an arbitrary Tailwind class) because Orb measures its container once on
+          mount with no ResizeObserver — a late Turbopack CSS injection would otherwise
+          leave the canvas locked at the wrong size. */}
+      <div className="pointer-events-none absolute inset-0 hidden items-center justify-center lg:flex">
+        <div
+          className="opacity-40 [mask-image:radial-gradient(circle,black_35%,transparent_68%)] [-webkit-mask-image:radial-gradient(circle,black_35%,transparent_68%)]"
+          style={{ width: 900, height: 900 }}
+        >
+          <Orb hue={20} backgroundColor="#F6F4EE" hoverIntensity={0} rotateOnHover={false} />
+        </div>
+      </div>
 
       {/* Centered content */}
       <div className="relative flex h-full flex-col items-center justify-center px-4 text-center">
@@ -39,10 +46,7 @@ export function SiteHero() {
         </span>
 
         {/* Headline */}
-        <h1
-          className="mt-6 max-w-5xl text-balance text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl xl:text-8xl"
-          style={{ textShadow: "0 2px 40px rgba(0,0,0,0.6)" }}
-        >
+        <h1 className="text-foreground mt-6 max-w-5xl text-balance text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
           Professional Software Solutions for{" "}
           <span className="text-[#FD6005]">Every Business Need</span>
         </h1>
@@ -50,20 +54,24 @@ export function SiteHero() {
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <InteractiveHoverButton
-            className="h-12 rounded-lg px-8 text-base"
+            className="h-12 rounded-lg border-transparent bg-white px-8 text-base text-neutral-900 shadow-md"
             onClick={() => document.getElementById("contact")?.scrollIntoView()}
           >
             Contact Us
           </InteractiveHoverButton>
-          <Button
-            
-            variant="outline"
-            size="lg"
-            className="border-white/25 bg-white/5 font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
-            asChild
+          <SpecularButton
+            radius={8}
+            tint="#ffffff"
+            tintOpacity={0.85}
+            blur={6}
+            textColor="#171717"
+            lineColor="#0A2540"
+            baseColor="#0A2540"
+            className="h-12 px-8 text-base font-semibold shadow-md"
+            onClick={() => document.getElementById("services")?.scrollIntoView()}
           >
-            <a href="#services">Explore Services</a>
-          </Button>
+            Explore Services
+          </SpecularButton>
         </div>
       </div>
     </section>
