@@ -14,6 +14,7 @@ export type Service = {
   title: string;
   description: string;
   icon: LucideIcon;
+  href?: string;
 };
 
 export const services: Service[] = [
@@ -21,11 +22,13 @@ export const services: Service[] = [
     title: "Software Development",
     description: "Custom software built around how your business actually works.",
     icon: Code2,
+    href: "/services/software-development",
   },
   {
     title: "Web Development",
     description: "Fast, modern websites and web apps that convert visitors.",
     icon: Globe,
+    href: "/services/web-development",
   },
   {
     title: "Mobile App Development",

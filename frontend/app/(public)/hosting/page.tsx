@@ -1,9 +1,32 @@
 import type { Metadata } from "next"
 
-import { HostingFaq } from "./_components/hosting-faq"
+import { FaqSection } from "@/components/shared/faq-section"
 import { HowItWorks } from "./_components/how-it-works"
 import { PlanCards } from "./_components/plan-cards"
 import { WhyHost } from "./_components/why-host"
+
+const hostingFaqs = [
+  {
+    question: "How long does provisioning take?",
+    answer:
+      "Most VPS orders are set up shortly after we confirm your requirements. We'll reach out if anything needs clarifying first.",
+  },
+  {
+    question: "Can I change OS or add extra software?",
+    answer:
+      "Yes, add your requirements in the notes field when ordering, or reach out afterward and we'll help set it up.",
+  },
+  {
+    question: "Can I upgrade my plan later?",
+    answer:
+      "Yes. Contact us when you're ready to scale up and we'll move you to a bigger plan.",
+  },
+  {
+    question: "Do you offer support after setup?",
+    answer:
+      "Yes, our team is reachable for server issues and configuration help after your VPS is live.",
+  },
+]
 
 export const metadata: Metadata = {
   title: "Dedicated VPS Hosting",
@@ -30,7 +53,7 @@ export default function HostingPage() {
       <PlanCards />
       <WhyHost />
       <HowItWorks />
-      <HostingFaq />
+      <FaqSection faqs={hostingFaqs} />
     </>
   )
 }

@@ -31,12 +31,10 @@ import {
 } from "@/components/ui/sheet";
 
 const navLinks = [
-  { label: "Solutions", href: "/#solutions" },
-  { label: "Work", href: "/#work" },
   { label: "Domains", href: "/domains" },
   { label: "Hosting", href: "/hosting" },
   { label: "About", href: "/#about" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Contact", href: "/contact" },
 ] as const;
 
 function HeaderThemeToggle({
@@ -108,7 +106,7 @@ export function SiteHeader() {
                     {services.map((service) => (
                       <li key={service.title}>
                         <NavigationMenuLink asChild>
-                          <Link href="/#services" className="flex-row items-start gap-4 p-3">
+                          <Link href={service.href ?? "/#services"} className="flex-row items-start gap-4 p-3">
                             <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                               <service.icon className="size-6" />
                             </div>

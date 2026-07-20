@@ -1,11 +1,34 @@
 import type { Metadata } from "next"
 
+import { FaqSection } from "@/components/shared/faq-section"
 import { SparklesText } from "@/components/ui/sparkles-text"
-import { DomainFaq } from "./_components/domain-faq"
 import { DomainSearch } from "./_components/domain-search"
 import { HowItWorks } from "./_components/how-it-works"
 import { PopularTlds } from "./_components/popular-tlds"
 import { WhyRegister } from "./_components/why-register"
+
+const domainFaqs = [
+  {
+    question: "How long does registration take?",
+    answer:
+      "Most domains are active within a few minutes of your order being confirmed. Some extensions may take a little longer to propagate.",
+  },
+  {
+    question: "Is WHOIS privacy included?",
+    answer:
+      "Yes, WHOIS privacy protection is included at no extra cost on supported extensions, so your personal details aren't publicly listed.",
+  },
+  {
+    question: "Can I transfer a domain I already own?",
+    answer:
+      "Yes. Reach out with your domain name and current registrar, and we'll guide you through the transfer process.",
+  },
+  {
+    question: "What happens when my domain is close to expiring?",
+    answer:
+      "You'll get renewal reminders ahead of your expiry date so you can renew from your dashboard before the domain lapses.",
+  },
+]
 
 export const metadata: Metadata = {
   title: "Domain Registration",
@@ -43,7 +66,7 @@ export default function DomainsPage() {
       <PopularTlds />
       <WhyRegister />
       <HowItWorks />
-      <DomainFaq />
+      <FaqSection faqs={domainFaqs} />
     </>
   )
 }

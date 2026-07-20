@@ -8,8 +8,11 @@ function buildLlmsTxt(): string {
 ## Pages
 
 - [Home](${SITE_URL}/): Overview of Core IT's services and products.
+- [Web Development](${SITE_URL}/services/web-development): Custom websites and web apps.
+- [Software Development](${SITE_URL}/services/software-development): Custom software built around your business.
 - [Hosting](${SITE_URL}/hosting): VPS hosting plans and pricing.
 - [Domains](${SITE_URL}/domains): Domain search and registration.
+- [Contact](${SITE_URL}/contact): Get in touch with Core IT.
 - [Sign up](${SITE_URL}/signup): Create a Core IT account.
 - [Log in](${SITE_URL}/login): Sign in to an existing account.
 - [Privacy Policy](${SITE_URL}/privacy): How Core IT collects, uses, and shares information.
@@ -18,6 +21,7 @@ function buildLlmsTxt(): string {
 ## Contact
 
 - Email: info@coreitbd.com
+- LinkedIn: https://www.linkedin.com/company/core-it-bd
 `
 }
 

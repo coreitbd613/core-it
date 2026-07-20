@@ -14,7 +14,7 @@ import { Dock, DockIcon } from "@/components/ui/dock";
 const socialLinks = [
   {
     label: "Facebook",
-    href: "https://www.facebook.com/share/1HNCTGBPzF/",
+    href: "https://www.facebook.com/coreitbd",
     icon: FaFacebookF,
     color: "#1877F2",
   },
@@ -32,7 +32,7 @@ const socialLinks = [
   },
   {
     label: "LinkedIn",
-    href: "#",
+    href: "https://www.linkedin.com/company/core-it-bd",
     icon: FaLinkedinIn,
     color: "#0A66C2",
   },
@@ -53,13 +53,12 @@ const footerColumns = [
     links: [
       { label: "About", href: "/#about" },
       { label: "Services", href: "/#services" },
-      { label: "Our work", href: "/#work" },
     ],
   },
   {
     title: "Support",
     links: [
-      { label: "Contact us", href: "/#contact" },
+      { label: "Contact us", href: "/contact" },
       { label: "Terms and Conditions", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
     ],
