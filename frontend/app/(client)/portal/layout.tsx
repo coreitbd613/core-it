@@ -40,7 +40,7 @@ function buildSearchItems(): SearchItem[] {
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard className="size-4" /> },
     { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/portal/proposals", icon: <FileTextIcon className="size-4" /> },
     { id: "nav-projects", group: "Go to", label: "Projects", href: "/portal/projects", icon: <FolderKanbanIcon className="size-4" /> },
-    { id: "nav-domains", group: "Go to", label: "Domains", href: "/domains/orders", icon: <GlobeIcon className="size-4" /> },
+    { id: "nav-domains", group: "Go to", label: "Domains", href: "/portal/domains", icon: <GlobeIcon className="size-4" /> },
     { id: "nav-contracts", group: "Go to", label: "Contracts", href: "/portal/contracts", icon: <FileSignatureIcon className="size-4" /> },
     { id: "nav-invoices", group: "Go to", label: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon className="size-4" /> },
     { id: "nav-statements", group: "Go to", label: "Statements", href: "/portal/statements", icon: <ScrollTextIcon className="size-4" /> },
@@ -100,7 +100,7 @@ function buildNavItems(canManageTeam: boolean, canViewBilling: boolean): PanelNa
     { name: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard /> },
     { name: "Proposals", href: "/portal/proposals", icon: <FileTextIcon /> },
     { name: "Projects", href: "/portal/projects", icon: <FolderKanbanIcon /> },
-    { name: "Domains", href: "/domains/orders", icon: <GlobeIcon /> },
+    { name: "Domains", href: "/portal/domains", icon: <GlobeIcon /> },
     ...(canViewBilling
       ? [
           { name: "Contracts", href: "/portal/contracts", icon: <FileSignatureIcon /> },

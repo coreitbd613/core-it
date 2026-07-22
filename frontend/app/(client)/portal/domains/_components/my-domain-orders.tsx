@@ -62,10 +62,10 @@ export function MyDomainOrders() {
               {order.status === "COMPLETED" && (
                 <>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/domains/${order.id}/dns`}>Manage DNS</Link>
+                    <Link href={`/portal/domains/${order.id}/dns`}>Manage DNS</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/domains/${order.id}/email-forwarding`}>Email forwarding</Link>
+                    <Link href={`/portal/domains/${order.id}/email-forwarding`}>Email forwarding</Link>
                   </Button>
                 </>
               )}

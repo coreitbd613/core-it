@@ -117,7 +117,7 @@ export function CheckoutForm() {
             We&apos;ll process your registration and follow up shortly.
           </p>
           <Button asChild className="mt-2">
-            <a href="/domains/orders">View my orders</a>
+            <a href="/portal/domains">View my orders</a>
           </Button>
         </CardContent>
       </Card>

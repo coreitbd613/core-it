@@ -2,12 +2,10 @@ import { MyDomainOrders } from "./_components/my-domain-orders"
 
 export default function MyDomainOrdersPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-28 sm:px-6 md:py-36 lg:px-8">
+    <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">My domain orders</h1>
-        <p className="mt-1 text-muted-foreground">
-          Track the domains you&apos;ve ordered through us.
-        </p>
+        <h1 className="text-2xl font-bold">Domains</h1>
+        <p className="text-muted-foreground">Track the domains you&apos;ve ordered through us.</p>
       </div>
 
       <MyDomainOrders />
