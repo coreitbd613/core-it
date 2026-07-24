@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { XMLParser } from 'fast-xml-parser';
 
@@ -7,6 +11,11 @@ export interface DomainAvailability {
   available: boolean;
   isPremium: boolean;
   premiumPriceUsd?: number;
+}
+
+export interface DomainPricing {
+  registrationUsd: number;
+  renewalUsd: number;
 }
 
 const PRICING_CACHE_TTL_MS = 60 * 60 * 1000;
@@ -29,7 +38,7 @@ export class NamecheapService {
   });
   private readonly pricingCache = new Map<
     string,
-    { priceUsd: number; expiresAt: number }
+    { pricing: DomainPricing; expiresAt: number }
   >();
 
   constructor(private readonly configService: ConfigService) {}
@@ -112,26 +121,28 @@ export class NamecheapService {
     }));
   }
 
-  async getPricing(tld: string): Promise<number> {
-    const normalized = tld.toLowerCase();
-    const cached = this.pricingCache.get(normalized);
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.priceUsd;
-    }
-
+  private async getActionPrice(
+    tld: string,
+    productCategory: 'REGISTER' | 'RENEW',
+    actionName: 'REGISTER' | 'RENEW',
+  ): Promise<number> {
     const commandResponse = await this.call('namecheap.users.getPricing', {
       ProductType: 'DOMAIN',
-      ProductCategory: 'REGISTER',
-      ActionName: 'REGISTER',
-      ProductName: normalized,
+      ProductCategory: productCategory,
+      ActionName: actionName,
+      ProductName: tld,
     });
 
     const productTypes =
-      (commandResponse?.UserGetPricingResult as {
-        ProductType?: Record<string, unknown>[];
-      })?.ProductType ?? [];
-    const categories = (productTypes[0]?.ProductCategory ??
-      []) as Record<string, unknown>[];
+      (
+        commandResponse?.UserGetPricingResult as {
+          ProductType?: Record<string, unknown>[];
+        }
+      )?.ProductType ?? [];
+    const categories = (productTypes[0]?.ProductCategory ?? []) as Record<
+      string,
+      unknown
+    >[];
     const products = (categories[0]?.Product ?? []) as Record<
       string,
       unknown
@@ -140,17 +151,36 @@ export class NamecheapService {
     const yearPrice = prices.find((price) => price['@_Duration'] === '1');
 
     if (!yearPrice) {
-      throw new InternalServerErrorException(
-        `No pricing found for .${normalized}`,
-      );
+      throw new InternalServerErrorException(`No pricing found for .${tld}`);
     }
 
-    const priceUsd = Number(yearPrice['@_YourPrice'] ?? yearPrice['@_Price']);
+    return Number(
+      yearPrice['@_YourPrice'] ??
+        yearPrice['@_RegularPrice'] ??
+        yearPrice['@_Price'],
+    );
+  }
+
+  async getPricing(tld: string): Promise<DomainPricing> {
+    const normalized = tld.toLowerCase();
+    const cached = this.pricingCache.get(normalized);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.pricing;
+    }
+
+    const pricing = {
+      registrationUsd: await this.getActionPrice(
+        normalized,
+        'REGISTER',
+        'REGISTER',
+      ),
+      renewalUsd: await this.getActionPrice(normalized, 'RENEW', 'RENEW'),
+    };
     this.pricingCache.set(normalized, {
-      priceUsd,
+      pricing,
       expiresAt: Date.now() + PRICING_CACHE_TTL_MS,
     });
 
-    return priceUsd;
+    return pricing;
   }
 }

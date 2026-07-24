@@ -48,6 +48,20 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { GoogleProfile } from './strategies/google.strategy';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
+const CLIENT_DASHBOARD_PATH = '/portal/dashboard';
+
+function getSafeClientRedirectPath(redirect: unknown) {
+  const redirectPath = Array.isArray(redirect) ? redirect[0] : redirect;
+  if (
+    typeof redirectPath === 'string' &&
+    redirectPath.startsWith('/') &&
+    !redirectPath.startsWith('//')
+  ) {
+    return redirectPath;
+  }
+
+  return CLIENT_DASHBOARD_PATH;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -162,7 +176,7 @@ export class AuthController {
     const { user: _user, ...tokens } =
       await this.authService.loginWithGoogle(profile);
     this.setAuthCookies(res, tokens, AuthScope.CLIENT);
-    res.redirect(`${frontendUrl}/portal/dashboard`);
+    res.redirect(`${frontendUrl}${getSafeClientRedirectPath(req.query.state)}`);
   }
 
   @Post('refresh')

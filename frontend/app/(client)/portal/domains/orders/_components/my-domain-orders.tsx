@@ -25,11 +25,7 @@ const STATUS_VARIANT: Record<
   REJECTED: "destructive",
 }
 
-export function MyDomainOrders({
-  basePath = "/domains",
-}: {
-  basePath?: "/domains" | "/portal/domains"
-}) {
+export function MyDomainOrders() {
   const { data: orders, isPending } = useMyDomainOrders()
 
   if (isPending) {
@@ -59,17 +55,17 @@ export function MyDomainOrders({
               <div className="font-medium">{order.domainName}</div>
               <div className="text-xs text-muted-foreground">
                 {order.years} {order.years === 1 ? "year" : "years"} ·{" "}
-                {formatBDT(Number(order.priceBdt))}/yr
+                {formatBDT(Number(order.priceBdt))}/year
               </div>
             </div>
             <div className="flex items-center gap-2">
               {order.status === "COMPLETED" && (
                 <>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`${basePath}/${order.id}/dns`}>Manage DNS</Link>
+                    <Link href={`/portal/domains/${order.id}/dns`}>Manage DNS</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`${basePath}/${order.id}/email-forwarding`}>Email forwarding</Link>
+                    <Link href={`/portal/domains/${order.id}/email-forwarding`}>Email forwarding</Link>
                   </Button>
                 </>
               )}

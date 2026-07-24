@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { useDomainOrders } from "@/hooks/use-domains"
-import { formatBDT, formatUSD } from "@/lib/format"
+import { formatBDT } from "@/lib/format"
 import type { AdminDomainOrder, DomainOrderStatus } from "@/lib/domains"
 import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
@@ -38,12 +38,7 @@ const columns: ColumnDef<AdminDomainOrder>[] = [
     id: "price",
     header: "Price",
     cell: ({ row }) => (
-      <div>
-        <div>{formatBDT(Number(row.original.priceBdt))}</div>
-        <div className="text-xs text-muted-foreground">
-          {formatUSD(Number(row.original.priceUsd))}
-        </div>
-      </div>
+      <span>{formatBDT(Number(row.original.priceBdt))}/year</span>
     ),
   },
   {

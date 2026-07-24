@@ -7,8 +7,9 @@ import { AlertCircle, Search, SearchX, Sparkles } from "lucide-react"
 
 import { useClientAuth } from "@/contexts/client-auth-context"
 import { useDomainSearch } from "@/hooks/use-domains"
-import { formatBDT, formatUSD } from "@/lib/format"
+import { formatBDT } from "@/lib/format"
 import type { DomainSearchResult } from "@/lib/domains"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { BorderBeam } from "@/components/ui/border-beam"
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export const DOMAIN_SEARCH_INPUT_ID = "domain-search-input"
 
-export function DomainSearch() {
+type DomainSearchProps = {
+  className?: string
+  variant?: "public" | "panel"
+  autoFocus?: boolean
+}
+
+export function DomainSearch({
+  className,
+  variant = "public",
+  autoFocus = variant === "public",
+}: DomainSearchProps) {
   const router = useRouter()
   const { user } = useClientAuth()
   const [query, setQuery] = useState("")
@@ -40,29 +51,42 @@ export function DomainSearch() {
     router.push(checkoutPath)
   }
 
+  const isPanel = variant === "panel"
+
   return (
-    <div className="mt-10">
+    <div className={cn(isPanel ? "flex flex-col gap-5" : "mt-10", className)}>
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center gap-2 overflow-hidden rounded-xl border border-input bg-background p-2 transition-shadow focus-within:ring-3 focus-within:ring-ring/30"
+        className={cn(
+          "relative flex items-center gap-2 overflow-hidden rounded-xl border border-input bg-background p-2 transition-shadow focus-within:ring-3 focus-within:ring-ring/30",
+          isPanel && "rounded-lg"
+        )}
       >
-        <BorderBeam size={140} duration={7} colorFrom="#FD6005" colorTo="#0A2540" />
+        {!isPanel && <BorderBeam size={140} duration={7} colorFrom="#FD6005" colorTo="#0A2540" />}
         <Search className="ml-3 size-5 shrink-0 text-muted-foreground" />
         <Input
           id={DOMAIN_SEARCH_INPUT_ID}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="yourbusiness.com"
-          className="h-12 flex-1 border-0 bg-transparent px-1 text-lg shadow-none focus-visible:ring-0"
-          autoFocus
+          className={cn(
+            "flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0",
+            isPanel ? "h-10 text-base" : "h-12 text-lg"
+          )}
+          autoFocus={autoFocus}
         />
-        <Button type="submit" size="lg" className="h-12 gap-2 px-6 text-base" disabled={!query.trim()}>
+        <Button
+          type="submit"
+          size={isPanel ? "default" : "lg"}
+          className={cn("gap-2", isPanel ? "h-10 px-4" : "h-12 px-6 text-base")}
+          disabled={!query.trim()}
+        >
           <Search className="size-4" />
           Search
         </Button>
       </form>
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div className={cn("flex flex-col gap-3", !isPanel && "mt-8")}>
         {isFetching && <DomainResultsSkeleton />}
 
         {isError && (
@@ -119,12 +143,14 @@ export function DomainSearch() {
                         <div className="text-lg font-semibold">
                           {formatBDT(result.priceBdt)}
                           <span className="text-muted-foreground font-normal">
-                            /yr
+                            /year
                           </span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatUSD(result.priceUsd)}
-                        </div>
+                        {result.renewalPriceBdt > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            Renewal {formatBDT(result.renewalPriceBdt)}/year
+                          </div>
+                        )}
                       </div>
                       <Button size="lg" onClick={() => handleBuy(result)}>Buy</Button>
                     </div>

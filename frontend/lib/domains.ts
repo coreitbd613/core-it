@@ -11,6 +11,8 @@ export type DomainSearchResult = {
   isPremium: boolean
   priceUsd: number
   priceBdt: number
+  renewalPriceUsd: number
+  renewalPriceBdt: number
 }
 
 export type RegistrantInput = {
@@ -20,7 +22,6 @@ export type RegistrantInput = {
   registrantAddress2?: string
   registrantCity: string
   registrantStateProvince: string
-  registrantPostalCode: string
   registrantCountry: string
   registrantPhone: string
   registrantEmail: string

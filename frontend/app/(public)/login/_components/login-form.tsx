@@ -43,6 +43,7 @@ export function LoginForm({
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get("redirect")
+  const loginRedirectPath = getLoginRedirectPath(redirect)
   const queryClient = useQueryClient()
   const [email, setEmail] = useState("")
 
@@ -73,7 +74,7 @@ export function LoginForm({
       const user = (await res.json()) as CurrentUser
       queryClient.setQueryData(currentUserKey("client"), user)
 
-      router.push(getLoginRedirectPath(redirect))
+      router.push(loginRedirectPath)
       router.refresh()
     } catch {
       toast.error("Couldn't reach the server. Please try again.")
@@ -165,7 +166,7 @@ export function LoginForm({
               </FieldSeparator>
               <Field>
                 <Button variant="outline"  type="button" className="w-full" asChild>
-                  <a href={`${API_URL}/auth/google`}>
+                  <a href={`${API_URL}/auth/google?redirect=${encodeURIComponent(loginRedirectPath)}`}>
                     <FcGoogle className="size-4" />
                     Continue with Google
                   </a>

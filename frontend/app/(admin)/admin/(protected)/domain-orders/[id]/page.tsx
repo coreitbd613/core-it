@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { useDomainOrder, useUpdateDomainOrderStatus } from "@/hooks/use-domains"
-import { formatBDT, formatUSD } from "@/lib/format"
-import type { DomainOrderStatus } from "@/lib/domains"
+import { formatBDT } from "@/lib/format"
+import type { AdminDomainOrder, DomainOrderStatus } from "@/lib/domains"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,19 +35,26 @@ const STATUS_VARIANT: Record<
 
 export default function AdminDomainOrderDetailPage() {
   const params = useParams<{ id: string }>()
-  const router = useRouter()
   const { data: order, isPending } = useDomainOrder(params.id)
-  const updateStatus = useUpdateDomainOrderStatus(params.id)
 
-  const [status, setStatus] = useState<DomainOrderStatus>("PENDING")
-  const [adminNote, setAdminNote] = useState("")
+  if (isPending || !order) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64 w-full max-w-2xl rounded-lg" />
+      </div>
+    )
+  }
 
-  useEffect(() => {
-    if (order) {
-      setStatus(order.status)
-      setAdminNote(order.adminNote ?? "")
-    }
-  }, [order])
+  return <AdminDomainOrderDetail order={order} />
+}
+
+function AdminDomainOrderDetail({ order }: { order: AdminDomainOrder }) {
+  const router = useRouter()
+  const updateStatus = useUpdateDomainOrderStatus(order.id)
+
+  const [status, setStatus] = useState<DomainOrderStatus>(order.status)
+  const [adminNote, setAdminNote] = useState(order.adminNote ?? "")
 
   function handleSave() {
     updateStatus.mutate(
@@ -56,15 +63,6 @@ export default function AdminDomainOrderDetailPage() {
         onSuccess: () => toast.success("Order updated."),
         onError: (error) => toast.error(error.message),
       },
-    )
-  }
-
-  if (isPending || !order) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-64 w-full max-w-2xl rounded-lg" />
-      </div>
     )
   }
 
@@ -88,7 +86,7 @@ export default function AdminDomainOrderDetailPage() {
           <CardContent className="flex flex-col gap-3 text-sm">
             <Row label="Domain" value={order.domainName} />
             <Row label="Registration length" value={`${order.years} ${order.years === 1 ? "year" : "years"}`} />
-            <Row label="Price" value={`${formatBDT(Number(order.priceBdt))} (${formatUSD(Number(order.priceUsd))})`} />
+            <Row label="Price" value={`${formatBDT(Number(order.priceBdt))}/year`} />
             <Row label="Exchange rate used" value={`1 USD = ${order.exchangeRate} BDT`} />
             <Row label="Customer" value={`${order.user.name ?? "—"} · ${order.user.email}`} />
             <Row label="Submitted" value={new Date(order.createdAt).toLocaleString()} />
@@ -108,8 +106,8 @@ export default function AdminDomainOrderDetailPage() {
                 .join(", ")}
             />
             <Row
-              label="City / State / Postal"
-              value={`${order.registrantCity}, ${order.registrantStateProvince} ${order.registrantPostalCode}`}
+              label="City / State"
+              value={`${order.registrantCity}, ${order.registrantStateProvince}`}
             />
             <Row label="Country" value={order.registrantCountry} />
             <Row label="Phone" value={order.registrantPhone} />

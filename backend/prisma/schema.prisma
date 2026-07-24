@@ -152,7 +152,6 @@ model DomainOrder {
   registrantAddress2     String?
   registrantCity         String
   registrantStateProvince String
-  registrantPostalCode   String
   registrantCountry      String
   registrantPhone        String
   registrantEmail        String
@@ -163,4 +162,3 @@ model DomainOrder {
   @@index([userId])
   @@index([status])
 }
-

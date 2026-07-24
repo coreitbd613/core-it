@@ -37,12 +37,9 @@ type CompanyProfile = {
   phone: string
   website: string
   addressLine1: string
-  addressLine2: string
   city: string
   stateProvince: string
-  postalCode: string
   country: string
-  taxId: string
   tradeLicense: string
   tin: string
   bin: string
@@ -62,12 +59,9 @@ const initialProfile: CompanyProfile = {
   phone: "+8801712345678",
   website: "https://acmecorp.com",
   addressLine1: "",
-  addressLine2: "",
   city: "",
   stateProvince: "",
-  postalCode: "",
   country: "BD",
-  taxId: "",
   tradeLicense: "",
   tin: "",
   bin: "",
@@ -138,7 +132,16 @@ export default function CompanySettingsPage() {
             This information appears on proposals, invoices, and statements.
           </p>
         </div>
-        {!canManageCompany && <Badge variant="secondary">View only</Badge>}
+        <div className="flex shrink-0 items-center gap-2">
+          {!canManageCompany ? (
+            <Badge variant="secondary">View only</Badge>
+          ) : (
+            <Button type="submit" disabled={!isDirty || isSaving}>
+              {isSaving && <Spinner className="size-4" />}
+              Save changes
+            </Button>
+          )}
+        </div>
       </div>
 
       <fieldset disabled={!canManageCompany} className="contents">
@@ -274,7 +277,7 @@ export default function CompanySettingsPage() {
         <CardContent>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="company-address1">Address line 1</FieldLabel>
+              <FieldLabel htmlFor="company-address1">Address line</FieldLabel>
               <div className="relative">
                 <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -285,17 +288,6 @@ export default function CompanySettingsPage() {
                   className="pl-9"
                 />
               </div>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="company-address2">Address line 2</FieldLabel>
-              <Input
-                id="company-address2"
-                value={form.addressLine2}
-                onChange={(e) => update("addressLine2", e.target.value)}
-                placeholder="Apartment, suite, unit (optional)"
-              />
-              <FieldDescription>Optional.</FieldDescription>
             </Field>
 
             <Field>
@@ -334,27 +326,7 @@ export default function CompanySettingsPage() {
                   onChange={(value) => update("city", value)}
                 />
               </Field>
-              <Field>
-                <FieldLabel htmlFor="company-postal">Postal code</FieldLabel>
-                <Input
-                  id="company-postal"
-                  value={form.postalCode}
-                  onChange={(e) => update("postalCode", e.target.value)}
-                />
-              </Field>
             </div>
-
-            <Field>
-              <FieldLabel htmlFor="company-tax">Tax/Registration number</FieldLabel>
-              <Input
-                id="company-tax"
-                value={form.taxId}
-                onChange={(e) => update("taxId", e.target.value)}
-                placeholder="Optional"
-                className="max-w-sm"
-              />
-              <FieldDescription>Shown on invoices if provided.</FieldDescription>
-            </Field>
           </FieldGroup>
         </CardContent>
       </Card>
@@ -481,14 +453,6 @@ export default function CompanySettingsPage() {
       </div>
       </div>
 
-      {canManageCompany && (
-        <div className="flex justify-end border-t pt-6">
-          <Button type="submit" disabled={!isDirty || isSaving}>
-            {isSaving && <Spinner className="size-4" />}
-            Save changes
-          </Button>
-        </div>
-      )}
       </fieldset>
     </form>
   )

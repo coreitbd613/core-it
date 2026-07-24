@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 
 import { useClientAuth } from "@/contexts/client-auth-context"
-import { MockRoleProvider, useMockRole } from "@/contexts/mock-role-context"
+import { MockRoleProvider } from "@/contexts/mock-role-context"
 import { Button } from "@/components/ui/button"
 import PanelDashboardShell, {
   type PanelNavItem,
@@ -30,8 +30,6 @@ import { mockContracts } from "@/lib/mock/contracts"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
 import { mockInvoices } from "@/lib/mock/invoices"
-
-import { MockRoleSwitcher } from "./_components/mock-role-switcher"
 
 const CURRENT_ORG_ID = "org-1"
 
@@ -95,21 +93,11 @@ function buildSearchItems(): SearchItem[] {
   ]
 }
 
-function buildNavItems(canManageTeam: boolean, canViewBilling: boolean): PanelNavItem[] {
+function buildNavItems(): PanelNavItem[] {
   return [
-    { name: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard /> },
-    { name: "Proposals", href: "/portal/proposals", icon: <FileTextIcon /> },
-    { name: "Projects", href: "/portal/projects", icon: <FolderKanbanIcon /> },
+    { name: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon /> },
     { name: "Domains", href: "/portal/domains/orders", icon: <GlobeIcon /> },
-    ...(canViewBilling
-      ? [
-          { name: "Contracts", href: "/portal/contracts", icon: <FileSignatureIcon /> },
-          { name: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon /> },
-          { name: "Statements", href: "/portal/statements", icon: <ScrollTextIcon /> },
-        ]
-      : []),
     { name: "Company", href: "/portal/settings/company", icon: <Building2Icon /> },
-    ...(canManageTeam ? [{ name: "Team", href: "/portal/settings/team", icon: <UsersIcon /> }] : []),
     { name: "Profile", href: "/portal/profile", icon: <User /> },
   ]
 }
@@ -129,7 +117,6 @@ export default function ClientLayout({
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, isPending, logout } = useClientAuth()
-  const { canManageTeam, canViewBilling } = useMockRole()
 
   async function handleLogout() {
     await logout()
@@ -139,8 +126,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <PanelDashboardShell
-      panelHomeHref="/portal/dashboard"
-      navItems={buildNavItems(canManageTeam, canViewBilling)}
+      panelHomeHref="/portal/invoices"
+      navItems={buildNavItems()}
       user={{
         name: user?.name ?? "User",
         email: user?.email ?? "",
@@ -163,7 +150,6 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       }
     >
       {children}
-      <MockRoleSwitcher />
     </PanelDashboardShell>
   )
 }

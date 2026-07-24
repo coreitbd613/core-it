@@ -1,19 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Camera, Mail } from "lucide-react"
+import { useRef, useState } from "react"
+import { BriefcaseBusiness, Camera, Mail, User } from "lucide-react"
 import { toast } from "sonner"
 
 import {
-  useChangePassword,
   useCurrentUser,
   useUpdateProfile,
   useUploadAvatar,
 } from "@/hooks/use-current-user"
-import { logout, type AuthScope } from "@/lib/auth"
-import { PasswordInput } from "@/components/shared/password-input"
+import type { AuthScope, CurrentUser } from "@/lib/auth"
 import {
   Avatar,
   AvatarFallback,
@@ -30,12 +27,10 @@ import {
 } from "@/components/ui/card"
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { PhoneNumberInput } from "@/components/shared/phone-number-input"
@@ -49,27 +44,7 @@ function getInitials(name: string) {
 }
 
 export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
-  const router = useRouter()
   const { data: user, isPending } = useCurrentUser(scope)
-  const updateProfile = useUpdateProfile(scope)
-  const uploadAvatar = useUploadAvatar(scope)
-  const changePassword = useChangePassword(scope)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const [name, setName] = useState("")
-  const [contactNumber, setContactNumber] = useState("")
-  const [whatsappNumber, setWhatsappNumber] = useState("")
-
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-
-  useEffect(() => {
-    if (!user) return
-    setName(user.name ?? "")
-    setContactNumber(user.contactNumber ?? "")
-    setWhatsappNumber(user.whatsappNumber ?? "")
-  }, [user])
 
   if (isPending) {
     return <ProfileFormSkeleton />
@@ -85,10 +60,45 @@ export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
     )
   }
 
+  return <LoadedProfileForm scope={scope} user={user} />
+}
+
+function LoadedProfileForm({
+  scope,
+  user,
+}: {
+  scope: AuthScope
+  user: CurrentUser
+}) {
+  const updateProfile = useUpdateProfile(scope)
+  const uploadAvatar = useUploadAvatar(scope)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [name, setName] = useState(user.name ?? "")
+  const [jobTitle, setJobTitle] = useState("")
+  const [savedJobTitle, setSavedJobTitle] = useState("")
+  const [contactNumber, setContactNumber] = useState(user.contactNumber ?? "")
+
   const isDirty =
     name !== (user.name ?? "") ||
-    contactNumber !== (user.contactNumber ?? "") ||
-    whatsappNumber !== (user.whatsappNumber ?? "")
+    jobTitle !== savedJobTitle ||
+    contactNumber !== (user.contactNumber ?? "")
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    updateProfile.mutate(
+      {
+        name: name.trim() || undefined,
+        contactNumber: contactNumber.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setSavedJobTitle(jobTitle)
+          toast.success("Profile updated.")
+        },
+        onError: (error) => toast.error(error.message),
+      },
+    )
+  }
 
   function handleAvatarSelect(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -110,154 +120,114 @@ export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
     })
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    updateProfile.mutate(
-      {
-        name: name.trim() || undefined,
-        contactNumber: contactNumber.trim() || undefined,
-        whatsappNumber: whatsappNumber.trim() || undefined,
-      },
-      {
-        onSuccess: () => toast.success("Profile updated."),
-        onError: (error) => toast.error(error.message),
-      },
-    )
-  }
-
-  function handleChangePassword(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords don't match.")
-      return
-    }
-
-    changePassword.mutate(
-      { currentPassword, newPassword },
-      {
-        onSuccess: async () => {
-          toast.success("Password changed. Please sign in again.")
-          await logout(scope)
-          router.push(scope === "admin" ? "/admin/login" : "/login")
-          router.refresh()
-        },
-        onError: (error) => toast.error(error.message),
-      },
-    )
-  }
-
   const initials = getInitials(user.name ?? user.email)
 
   return (
-    <div className="flex flex-col gap-6">
     <form onSubmit={handleSubmit}>
-      <Card className="max-w-2xl">
+      <Card className="max-w-5xl">
         <CardHeader>
-          <CardTitle>Personal information</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <User className="size-5 text-muted-foreground" />
+            Personal details
+          </CardTitle>
           <CardDescription>
-            How you appear across Core IT and how we can reach you.
+            This profile belongs to your login account.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-6">
-          <div className="flex items-center gap-5">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadAvatar.isPending}
-              className="group relative shrink-0 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              aria-label="Change profile photo"
-            >
-              <Avatar className="size-20">
-                {user.avatarUrl ? (
-                  <AvatarImage src={user.avatarUrl} alt={user.name ?? user.email} />
-                ) : null}
-                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                {uploadAvatar.isPending ? (
-                  <Spinner className="size-5 text-white" />
-                ) : (
-                  <Camera className="size-5 text-white" />
-                )}
-              </span>
-            </button>
-            <div className="flex flex-col gap-1.5">
-              <Button
+        <CardContent>
+          <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
+            <div className="flex flex-col gap-3">
+              <FieldLabel>Profile photo</FieldLabel>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadAvatar.isPending}
-                className="w-fit"
+                className="group relative size-36 overflow-hidden rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-70"
+                aria-label="Change profile photo"
               >
-                {uploadAvatar.isPending && <Spinner className="size-3.5" />}
-                Change photo
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                JPG or PNG, up to 5MB.
-              </p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarSelect}
-            />
-          </div>
-
-          <Separator />
-
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="profile-name">Full name</FieldLabel>
-              <Input
-                id="profile-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Jane Doe"
-                autoComplete="name"
-                maxLength={120}
+                <Avatar className="size-full">
+                  {user.avatarUrl ? (
+                    <AvatarImage src={user.avatarUrl} alt={user.name ?? user.email} className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className="text-3xl">{initials}</AvatarFallback>
+                </Avatar>
+                <span className="absolute inset-x-0 bottom-0 flex h-12 items-center justify-center gap-1.5 bg-black/55 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  {uploadAvatar.isPending ? (
+                    <Spinner className="size-4 text-white" />
+                  ) : (
+                    <>
+                      <Camera className="size-4" />
+                      Upload
+                    </>
+                  )}
+                </span>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarSelect}
               />
-            </Field>
+            </div>
 
-            <Field>
-              <FieldLabel htmlFor="profile-email">Email</FieldLabel>
-              <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <FieldGroup>
+              <div className="grid gap-5 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="profile-name">Full name</FieldLabel>
                 <Input
-                  id="profile-email"
-                  value={user.email}
-                  disabled
-                  className="pl-9"
+                  id="profile-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="e.g. Ayesha Rahman"
+                  autoComplete="name"
+                  maxLength={120}
                 />
-              </div>
-              <FieldDescription>
-                Your email is used to sign in and can&apos;t be changed here.
-              </FieldDescription>
-            </Field>
+              </Field>
 
-            <div className="grid gap-5 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="profile-email">Email address</FieldLabel>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="profile-email"
+                    value={user.email}
+                    disabled
+                    className="pl-9"
+                    autoComplete="email"
+                  />
+                </div>
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="profile-job-title">Job title</FieldLabel>
+                <div className="relative">
+                  <BriefcaseBusiness className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="profile-job-title"
+                    value={jobTitle}
+                    onChange={(event) => setJobTitle(event.target.value)}
+                    placeholder="e.g. Operations Manager"
+                    className="pl-9"
+                    autoComplete="organization-title"
+                    maxLength={120}
+                  />
+                </div>
+              </Field>
+
               <Field>
                 <FieldLabel htmlFor="profile-contact">Contact number</FieldLabel>
                 <PhoneNumberInput
                   id="profile-contact"
                   value={contactNumber}
                   onChange={setContactNumber}
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="profile-whatsapp">WhatsApp number</FieldLabel>
-                <PhoneNumberInput
-                  id="profile-whatsapp"
-                  value={whatsappNumber}
-                  onChange={setWhatsappNumber}
+                  autoComplete="tel"
                 />
               </Field>
             </div>
-          </FieldGroup>
+            </FieldGroup>
+          </div>
         </CardContent>
 
         <CardFooter className="justify-end border-t">
@@ -268,97 +238,25 @@ export function ProfileForm({ scope = "client" }: { scope?: AuthScope }) {
         </CardFooter>
       </Card>
     </form>
-
-    <form onSubmit={handleChangePassword}>
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Change password</CardTitle>
-          <CardDescription>
-            Changing your password signs you out of all devices.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="current-password">Current password</FieldLabel>
-              <PasswordInput
-                id="current-password"
-                name="currentPassword"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-            </Field>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="new-password">New password</FieldLabel>
-                <PasswordInput
-                  id="new-password"
-                  name="newPassword"
-                  autoComplete="new-password"
-                  minLength={8}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="confirm-new-password">Confirm new password</FieldLabel>
-                <PasswordInput
-                  id="confirm-new-password"
-                  name="confirmNewPassword"
-                  autoComplete="new-password"
-                  minLength={8}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </Field>
-            </div>
-            <FieldDescription>Must be at least 8 characters long.</FieldDescription>
-          </FieldGroup>
-        </CardContent>
-
-        <CardFooter className="justify-end border-t">
-          <Button
-            type="submit"
-            disabled={
-              !currentPassword || !newPassword || !confirmPassword || changePassword.isPending
-            }
-          >
-            {changePassword.isPending && <Spinner className="size-4" />}
-            Change password
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
-    </div>
   )
 }
 
 function ProfileFormSkeleton() {
   return (
-    <Card className="max-w-2xl">
+    <Card className="max-w-5xl">
       <CardHeader>
         <Skeleton className="h-5 w-44" />
         <Skeleton className="h-4 w-72" />
       </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        <div className="flex items-center gap-5">
-          <Skeleton className="size-20 rounded-full" />
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-8 w-28" />
-            <Skeleton className="h-3 w-32" />
+      <CardContent>
+        <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="size-36 rounded-full" />
           </div>
-        </div>
-        <Separator />
-        <div className="flex flex-col gap-5">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
             <Skeleton className="h-9 w-full" />
             <Skeleton className="h-9 w-full" />
           </div>

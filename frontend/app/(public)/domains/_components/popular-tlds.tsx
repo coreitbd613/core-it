@@ -63,8 +63,15 @@ export function PopularTlds() {
                 <span className="text-sm text-muted-foreground">Search to see price</span>
               ) : (
                 <div>
-                  <span className="text-lg font-medium">{formatBDT(result.priceBdt)}</span>
-                  <span className="text-muted-foreground"> /yr</span>
+                  <span className="text-lg font-medium">
+                    {formatBDT(result.priceBdt)}
+                  </span>
+                  <span className="text-muted-foreground">/year</span>
+                  {result.renewalPriceBdt > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      Renewal {formatBDT(result.renewalPriceBdt)}/year
+                    </div>
+                  )}
                 </div>
               )}
             </button>

@@ -1,8 +1,26 @@
 import { Injectable } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
 
 @Injectable()
-export class GoogleAuthGuard extends AuthGuard('google') {}
+export class GoogleAuthGuard extends AuthGuard('google') {
+  getAuthenticateOptions(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest<Request>();
+    const redirect = request.query.redirect;
+    const redirectPath = Array.isArray(redirect) ? redirect[0] : redirect;
+
+    if (
+      typeof redirectPath === 'string' &&
+      redirectPath.startsWith('/') &&
+      !redirectPath.startsWith('//')
+    ) {
+      return { state: redirectPath };
+    }
+
+    return undefined;
+  }
+}
 
 /**
  * Used only on the callback route: swallows strategy failures (denied

@@ -11,6 +11,7 @@ import { CreateDomainOrderDto } from './dto/create-domain-order.dto';
 import { UpdateDomainOrderStatusDto } from './dto/update-domain-order-status.dto';
 
 const COMMON_TLDS = ['com', 'net', 'org', 'io', 'co', 'xyz', 'info'];
+const DOMAIN_PRICE_ROUNDING_BDT = 50;
 
 export interface DomainSearchResult {
   domain: string;
@@ -19,6 +20,8 @@ export interface DomainSearchResult {
   isPremium: boolean;
   priceUsd: number;
   priceBdt: number;
+  renewalPriceUsd: number;
+  renewalPriceBdt: number;
 }
 
 @Injectable()
@@ -31,6 +34,15 @@ export class DomainService {
 
   private exchangeRate(): number {
     return Number(this.configService.get<string>('USD_TO_BDT_RATE', '122'));
+  }
+
+  private toRoundedBdt(priceUsd: number, rate: number): number {
+    const priceBdt = priceUsd * rate;
+    if (priceBdt <= 0) return 0;
+    return (
+      Math.ceil(priceBdt / DOMAIN_PRICE_ROUNDING_BDT) *
+      DOMAIN_PRICE_ROUNDING_BDT
+    );
   }
 
   private parseQuery(query: string): { domain: string; tld: string }[] {
@@ -71,12 +83,15 @@ export class DomainService {
             isPremium: false,
             priceUsd: 0,
             priceBdt: 0,
+            renewalPriceUsd: 0,
+            renewalPriceBdt: 0,
           };
         }
 
+        const pricing = await this.namecheapService.getPricing(candidate.tld);
         const priceUsd = match.isPremium
           ? (match.premiumPriceUsd ?? 0)
-          : await this.namecheapService.getPricing(candidate.tld);
+          : pricing.registrationUsd;
 
         return {
           domain: candidate.domain,
@@ -84,7 +99,9 @@ export class DomainService {
           available: true,
           isPremium: match.isPremium,
           priceUsd,
-          priceBdt: Math.round(priceUsd * rate),
+          priceBdt: this.toRoundedBdt(priceUsd, rate),
+          renewalPriceUsd: pricing.renewalUsd,
+          renewalPriceBdt: this.toRoundedBdt(pricing.renewalUsd, rate),
         };
       }),
     );
@@ -107,9 +124,10 @@ export class DomainService {
       );
     }
 
+    const pricing = await this.namecheapService.getPricing(tld);
     const priceUsd = availability.isPremium
       ? (availability.premiumPriceUsd ?? 0)
-      : await this.namecheapService.getPricing(tld);
+      : pricing.registrationUsd;
     const rate = this.exchangeRate();
 
     return this.prisma.domainOrder.create({
@@ -119,7 +137,7 @@ export class DomainService {
         tld,
         years: dto.years ?? 1,
         priceUsd,
-        priceBdt: Math.round(priceUsd * rate),
+        priceBdt: this.toRoundedBdt(priceUsd, rate),
         exchangeRate: rate,
         registrantFirstName: dto.registrantFirstName,
         registrantLastName: dto.registrantLastName,
@@ -127,7 +145,6 @@ export class DomainService {
         registrantAddress2: dto.registrantAddress2,
         registrantCity: dto.registrantCity,
         registrantStateProvince: dto.registrantStateProvince,
-        registrantPostalCode: dto.registrantPostalCode,
         registrantCountry: dto.registrantCountry,
         registrantPhone: dto.registrantPhone,
         registrantEmail: dto.registrantEmail,

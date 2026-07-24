@@ -42,7 +42,7 @@ const phoneCountries: PhoneCountry[] = Country.getAllCountries()
 const DEFAULT_COUNTRY: PhoneCountry =
   phoneCountries.find((country) => country.isoCode === "BD") ?? phoneCountries[0]
 
-/** Strips a local BD trunk `0` if present and checks for a valid 10-digit mobile number. */
+/** Strips a local BD trunk `0` if present and returns the 10 mobile digits stored after +880. */
 function normalizeBdDigits(raw: string): string {
   let digits = raw.replace(/\D/g, "")
   if (digits.startsWith("0")) digits = digits.slice(1)
@@ -69,6 +69,8 @@ type PhoneNumberInputProps = {
   onBlur?: () => void
   disabled?: boolean
   id?: string
+  name?: string
+  autoComplete?: string
   "aria-invalid"?: boolean
   className?: string
 }
@@ -79,6 +81,8 @@ export function PhoneNumberInput({
   onBlur,
   disabled,
   id,
+  name,
+  autoComplete = "tel",
   "aria-invalid": ariaInvalid,
   className,
 }: PhoneNumberInputProps) {
@@ -91,6 +95,7 @@ export function PhoneNumberInput({
   const [selectedIso, setSelectedIso] = React.useState<string>(
     () => matchCountry(value)?.isoCode ?? DEFAULT_COUNTRY.isoCode
   )
+  const [bdTrunkStarted, setBdTrunkStarted] = React.useState(false)
   const selectedCountry =
     phoneCountries.find((c) => c.isoCode === selectedIso) ?? DEFAULT_COUNTRY
 
@@ -110,13 +115,24 @@ export function PhoneNumberInput({
     ? value.slice(selectedCountry.dialCode.length).replace(/\D/g, "")
     : ""
 
+  const displayDigits =
+    selectedCountry.dialCode === "+880" && (nationalDigits || bdTrunkStarted)
+      ? `0${nationalDigits}`
+      : nationalDigits
+
   const displayValue = React.useMemo(() => {
-    if (!nationalDigits) return ""
+    if (!displayDigits) return ""
     const formatter = new AsYouType(selectedCountry.isoCode as CountryCode)
-    return formatter.input(nationalDigits)
-  }, [nationalDigits, selectedCountry.isoCode])
+    return formatter.input(displayDigits)
+  }, [displayDigits, selectedCountry.isoCode])
 
   function emit(nextDialCode: string, rawDigits: string) {
+    if (nextDialCode === "+880") {
+      setBdTrunkStarted(rawDigits.replace(/\D/g, "") === "0")
+    } else {
+      setBdTrunkStarted(false)
+    }
+
     const digits =
       nextDialCode === "+880" ? normalizeBdDigits(rawDigits) : rawDigits.replace(/\D/g, "").slice(0, 15)
     onChange(digits ? `${nextDialCode}${digits}` : "")
@@ -173,8 +189,10 @@ export function PhoneNumberInput({
 
       <InputGroupInput
         id={id}
+        name={name ?? id}
         type="tel"
         inputMode="numeric"
+        autoComplete={autoComplete}
         placeholder={selectedCountry.dialCode === "+880" ? "01XXX-XXXXXX" : "Phone number"}
         value={displayValue}
         onChange={(e) => emit(selectedCountry.dialCode, e.target.value)}

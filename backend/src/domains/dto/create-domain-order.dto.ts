@@ -52,10 +52,6 @@ export class CreateDomainOrderDto {
 
   @IsString()
   @IsNotEmpty()
-  registrantPostalCode: string;
-
-  @IsString()
-  @IsNotEmpty()
   registrantCountry: string;
 
   @IsString()
