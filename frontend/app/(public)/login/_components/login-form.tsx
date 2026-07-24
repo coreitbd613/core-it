@@ -27,6 +27,14 @@ import { currentUserKey } from "@/hooks/use-current-user"
 import type { CurrentUser } from "@/lib/auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
+const CLIENT_DASHBOARD_PATH = "/portal/dashboard"
+
+function getLoginRedirectPath(redirect: string | null) {
+  if (!redirect || redirect === "/dashboard") return CLIENT_DASHBOARD_PATH
+  if (!redirect.startsWith("/") || redirect.startsWith("//")) return CLIENT_DASHBOARD_PATH
+
+  return redirect
+}
 
 export function LoginForm({
   className,
@@ -65,7 +73,7 @@ export function LoginForm({
       const user = (await res.json()) as CurrentUser
       queryClient.setQueryData(currentUserKey("client"), user)
 
-      router.push(redirect ?? "/portal/dashboard")
+      router.push(getLoginRedirectPath(redirect))
       router.refresh()
     } catch {
       toast.error("Couldn't reach the server. Please try again.")

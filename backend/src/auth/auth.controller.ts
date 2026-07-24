@@ -38,7 +38,10 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
+import {
+  GoogleAuthGuard,
+  GoogleCallbackGuard,
+} from './guards/google-auth.guard';
 import { AdminJwtAuthGuard } from './guards/admin-jwt-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -156,11 +159,10 @@ export class AuthController {
       return;
     }
 
-    const { user: _user, ...tokens } = await this.authService.loginWithGoogle(
-      profile,
-    );
+    const { user: _user, ...tokens } =
+      await this.authService.loginWithGoogle(profile);
     this.setAuthCookies(res, tokens, AuthScope.CLIENT);
-    res.redirect(`${frontendUrl}/dashboard`);
+    res.redirect(`${frontendUrl}/portal/dashboard`);
   }
 
   @Post('refresh')
@@ -195,10 +197,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const raw = req.cookies?.[CLIENT_REFRESH_COOKIE] as string | undefined;
     await this.authService.logout(raw);
     this.clearAuthCookies(res, AuthScope.CLIENT);

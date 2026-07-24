@@ -48,7 +48,13 @@ import {
 
 const recordTypes: DnsRecordType[] = ["A", "CNAME", "TXT", "MX"]
 
-export function DnsRecordsView({ domainId }: { domainId: string }) {
+export function DnsRecordsView({
+  domainId,
+  basePath = "/domains",
+}: {
+  domainId: string
+  basePath?: "/domains" | "/portal/domains"
+}) {
   const [, forceRerender] = React.useState(0)
   const records = getDnsRecords(domainId)
 
@@ -68,7 +74,7 @@ export function DnsRecordsView({ domainId }: { domainId: string }) {
     <div className="mx-auto w-full max-w-3xl px-4 py-28 sm:px-6 md:py-36 lg:px-8">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/domains/orders" aria-label="Back to domain orders">
+          <Link href={`${basePath}/orders`} aria-label="Back to domain orders">
             <ArrowLeftIcon />
           </Link>
         </Button>

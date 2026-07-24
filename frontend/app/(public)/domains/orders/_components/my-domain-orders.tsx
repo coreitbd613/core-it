@@ -25,7 +25,11 @@ const STATUS_VARIANT: Record<
   REJECTED: "destructive",
 }
 
-export function MyDomainOrders() {
+export function MyDomainOrders({
+  basePath = "/domains",
+}: {
+  basePath?: "/domains" | "/portal/domains"
+}) {
   const { data: orders, isPending } = useMyDomainOrders()
 
   if (isPending) {
@@ -62,10 +66,10 @@ export function MyDomainOrders() {
               {order.status === "COMPLETED" && (
                 <>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/domains/${order.id}/dns`}>Manage DNS</Link>
+                    <Link href={`${basePath}/${order.id}/dns`}>Manage DNS</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/domains/${order.id}/email-forwarding`}>Email forwarding</Link>
+                    <Link href={`${basePath}/${order.id}/email-forwarding`}>Email forwarding</Link>
                   </Button>
                 </>
               )}
