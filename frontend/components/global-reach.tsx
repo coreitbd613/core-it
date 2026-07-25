@@ -39,15 +39,14 @@ const GlobalReach = ({ className }: GlobalReachProps) => {
           </span>
 
           <h2 className="mt-6 text-balance text-4xl font-medium text-foreground md:text-6xl">
-            Powering Businesses{" "}
-            <span className="text-[#FD6005]">Across the Globe</span>
+            World Domination <span className="text-[#FD6005]">35%</span>
           </h2>
 
           <p className="mt-6 max-w-md text-base tracking-tight text-muted-foreground">
-            Wherever your business operates, we&apos;re ready to build with
-            you. Our teams deliver software solutions for clients spanning
-            every continent, backed by processes that scale across time
-            zones.
+            Wherever your business operates, Core IT is ready to build with
+            you. Core IT&apos;s teams deliver software solutions for clients
+            spanning every continent, backed by processes that scale across
+            time zones.
           </p>
 
           <InteractiveHoverButton

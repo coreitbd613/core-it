@@ -21,19 +21,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 
 const navLinks = [
   { label: "Domains", href: "/domains" },
   { label: "Hosting", href: "/hosting" },
   { label: "About", href: "/#about" },
-  { label: "Contact", href: "/contact" },
+  { label: "Contact", href: "/#contact-us" },
 ] as const;
 
 function MobileMenuIcon({ open }: { open: boolean }) {
@@ -93,6 +86,26 @@ export function SiteHeader() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
+
+  function closeMobileMenu() {
+    setMobileOpen(false);
+  }
+
+  function toggleMobileMenu() {
+    setMobileOpen((open) => {
+      if (!open) setMobileView("main");
+      return !open;
+    });
+  }
 
   const navText = "text-foreground/80 hover:text-foreground hover:bg-muted";
   const iconText = "text-foreground/80 hover:bg-muted hover:text-foreground";
@@ -219,133 +232,137 @@ export function SiteHeader() {
             size="icon"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((open) => !open)}
+            onClick={toggleMobileMenu}
             className={cn("relative z-[60] border-none bg-transparent", iconText)}
           >
             <MobileMenuIcon open={mobileOpen} />
           </Button>
-          <Sheet
-            open={mobileOpen}
-            onOpenChange={(open) => {
-              setMobileOpen(open);
-              if (!open) setMobileView("main");
-            }}
-          >
-            <SheetContent side="right" showCloseButton={false} className="w-full gap-0 p-0 sm:max-w-full">
-              <SheetHeader className="flex-row items-center p-4">
-                <SheetTitle className="sr-only">Menu</SheetTitle>
-                <Image
-                  src="/logo-light.png"
-                  alt="CORE IT"
-                  width={527}
-                  height={135}
-                  className="h-8 w-auto dark:hidden"
-                />
-                <Image
-                  src="/logo-dark.png"
-                  alt="CORE IT"
-                  width={527}
-                  height={135}
-                  className="hidden h-8 w-auto dark:block"
-                />
-              </SheetHeader>
 
-              {mobileView === "main" ? (
-                <nav className="flex flex-1 flex-col overflow-y-auto px-6">
-                  <button
-                    type="button"
-                    onClick={() => setMobileView("services")}
-                    className="flex items-center justify-between border-b border-dashed border-border py-4 text-left text-lg font-medium text-foreground"
+          <div
+            aria-hidden={!mobileOpen}
+            className={cn(
+              "fixed inset-0 z-50 flex flex-col bg-background transition-all duration-300 ease-out",
+              mobileOpen
+                ? "translate-y-0 opacity-100"
+                : "pointer-events-none -translate-y-4 opacity-0"
+            )}
+          >
+            <div className="flex h-16 shrink-0 items-center border-b border-border px-4">
+              <Image
+                src="/logo-light.png"
+                alt="CORE IT"
+                width={527}
+                height={135}
+                className="h-8 w-auto dark:hidden"
+              />
+              <Image
+                src="/logo-dark.png"
+                alt="CORE IT"
+                width={527}
+                height={135}
+                className="hidden h-8 w-auto dark:block"
+              />
+            </div>
+
+            {mobileView === "main" ? (
+              <nav className="flex flex-col overflow-y-auto px-6">
+                <button
+                  type="button"
+                  onClick={() => setMobileView("services")}
+                  className="flex items-center justify-between border-b border-dashed border-border py-4 text-left text-lg font-medium text-foreground"
+                >
+                  Services
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                </button>
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMobileMenu}
+                    className="border-b border-dashed border-border py-4 text-lg font-medium text-foreground"
                   >
-                    Services
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  </button>
-                  {navLinks.map((link) => (
-                    <SheetClose key={link.href} asChild>
-                      <Link
-                        href={link.href}
-                        className="border-b border-dashed border-border py-4 text-lg font-medium text-foreground"
-                      >
-                        {link.label}
-                      </Link>
-                    </SheetClose>
-                  ))}
-                </nav>
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            ) : (
+              <div className="flex flex-col overflow-y-auto px-6">
+                <button
+                  type="button"
+                  onClick={() => setMobileView("main")}
+                  className="flex items-center gap-1 py-4 text-sm font-medium text-muted-foreground"
+                >
+                  <ChevronLeft className="size-4" />
+                  Back
+                </button>
+                {services.map((service) => (
+                  <Link
+                    key={service.title}
+                    href={service.href ?? "/#services"}
+                    onClick={closeMobileMenu}
+                    className="flex items-start gap-3 border-b border-dashed border-border py-4"
+                  >
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <service.icon className="size-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-base font-semibold text-foreground">
+                        {service.title}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {service.description}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 px-6 py-6">
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-12 gap-2 text-base"
+                  onClick={closeMobileMenu}
+                  asChild
+                >
+                  <Link href="/admin/dashboard">
+                    <ShieldCheck className="size-5" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
+              {isPending ? (
+                <div className="grid grid-cols-2 gap-3" aria-hidden>
+                  <div className="h-12 w-full animate-pulse rounded-lg bg-muted" />
+                  <div className="h-12 w-full animate-pulse rounded-lg bg-muted" />
+                </div>
+              ) : user ? (
+                <Button size="lg" className="h-12 gap-2 text-base" onClick={closeMobileMenu} asChild>
+                  <Link href="/portal/dashboard">
+                    <LayoutDashboard className="size-5" />
+                    Dashboard
+                  </Link>
+                </Button>
               ) : (
-                <div className="flex flex-1 flex-col overflow-y-auto px-6">
-                  <button
-                    type="button"
-                    onClick={() => setMobileView("main")}
-                    className="flex items-center gap-1 py-4 text-sm font-medium text-muted-foreground"
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-12 text-base"
+                    onClick={closeMobileMenu}
+                    asChild
                   >
-                    <ChevronLeft className="size-4" />
-                    Back
-                  </button>
-                  {services.map((service) => (
-                    <SheetClose key={service.title} asChild>
-                      <Link
-                        href={service.href ?? "/#services"}
-                        className="flex items-start gap-3 border-b border-dashed border-border py-4"
-                      >
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          <service.icon className="size-4" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-base font-semibold text-foreground">
-                            {service.title}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {service.description}
-                          </span>
-                        </div>
-                      </Link>
-                    </SheetClose>
-                  ))}
+                    <Link href="/login">Sign in</Link>
+                  </Button>
+                  <Button size="lg" className="h-12 text-base" onClick={closeMobileMenu} asChild>
+                    <Link href="/signup">Sign up</Link>
+                  </Button>
                 </div>
               )}
-
-              <div className="flex flex-col gap-2 border-t border-border p-4">
-                {isAdmin && (
-                  <SheetClose asChild>
-                    <Button variant="outline" className="gap-2" asChild>
-                      <Link href="/admin/dashboard">
-                        <ShieldCheck className="size-4" />
-                        Admin
-                      </Link>
-                    </Button>
-                  </SheetClose>
-                )}
-                {isPending ? (
-                  <div className="grid grid-cols-2 gap-2" aria-hidden>
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-muted" />
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-muted" />
-                  </div>
-                ) : user ? (
-                  <SheetClose asChild>
-                    <Button className="gap-2" asChild>
-                      <Link href="/portal/dashboard">
-                        <LayoutDashboard className="size-4" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                  </SheetClose>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    <SheetClose asChild>
-                      <Button variant="outline" asChild>
-                        <Link href="/login">Sign in</Link>
-                      </Button>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Button asChild>
-                        <Link href="/signup">Sign up</Link>
-                      </Button>
-                    </SheetClose>
-                  </div>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+            </div>
+          </div>
         </div>
       </div>
     </header>

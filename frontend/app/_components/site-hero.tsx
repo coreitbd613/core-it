@@ -39,8 +39,9 @@ export function SiteHero() {
 
           {/* Description */}
           <p className="mt-4 max-w-md text-balance text-base text-muted-foreground">
-            We design, build, and host software that fits how your business actually runs —
-            from custom platforms to the everyday IT infrastructure behind them.
+            Core IT designs, builds, and hosts software that fits how your business
+            actually runs — from custom platforms to the everyday IT infrastructure
+            behind them.
           </p>
 
           {/* CTAs */}

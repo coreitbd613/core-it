@@ -44,16 +44,7 @@ function MarqueeCard({
 
 const PortfolioMarquee = ({ className }: PortfolioMarqueeProps) => {
   return (
-    <section className={cn("relative z-10 overflow-hidden bg-background py-24", className)}>
-      <div className="mx-auto mb-12 flex max-w-7xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
-        <h2 className="text-4xl font-medium text-foreground md:text-6xl">
-          Designs we&apos;re proud of
-        </h2>
-        <p className="mt-4 max-w-xl text-base tracking-tight text-muted-foreground">
-          A look at the range of products, brands, and experiences we&apos;ve
-          helped bring to life.
-        </p>
-      </div>
+    <section className={cn("relative z-10 overflow-hidden bg-[#20ABE9] py-24", className)}>
 
       <div className="flex flex-col gap-6">
         <Marquee className="[--duration:35s]">

@@ -15,13 +15,13 @@ const WhatWeDo = ({ className }: WhatWeDoProps) => {
           What We Do
         </h2>
         <p className="text-lg leading-relaxed text-muted-foreground">
-          Core IT is a software development company based in Bangladesh. We design
-          and build websites, mobile apps, and e-commerce platforms for clients,
-          and we also build and operate our own CRM &amp; ERP software product —
-          a business management platform where companies create an account, invite
-          their team, and manage proposals, contracts, projects, invoicing, and
-          domain hosting all in one place. We also offer domain registration,
-          VPS hosting, SEO, and digital marketing services.
+          Core IT is a software development company based in Bangladesh. Core IT
+          designs and builds websites, mobile apps, and e-commerce platforms for
+          clients, and also builds and operates its own CRM &amp; ERP software
+          product — a business management platform where companies create an
+          account, invite their team, and manage proposals, contracts, projects,
+          invoicing, and domain hosting all in one place. Core IT also offers
+          domain registration, VPS hosting, SEO, and digital marketing services.
         </p>
       </div>
     </section>

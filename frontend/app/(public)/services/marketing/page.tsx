@@ -28,7 +28,7 @@ const marketingFaqs = [
 ]
 
 export const metadata: Metadata = {
-  title: "Marketing",
+  title: "Digital Marketing",
   description:
     "Campaigns that bring the right customers to your door. Digital marketing services from Core IT.",
   alternates: { canonical: "/services/marketing" },
@@ -40,7 +40,7 @@ export default function MarketingPage() {
       <div className="mx-auto w-full max-w-7xl px-4 py-28 text-center sm:px-6 md:py-36 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-            Marketing
+            Digital Marketing
           </h1>
           <p className="mt-6 text-xl text-muted-foreground">
             Campaigns that bring the right customers to your door, built

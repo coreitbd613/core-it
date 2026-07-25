@@ -10,16 +10,56 @@ import { cn } from "@/lib/utils"
 const MOVEMENT_DAMPING = 1400
 
 const GLOBE_MARKERS = [
+  // Manila, Philippines
   { location: [14.5995, 120.9842] as [number, number], size: 0.03 },
+  // Mumbai, India
   { location: [19.076, 72.8777] as [number, number], size: 0.1 },
-  { location: [23.8103, 90.4125] as [number, number], size: 0.05 },
+  // Dhaka, Bangladesh
+  { location: [23.8103, 90.4125] as [number, number], size: 0.1 },
+  // Cairo, Egypt
   { location: [30.0444, 31.2357] as [number, number], size: 0.07 },
+  // Beijing, China
   { location: [39.9042, 116.4074] as [number, number], size: 0.08 },
+  // São Paulo, Brazil
   { location: [-23.5505, -46.6333] as [number, number], size: 0.1 },
+  // Mexico City, Mexico
   { location: [19.4326, -99.1332] as [number, number], size: 0.1 },
+  // New York, USA
   { location: [40.7128, -74.006] as [number, number], size: 0.1 },
+  // Osaka, Japan
   { location: [34.6937, 135.5022] as [number, number], size: 0.05 },
+  // Istanbul, Turkey
   { location: [41.0082, 28.9784] as [number, number], size: 0.06 },
+  // London, United Kingdom
+  { location: [51.5074, -0.1278] as [number, number], size: 0.08 },
+  // Berlin, Germany
+  { location: [52.52, 13.405] as [number, number], size: 0.06 },
+  // Paris, France
+  { location: [48.8566, 2.3522] as [number, number], size: 0.06 },
+  // Dubai, UAE
+  { location: [25.2048, 55.2708] as [number, number], size: 0.08 },
+  // Singapore
+  { location: [1.3521, 103.8198] as [number, number], size: 0.07 },
+  // Sydney, Australia
+  { location: [-33.8688, 151.2093] as [number, number], size: 0.06 },
+  // Toronto, Canada
+  { location: [43.6532, -79.3832] as [number, number], size: 0.06 },
+  // Lagos, Nigeria
+  { location: [6.5244, 3.3792] as [number, number], size: 0.06 },
+  // Johannesburg, South Africa
+  { location: [-26.2041, 28.0473] as [number, number], size: 0.05 },
+  // Jakarta, Indonesia
+  { location: [-6.2088, 106.8456] as [number, number], size: 0.06 },
+  // Karachi, Pakistan
+  { location: [24.8607, 67.0011] as [number, number], size: 0.06 },
+  // Moscow, Russia
+  { location: [55.7558, 37.6173] as [number, number], size: 0.06 },
+  // Buenos Aires, Argentina
+  { location: [-34.6037, -58.3816] as [number, number], size: 0.05 },
+  // Seoul, South Korea
+  { location: [37.5665, 126.978] as [number, number], size: 0.06 },
+  // Bangkok, Thailand
+  { location: [13.7563, 100.5018] as [number, number], size: 0.05 },
 ]
 
 const LIGHT_GLOBE_CONFIG: COBEOptions = {

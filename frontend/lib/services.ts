@@ -1,5 +1,4 @@
 import {
-  Code2,
   Globe,
   Smartphone,
   ShoppingCart,
@@ -18,12 +17,6 @@ export type Service = {
 };
 
 export const services: Service[] = [
-  {
-    title: "Software Development",
-    description: "Custom software built around how your business actually works.",
-    icon: Code2,
-    href: "/services/software-development",
-  },
   {
     title: "Web Development",
     description: "Fast, modern websites and web apps that convert visitors.",
@@ -55,7 +48,7 @@ export const services: Service[] = [
     href: "/services/seo",
   },
   {
-    title: "Marketing",
+    title: "Digital Marketing",
     description: "Campaigns that bring the right customers to your door.",
     icon: Megaphone,
     href: "/services/marketing",

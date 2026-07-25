@@ -12,6 +12,11 @@ interface ServicesAccordionProps {
 const serviceImages: Partial<Record<string, string>> = {
   "Web Development": "/website-development.jpeg",
   "Mobile App Development": "/mobile-app-development.webp",
+  "E-Commerce": "/e-commerce-development.webp",
+  "Domain & Hosting": "/domain-hosting-odepe.png",
+  "Search Engine Optimization": "/SEO.png",
+  "Digital Marketing": "/digital_marketing_strategies-1.webp",
+  "Design & Branding": "/branding.webp",
 };
 
 const ServicesAccordion = ({ className }: ServicesAccordionProps) => {
@@ -26,8 +31,8 @@ const ServicesAccordion = ({ className }: ServicesAccordionProps) => {
             Featured Services
           </h2>
           <p className="mt-4 max-w-xl text-base tracking-tight text-muted-foreground">
-            We offer comprehensive digital solutions to help your business
-            grow. From web development to mobile apps, we deliver quality
+            Core IT offers comprehensive digital solutions to help your business
+            grow. From web development to mobile apps, Core IT delivers quality
             results that exceed expectations.
           </p>
         </div>
