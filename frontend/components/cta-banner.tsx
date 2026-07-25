@@ -1,6 +1,5 @@
-import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
+import { WHATSAPP_URL } from "@/lib/contact"
 import { cn } from "@/lib/utils"
 
 interface CtaBannerProps {
@@ -18,7 +17,9 @@ const CtaBanner = ({ className }: CtaBannerProps) => {
           Tell us about your project and we&apos;ll get back to you shortly.
         </p>
         <Button size="lg" className="mt-2 h-12 rounded-lg px-8 text-base" asChild>
-          <Link href="/contact">Get in touch</Link>
+          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+            Get in touch
+          </a>
         </Button>
       </div>
     </section>

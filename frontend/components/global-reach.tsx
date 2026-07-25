@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Globe as GlobeIcon } from "lucide-react";
 
 import { Globe } from "@/components/ui/globe";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { WHATSAPP_URL } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
 interface GlobalReachProps {
@@ -12,8 +12,6 @@ interface GlobalReachProps {
 }
 
 const GlobalReach = ({ className }: GlobalReachProps) => {
-  const router = useRouter();
-
   return (
     <section
       id="global-reach"
@@ -54,7 +52,7 @@ const GlobalReach = ({ className }: GlobalReachProps) => {
 
           <InteractiveHoverButton
             className="mt-10 h-12 w-fit rounded-lg border-transparent bg-white px-8 text-base text-neutral-900 shadow-md"
-            onClick={() => router.push("/contact")}
+            onClick={() => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer")}
           >
             Contact Us
           </InteractiveHoverButton>

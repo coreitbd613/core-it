@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa6";
 
 import { Dock, DockIcon } from "@/components/ui/dock";
+import { WHATSAPP_URL } from "@/lib/contact";
 
 const socialLinks = [
   {
@@ -58,7 +59,7 @@ const footerColumns = [
   {
     title: "Support",
     links: [
-      { label: "Contact us", href: "/contact" },
+      { label: "Contact us", href: WHATSAPP_URL, external: true },
       { label: "Terms and Conditions", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
     ],
@@ -118,6 +119,9 @@ export function SiteFooter() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
+                    {...("external" in link && link.external
+                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      : {})}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {link.label}
