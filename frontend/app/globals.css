@@ -86,7 +86,19 @@
   0% {
     background-position: 20% 20%, 80% 70%;}
   100% {
-    background-position: 30% 30%, 70% 60%;}}}
+    background-position: 30% 30%, 70% 60%;}}
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform: translateX(0);}
+  to {
+    transform: translateX(calc(-100% - var(--gap)));}}
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);}
+  to {
+    transform: translateY(calc(-100% - var(--gap)));}}}
 
 :root {
   --background: #F6F4EE;
