@@ -44,12 +44,12 @@ function MarqueeCard({
 
 const PortfolioMarquee = ({ className }: PortfolioMarqueeProps) => {
   return (
-    <section className={cn("relative z-10 overflow-hidden bg-brand-navy py-24", className)}>
+    <section className={cn("relative z-10 overflow-hidden bg-background py-24", className)}>
       <div className="mx-auto mb-12 flex max-w-7xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
-        <h2 className="text-4xl font-medium text-white md:text-6xl">
+        <h2 className="text-4xl font-medium text-foreground md:text-6xl">
           Designs we&apos;re proud of
         </h2>
-        <p className="mt-4 max-w-xl text-base tracking-tight text-white/60">
+        <p className="mt-4 max-w-xl text-base tracking-tight text-muted-foreground">
           A look at the range of products, brands, and experiences we&apos;ve
           helped bring to life.
         </p>
@@ -68,8 +68,8 @@ const PortfolioMarquee = ({ className }: PortfolioMarqueeProps) => {
         </Marquee>
       </div>
 
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-brand-navy to-transparent sm:w-48" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-brand-navy to-transparent sm:w-48" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent sm:w-48" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent sm:w-48" />
     </section>
   );
 };
