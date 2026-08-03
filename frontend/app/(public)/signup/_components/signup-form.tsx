@@ -184,7 +184,7 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit"  disabled={isPending}>
+                <Button type="submit" size="lg" disabled={isPending}>
                   {isPending && <Spinner className="size-4" />}
                   Create Account
                 </Button>
@@ -193,7 +193,7 @@ export function SignupForm({
                 Or continue with
               </FieldSeparator>
               <Field>
-                <Button variant="outline"  type="button" className="w-full" asChild>
+                <Button variant="outline" size="lg" type="button" className="w-full" asChild>
                   <a href={`${API_URL}/auth/google`}>
                     <FcGoogle className="size-4" />
                     Continue with Google

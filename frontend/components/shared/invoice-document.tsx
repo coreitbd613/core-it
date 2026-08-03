@@ -2,6 +2,7 @@ import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
   invoiceBalanceBdt,
+  invoiceGrandTotalBdt,
   invoicePaidBdt,
   invoiceTotalBdt,
   invoiceTypeLabels,
@@ -15,7 +16,10 @@ const watermarkLabels: Partial<Record<Invoice["status"], string>> = {
 }
 
 export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
-  const total = invoiceTotalBdt(invoice)
+  const subtotal = invoiceTotalBdt(invoice)
+  const discountAmount = subtotal * (invoice.discountPercent / 100)
+  const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
+  const total = invoiceGrandTotalBdt(invoice)
   const paid = invoicePaidBdt(invoice)
   const balance = invoiceBalanceBdt(invoice)
   const status = deriveInvoiceStatus(invoice)
@@ -99,7 +103,25 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       <div className="relative mt-6 flex flex-col items-end gap-2">
         <div className="flex w-full max-w-56 items-center justify-between text-sm">
-          <span className="text-muted-foreground">Total</span>
+          <span className="text-muted-foreground">Subtotal</span>
+          <span className="font-medium tabular-nums text-foreground">{formatBDT(subtotal)}</span>
+        </div>
+        {invoice.discountPercent > 0 && (
+          <div className="flex w-full max-w-56 items-center justify-between text-sm">
+            <span className="text-muted-foreground">Discount ({invoice.discountPercent}%)</span>
+            <span className="font-medium tabular-nums text-foreground">
+              -{formatBDT(discountAmount)}
+            </span>
+          </div>
+        )}
+        {invoice.taxPercent > 0 && (
+          <div className="flex w-full max-w-56 items-center justify-between text-sm">
+            <span className="text-muted-foreground">Tax ({invoice.taxPercent}%)</span>
+            <span className="font-medium tabular-nums text-foreground">{formatBDT(taxAmount)}</span>
+          </div>
+        )}
+        <div className="flex w-full max-w-56 items-center justify-between border-t pt-2 text-sm">
+          <span className="font-medium text-foreground">Total</span>
           <span className="font-medium tabular-nums text-foreground">{formatBDT(total)}</span>
         </div>
         {paid > 0 && (
@@ -113,6 +135,13 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <span className="tabular-nums">{formatBDT(balance)}</span>
         </div>
       </div>
+
+      {invoice.notes && (
+        <div className="relative mt-8 border-t pt-6">
+          <p className="text-xs tracking-wide text-muted-foreground uppercase">Notes</p>
+          <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">{invoice.notes}</p>
+        </div>
+      )}
     </div>
   )
 }

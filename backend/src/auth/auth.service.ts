@@ -101,11 +101,23 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const existing = await this.usersService.findByEmail(dto.email);
+    const hashedPassword = await bcrypt.hash(dto.password, SALT_ROUNDS);
+
     if (existing) {
-      throw new ConflictException('Email already in use');
+      if (existing.emailVerified) {
+        throw new ConflictException('Email already in use');
+      }
+
+      // Unverified signup from before: refresh their details and resend the
+      // verification link instead of permanently locking them out.
+      const user = await this.usersService.updatePendingRegistration(existing.id, {
+        name: dto.name,
+        password: hashedPassword,
+      });
+      await this.sendVerificationEmail(user.id, user.email, user.name);
+      return { user: sanitize(user) };
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, SALT_ROUNDS);
     const user = await this.usersService.create({
       email: dto.email,
       password: hashedPassword,
@@ -203,8 +215,11 @@ export class AuthService {
   async validateGoogleUser(profile: GoogleProfile) {
     const byGoogleId = await this.usersService.findByGoogleId(profile.googleId);
     if (byGoogleId) {
-      if (profile.avatarUrl && profile.avatarUrl !== byGoogleId.avatarUrl) {
-        return this.usersService.update(byGoogleId.id, {
+      const avatarChanged =
+        profile.avatarUrl && profile.avatarUrl !== byGoogleId.avatarUrl;
+      if (avatarChanged || !byGoogleId.emailVerified) {
+        return this.usersService.linkGoogleId(byGoogleId.id, {
+          googleId: profile.googleId,
           avatarUrl: profile.avatarUrl,
         });
       }

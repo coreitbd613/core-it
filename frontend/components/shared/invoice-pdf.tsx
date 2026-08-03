@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { formatBDT } from "@/lib/format"
 import {
   invoiceBalanceBdt,
+  invoiceGrandTotalBdt,
   invoicePaidBdt,
   invoiceTotalBdt,
   type Invoice,
@@ -41,7 +42,10 @@ const styles = StyleSheet.create({
 })
 
 function InvoiceDocument({ invoice }: { invoice: Invoice }) {
-  const total = invoiceTotalBdt(invoice)
+  const subtotal = invoiceTotalBdt(invoice)
+  const discountAmount = subtotal * (invoice.discountPercent / 100)
+  const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
+  const total = invoiceGrandTotalBdt(invoice)
   const paid = invoicePaidBdt(invoice)
   const balance = invoiceBalanceBdt(invoice)
 
@@ -91,6 +95,22 @@ function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
           <View style={styles.totalsBlock}>
             <View style={styles.totalsRow}>
+              <Text style={styles.totalsLabel}>Subtotal</Text>
+              <Text>{formatBDT(subtotal)}</Text>
+            </View>
+            {invoice.discountPercent > 0 && (
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsLabel}>Discount ({invoice.discountPercent}%)</Text>
+                <Text>-{formatBDT(discountAmount)}</Text>
+              </View>
+            )}
+            {invoice.taxPercent > 0 && (
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsLabel}>Tax ({invoice.taxPercent}%)</Text>
+                <Text>{formatBDT(taxAmount)}</Text>
+              </View>
+            )}
+            <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>Total</Text>
               <Text>{formatBDT(total)}</Text>
             </View>
@@ -106,6 +126,13 @@ function InvoiceDocument({ invoice }: { invoice: Invoice }) {
             </View>
           </View>
         </View>
+
+        {invoice.notes && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Notes</Text>
+            <Text>{invoice.notes}</Text>
+          </View>
+        )}
       </Page>
     </Document>
   )

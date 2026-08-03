@@ -43,7 +43,7 @@ type DataTableProps<TData> = {
   getRowId: (row: TData) => string
   isLoading?: boolean
   skeletonRows?: number
-  emptyMessage?: string
+  emptyMessage?: React.ReactNode
   pageSize?: number
   globalFilter?: string
   selectedLabel?: string
@@ -52,6 +52,7 @@ type DataTableProps<TData> = {
   sorting?: SortingState
   onSortingChange?: OnChangeFn<SortingState>
   onRowClick?: (row: TData) => void
+  getRowClassName?: (row: TData) => string | undefined
   enableRowSelection?: boolean | ((row: TData) => boolean)
   className?: string
   density?: "default" | "compact"
@@ -73,6 +74,7 @@ export function DataTable<TData>({
   sorting,
   onSortingChange,
   onRowClick,
+  getRowClassName,
   enableRowSelection = true,
   className,
   density = "default",
@@ -172,7 +174,7 @@ export function DataTable<TData>({
                       }
                       onRowClick(row.original)
                     }}
-                    className={cn(onRowClick && "cursor-pointer")}
+                    className={cn(onRowClick && "cursor-pointer", getRowClassName?.(row.original))}
                   >
                     {row.getVisibleCells().map((cell, index) => (
                       <TableCell

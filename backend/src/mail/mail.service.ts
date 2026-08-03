@@ -28,10 +28,11 @@ export class MailService {
       to,
       subject: 'Verify your email',
       html: this.wrap(`
-        <p>Hi ${escapeHtml(name ?? "there")},</p>
-        <p>Confirm your email address to finish setting up your Core IT account.</p>
-        <p><a href="${link}" style="color:#FD6005">Verify email</a></p>
-        <p>This link expires in 24 hours. If you didn't request this, you can ignore this email.</p>
+        <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi ${escapeHtml(name ?? "there")},</p>
+        <p style="margin:0 0 24px;">Confirm your email address to finish setting up your Core IT account.</p>
+        ${this.button('Verify email', link)}
+        <p style="margin:24px 0 0;font-size:13px;color:#a1a1aa;">This link expires in 24 hours. If you didn't request this, you can safely ignore this email.</p>
+        ${this.fallbackLink(link)}
       `),
     });
   }
@@ -42,16 +43,60 @@ export class MailService {
       to,
       subject: 'Reset your password',
       html: this.wrap(`
-        <p>Hi ${escapeHtml(name ?? "there")},</p>
-        <p>We received a request to reset your Core IT password.</p>
-        <p><a href="${link}" style="color:#FD6005">Reset password</a></p>
-        <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
+        <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi ${escapeHtml(name ?? "there")},</p>
+        <p style="margin:0 0 24px;">We received a request to reset your Core IT password.</p>
+        ${this.button('Reset password', link)}
+        <p style="margin:24px 0 0;font-size:13px;color:#a1a1aa;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+        ${this.fallbackLink(link)}
       `),
     });
   }
 
+  private button(label: string, href: string): string {
+    return `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 0;">
+        <tr>
+          <td style="border-radius:8px;background-color:#FD6005;">
+            <a href="${href}" style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${label}</a>
+          </td>
+        </tr>
+      </table>`;
+  }
+
+  private fallbackLink(link: string): string {
+    return `<p style="margin:16px 0 0;font-size:13px;color:#a1a1aa;word-break:break-all;">Or paste this link into your browser: <a href="${link}" style="color:#FD6005;">${link}</a></p>`;
+  }
+
   private wrap(bodyHtml: string): string {
-    return `<div style="font-family:sans-serif;font-size:14px;color:#111">${bodyHtml}</div>`;
+    return `
+<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background-color:#f4f4f5;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;border:1px solid #e4e4e7;">
+            <tr>
+              <td style="padding:28px 32px;text-align:center;border-bottom:1px solid #f0f0f1;">
+                <span style="font-size:20px;font-weight:700;color:#18181b;letter-spacing:-0.02em;">CORE IT</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;font-size:15px;line-height:1.6;color:#3f3f46;">
+                ${bodyHtml}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px;background-color:#fafafa;text-align:center;border-top:1px solid #f0f0f1;border-radius:0 0 12px 12px;">
+                <p style="margin:0;font-size:12px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} Core IT. All rights reserved.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
   }
 
   private async send(input: { to: string; subject: string; html: string }) {

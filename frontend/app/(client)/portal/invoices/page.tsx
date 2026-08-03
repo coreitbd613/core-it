@@ -23,9 +23,9 @@ import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
   invoiceBalanceBdt,
+  invoiceGrandTotalBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTotalBdt,
   invoiceTypeLabels,
   mockInvoices,
   type Invoice,
@@ -87,11 +87,11 @@ export default function InvoicesPage() {
       },
       {
         id: "total",
-        accessorFn: (row) => invoiceTotalBdt(row),
+        accessorFn: (row) => invoiceGrandTotalBdt(row),
         header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(invoiceTotalBdt(row.original))}
+            {formatBDT(invoiceGrandTotalBdt(row.original))}
           </span>
         ),
       },

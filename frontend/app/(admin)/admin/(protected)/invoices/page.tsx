@@ -2,8 +2,11 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   AlertTriangleIcon,
+  DownloadIcon,
+  EyeIcon,
   PlusIcon,
   ReceiptIcon,
   Trash2Icon,
@@ -20,6 +23,10 @@ import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { createSelectionColumn } from "@/components/shared/data-table/data-table-select-column"
+import {
+  DataTableRowActions,
+  type DataTableRowAction,
+} from "@/components/shared/data-table/data-table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +40,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -40,13 +49,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { downloadInvoicePdf } from "@/components/shared/invoice-pdf"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
   invoiceBalanceBdt,
+  invoiceGrandTotalBdt,
+  invoicePaidBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTotalBdt,
   invoiceTypeLabels,
   mockInvoices,
   type Invoice,
@@ -55,6 +66,7 @@ import {
 } from "@/lib/mock/invoices"
 
 export default function AdminInvoicesPage() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
   const [typeFilter, setTypeFilter] = useState<InvoiceType | "ALL">("ALL")
@@ -82,6 +94,13 @@ export default function AdminInvoicesPage() {
     setRowSelection({})
     forceRerender((n) => n + 1)
     toast.success(`Deleted ${selectedIds.length} draft invoice${selectedIds.length > 1 ? "s" : ""}.`)
+  }
+
+  function handleDeleteOne(invoice: Invoice) {
+    const index = mockInvoices.findIndex((inv) => inv.id === invoice.id)
+    if (index !== -1) mockInvoices.splice(index, 1)
+    forceRerender((n) => n + 1)
+    toast.success(`Deleted ${invoice.number}.`)
   }
 
   const stats = useMemo<DashboardStatItem[]>(() => {
@@ -144,12 +163,34 @@ export default function AdminInvoicesPage() {
         ),
       },
       {
+        id: "issuedAt",
+        accessorFn: (row) => row.issuedAt,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Issued" />,
+        cell: ({ row }) => new Date(row.original.issuedAt).toLocaleDateString(),
+      },
+      {
+        id: "dueAt",
+        accessorFn: (row) => row.dueAt,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Due" />,
+        cell: ({ row }) => new Date(row.original.dueAt).toLocaleDateString(),
+      },
+      {
         id: "total",
-        accessorFn: (row) => invoiceTotalBdt(row),
+        accessorFn: (row) => invoiceGrandTotalBdt(row),
         header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(invoiceTotalBdt(row.original))}
+            {formatBDT(invoiceGrandTotalBdt(row.original))}
+          </span>
+        ),
+      },
+      {
+        id: "paid",
+        accessorFn: (row) => invoicePaidBdt(row),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Paid" />,
+        cell: ({ row }) => (
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {formatBDT(invoicePaidBdt(row.original))}
           </span>
         ),
       },
@@ -157,11 +198,21 @@ export default function AdminInvoicesPage() {
         id: "balance",
         accessorFn: (row) => invoiceBalanceBdt(row),
         header: ({ column }) => <DataTableColumnHeader column={column} title="Balance" />,
-        cell: ({ row }) => (
-          <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(invoiceBalanceBdt(row.original))}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const status = deriveInvoiceStatus(row.original)
+          const total = invoiceGrandTotalBdt(row.original)
+          const paid = invoicePaidBdt(row.original)
+          return (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium tabular-nums text-foreground">
+                {formatBDT(invoiceBalanceBdt(row.original))}
+              </span>
+              {status === "PARTIALLY_PAID" && total > 0 && (
+                <Progress value={(paid / total) * 100} className="h-1 w-24" />
+              )}
+            </div>
+          )
+        },
       },
       {
         id: "status",
@@ -172,10 +223,43 @@ export default function AdminInvoicesPage() {
         },
       },
       {
-        id: "dueAt",
-        accessorFn: (row) => row.dueAt,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Due" />,
-        cell: ({ row }) => new Date(row.original.dueAt).toLocaleDateString(),
+        id: "actions",
+        header: "",
+        cell: ({ row }) => {
+          const invoice = row.original
+          const actions: DataTableRowAction[] = [
+            {
+              label: "View",
+              icon: <EyeIcon />,
+              onClick: () => router.push(`/admin/invoices/${invoice.id}`),
+            },
+            {
+              label: "Download PDF",
+              icon: <DownloadIcon />,
+              onClick: () => {
+                void downloadInvoicePdf(invoice)
+              },
+            },
+          ]
+
+          if (deriveInvoiceStatus(invoice) === "DRAFT") {
+            actions.push({
+              label: "Delete",
+              icon: <Trash2Icon />,
+              destructive: true,
+              separatorBefore: true,
+              confirm: {
+                title: `Delete ${invoice.number}?`,
+                description: "This can't be undone.",
+                confirmLabel: "Delete",
+              },
+              onClick: () => handleDeleteOne(invoice),
+            })
+          }
+
+          return <DataTableRowActions actions={actions} />
+        },
+        size: 40,
       },
     ],
     []
@@ -277,11 +361,32 @@ export default function AdminInvoicesPage() {
         columns={columns}
         data={invoices}
         getRowId={(row) => row.id}
-        emptyMessage="No invoices yet."
+        emptyMessage={
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <ReceiptIcon />
+              </EmptyMedia>
+              <EmptyTitle>No invoices yet</EmptyTitle>
+              <EmptyDescription>
+                Create your first invoice to start billing companies.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button asChild>
+              <Link href="/admin/invoices/new">
+                <PlusIcon />
+                New invoice
+              </Link>
+            </Button>
+          </Empty>
+        }
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         enableRowSelection={(row) => deriveInvoiceStatus(row) === "DRAFT"}
+        getRowClassName={(row) =>
+          deriveInvoiceStatus(row) === "OVERDUE" ? "bg-destructive/5 hover:bg-destructive/10" : undefined
+        }
       />
     </div>
   )

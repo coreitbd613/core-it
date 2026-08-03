@@ -8,7 +8,7 @@ import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatBDT } from "@/lib/format"
-import { invoiceTotalBdt, mockInvoices } from "@/lib/mock/invoices"
+import { invoiceGrandTotalBdt, mockInvoices } from "@/lib/mock/invoices"
 
 const CURRENT_ORG_ID = "org-1"
 
@@ -33,7 +33,7 @@ export default function StatementsPage() {
         date: invoice.issuedAt,
         description: `Invoice ${invoice.number} issued`,
         invoiceId: invoice.id,
-        debit: invoiceTotalBdt(invoice),
+        debit: invoiceGrandTotalBdt(invoice),
         credit: 0,
       })
       for (const payment of invoice.payments) {

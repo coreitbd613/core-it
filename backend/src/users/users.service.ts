@@ -32,11 +32,16 @@ export class UsersService {
     name?: string;
     avatarUrl?: string;
   }) {
-    return this.prisma.user.create({ data });
+    return this.prisma.user.create({
+      data: { ...data, emailVerified: true, emailVerifiedAt: new Date() },
+    });
   }
 
   linkGoogleId(userId: string, data: { googleId: string; avatarUrl?: string }) {
-    return this.prisma.user.update({ where: { id: userId }, data });
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { ...data, emailVerified: true, emailVerifiedAt: new Date() },
+    });
   }
 
   update(
@@ -48,6 +53,10 @@ export class UsersService {
       avatarUrl?: string;
     },
   ) {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  updatePendingRegistration(id: string, data: { name?: string; password: string }) {
     return this.prisma.user.update({ where: { id }, data });
   }
 

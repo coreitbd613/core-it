@@ -45,7 +45,6 @@ import {
 import { downloadProposalPdf } from "@/components/shared/proposal-pdf"
 import { formatBDT } from "@/lib/format"
 import { generateContractTerms, mockContracts } from "@/lib/mock/contracts"
-import { mockInvoices } from "@/lib/mock/invoices"
 import {
   deriveProposalStatus,
   isLatestProposalVersion,
@@ -57,10 +56,6 @@ import {
   proposalTotalBdt,
   type Proposal,
 } from "@/lib/mock/proposals"
-
-function nextInvoiceNumber() {
-  return `INV-2026-${String(mockInvoices.length + 1).padStart(3, "0")}`
-}
 
 export default function AdminProposalsPage() {
   const router = useRouter()
@@ -98,29 +93,7 @@ export default function AdminProposalsPage() {
   }
 
   function handleConvert(proposal: Proposal) {
-    const invoiceId = crypto.randomUUID()
-    const today = new Date()
-    const due = new Date(today)
-    due.setDate(due.getDate() + 14)
-
-    mockInvoices.unshift({
-      id: invoiceId,
-      number: nextInvoiceNumber(),
-      organizationId: proposal.organizationId,
-      organizationName: proposal.organizationName,
-      type: "FINAL",
-      proposalId: proposal.id,
-      voidReason: null,
-      lineItems: proposal.lineItems.map((item) => ({ ...item, id: crypto.randomUUID() })),
-      payments: [],
-      status: "SENT",
-      issuedAt: today.toISOString().slice(0, 10),
-      dueAt: due.toISOString().slice(0, 10),
-    })
-
-    proposal.convertedInvoiceId = invoiceId
-    router.push(`/admin/invoices/${invoiceId}`)
-    toast.success("Converted to invoice.")
+    router.push(`/admin/invoices/new?proposalId=${proposal.id}`)
   }
 
   function handleCreateRevision(proposal: Proposal) {
