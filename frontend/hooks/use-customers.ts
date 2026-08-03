@@ -1,11 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { deleteAdminCustomer, getAdminCustomers } from "@/lib/customers"
+import { deleteAdminCustomer, getAdminCustomer, getAdminCustomers } from "@/lib/customers"
 
 export function useAdminCustomers() {
   return useQuery({
     queryKey: ["admin-customers"],
     queryFn: getAdminCustomers,
+  })
+}
+
+export function useAdminCustomer(id: string) {
+  return useQuery({
+    queryKey: ["admin-customers", id],
+    queryFn: () => getAdminCustomer(id),
+    enabled: Boolean(id),
   })
 }
 

@@ -6,14 +6,18 @@ import { DownloadIcon } from "lucide-react"
 import QRCode from "qrcode"
 
 import { Button } from "@/components/ui/button"
+import { MOBILE_BANKING_NUMBER } from "@/lib/contact"
 import { formatBDT } from "@/lib/format"
 import {
+  deriveInvoiceStatus,
   invoiceBalanceBdt,
   invoiceGrandTotalBdt,
   invoicePaidBdt,
   invoiceTotalBdt,
   type Invoice,
 } from "@/lib/mock/invoices"
+
+const mobileBankingOptions = ["bKash", "Nagad", "Rocket"]
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 
@@ -47,6 +51,16 @@ const styles = StyleSheet.create({
   grandTotalRow: { flexDirection: "row", gap: 16, marginTop: 4 },
   grandTotalLabel: { fontWeight: 700 },
   grandTotalValue: { fontWeight: 700 },
+  paymentOptionsRow: { flexDirection: "row", gap: 8 },
+  paymentOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 4,
+    padding: 8,
+  },
+  paymentOptionName: { fontWeight: 700 },
+  paymentOptionMeta: { fontSize: 9, color: "#666666", marginTop: 2 },
 })
 
 function InvoiceDocument({
@@ -62,6 +76,8 @@ function InvoiceDocument({
   const total = invoiceGrandTotalBdt(invoice)
   const paid = invoicePaidBdt(invoice)
   const balance = invoiceBalanceBdt(invoice)
+  const status = deriveInvoiceStatus(invoice)
+  const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
 
   return (
     <Document>
@@ -141,6 +157,24 @@ function InvoiceDocument({
             </View>
           </View>
         </View>
+
+        {canPay && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>How to pay</Text>
+            <View style={styles.paymentOptionsRow}>
+              {mobileBankingOptions.map((name) => (
+                <View key={name} style={styles.paymentOption}>
+                  <Text style={styles.paymentOptionName}>{name}</Text>
+                  <Text>{MOBILE_BANKING_NUMBER}</Text>
+                  <Text style={styles.paymentOptionMeta}>Send Money (Personal)</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.paymentOptionMeta}>
+              Please reference {invoice.number} when paying.
+            </Text>
+          </View>
+        )}
 
         {invoice.notes && (
           <View style={styles.section}>

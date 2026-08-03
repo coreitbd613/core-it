@@ -62,13 +62,13 @@ export default function PublicInvoiceViewPage() {
         {canPay ? (
           <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center shadow-sm">
             <p className="text-sm text-muted-foreground">
-              Ready to pay? Reach out and reference{" "}
+              Questions about this invoice? Message us and reference{" "}
               <span className="font-medium text-foreground">{invoice.number}</span>.
             </p>
             <Button asChild>
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                 <MessageCircleIcon />
-                Pay via WhatsApp
+                Message on WhatsApp
               </a>
             </Button>
           </div>

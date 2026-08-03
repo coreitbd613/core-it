@@ -15,6 +15,21 @@ export type AdminCustomer = {
   totalSpentBdt: number
 }
 
+export type AdminCustomerDomainOrder = {
+  id: string
+  domainName: string
+  tld: string
+  years: number
+  priceBdt: string
+  status: "PENDING" | "COMPLETED" | "REJECTED"
+  createdAt: string
+}
+
+export type AdminCustomerDetail = AdminCustomer & {
+  whatsappNumber: string | null
+  domainOrders: AdminCustomerDomainOrder[]
+}
+
 async function parseErrorMessage(res: Response, fallback: string) {
   const body = (await res.json().catch(() => null)) as { message?: string } | null
   return body?.message ?? fallback
@@ -26,6 +41,14 @@ export async function getAdminCustomers(): Promise<AdminCustomer[]> {
     throw new Error(await parseErrorMessage(res, "Couldn't load customers."))
   }
   return (await res.json()) as AdminCustomer[]
+}
+
+export async function getAdminCustomer(id: string): Promise<AdminCustomerDetail> {
+  const res = await authFetch(`${API_URL}/users/admin/customers/${id}`, {}, "admin")
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, "Couldn't load this customer."))
+  }
+  return (await res.json()) as AdminCustomerDetail
 }
 
 export async function deleteAdminCustomer(id: string): Promise<void> {

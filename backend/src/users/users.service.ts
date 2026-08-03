@@ -101,6 +101,49 @@ export class UsersService {
     }));
   }
 
+  async getCustomerDetail(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        contactNumber: true,
+        whatsappNumber: true,
+        role: true,
+        emailVerified: true,
+        createdAt: true,
+        domainOrders: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            domainName: true,
+            tld: true,
+            years: true,
+            priceBdt: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Customer not found.');
+    }
+
+    const { domainOrders, ...profile } = user;
+    return {
+      ...profile,
+      domainOrders,
+      ordersCount: domainOrders.length,
+      totalSpentBdt: domainOrders
+        .filter((order) => order.status === 'COMPLETED')
+        .reduce((sum, order) => sum + Number(order.priceBdt), 0),
+    };
+  }
+
   async deleteCustomer(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {

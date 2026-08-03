@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   BadgeCheckIcon,
   BanknoteIcon,
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export default function AdminCustomersPage() {
+  const router = useRouter()
   const { data: customers, isPending } = useAdminCustomers()
   const deleteCustomer = useDeleteAdminCustomer()
   const deleteCustomers = useDeleteAdminCustomers()
@@ -149,7 +151,7 @@ export default function AdminCustomersPage() {
             {
               label: "View",
               icon: <EyeIcon />,
-              onClick: () => toast.info(`Viewing ${displayName}`),
+              onClick: () => router.push(`/admin/customers/${row.original.id}`),
             },
           ]
 
@@ -208,7 +210,7 @@ export default function AdminCustomersPage() {
         size: 40,
       },
     ],
-    [deleteCustomer]
+    [deleteCustomer, router]
   )
 
   return (

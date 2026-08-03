@@ -23,6 +23,12 @@ export class UsersController {
   }
 
   @UseGuards(AdminJwtAuthGuard)
+  @Get('admin/customers/:id')
+  getCustomer(@Param('id') id: string) {
+    return this.usersService.getCustomerDetail(id);
+  }
+
+  @UseGuards(AdminJwtAuthGuard)
   @Delete('admin/customers/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteCustomer(
