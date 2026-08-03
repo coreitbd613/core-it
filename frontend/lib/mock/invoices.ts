@@ -130,6 +130,9 @@ export const mockInvoices: Invoice[] = [
     proposalId: null,
     voidReason: null,
     lineItems: [{ id: "ili-1", description: "5 revision credits", quantity: 1, unitPriceBdt: 15000 }],
+    taxPercent: 0,
+    discountPercent: 0,
+    notes: null,
     payments: [
       {
         id: "pay-1",
@@ -155,6 +158,9 @@ export const mockInvoices: Invoice[] = [
     lineItems: [
       { id: "ili-2", description: "Maintenance retainer (Jul)", quantity: 1, unitPriceBdt: 25000 },
     ],
+    taxPercent: 0,
+    discountPercent: 0,
+    notes: null,
     payments: [
       {
         id: "pay-2",
