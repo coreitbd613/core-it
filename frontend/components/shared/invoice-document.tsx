@@ -1,3 +1,9 @@
+"use client"
+
+import Image from "next/image"
+
+import { useQrCodeDataUrl } from "@/hooks/use-qr-code-data-url"
+import { MOBILE_BANKING_NUMBER } from "@/lib/contact"
 import { formatBDT } from "@/lib/format"
 import {
   deriveInvoiceStatus,
@@ -9,11 +15,19 @@ import {
   type Invoice,
 } from "@/lib/mock/invoices"
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
+
 const watermarkLabels: Partial<Record<Invoice["status"], string>> = {
   PAID: "Paid",
   CANCELLED: "Void",
   OVERDUE: "Overdue",
 }
+
+const mobileBankingOptions = [
+  { name: "bKash", instruction: "Send Money" },
+  { name: "Nagad", instruction: "Send Money" },
+  { name: "Rocket", instruction: "Send Money" },
+]
 
 export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const subtotal = invoiceTotalBdt(invoice)
@@ -24,6 +38,8 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const balance = invoiceBalanceBdt(invoice)
   const status = deriveInvoiceStatus(invoice)
   const watermark = watermarkLabels[status]
+  const qrCodeUrl = useQrCodeDataUrl(`${SITE_URL}/invoices/view/${invoice.id}`)
+  const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
 
   return (
     <div
@@ -44,10 +60,22 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <p className="text-xl font-bold text-foreground">Core IT</p>
           <p className="mt-1 text-sm text-muted-foreground">info@coreitbd.com</p>
         </div>
-        <div className="sm:text-right">
-          <p className="text-sm text-muted-foreground">{invoice.number}</p>
-          <p className="mt-1 text-sm text-muted-foreground">Billed to</p>
-          <p className="font-medium text-foreground">{invoice.organizationName}</p>
+        <div className="flex flex-col items-start gap-3 sm:items-end">
+          {qrCodeUrl && (
+            <Image
+              src={qrCodeUrl}
+              alt="Scan to view this invoice online"
+              width={72}
+              height={72}
+              unoptimized
+              className="size-16 rounded-md border p-1"
+            />
+          )}
+          <div className="sm:text-right">
+            <p className="text-sm text-muted-foreground">{invoice.number}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Billed to</p>
+            <p className="font-medium text-foreground">{invoice.organizationName}</p>
+          </div>
         </div>
       </div>
 
@@ -135,6 +163,29 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <span className="tabular-nums">{formatBDT(balance)}</span>
         </div>
       </div>
+
+      {canPay && (
+        <div className="relative mt-8 border-t pt-6">
+          <p className="text-xs tracking-wide text-muted-foreground uppercase">How to pay</p>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {mobileBankingOptions.map((option) => (
+              <div key={option.name} className="rounded-lg border p-3">
+                <p className="text-sm font-medium text-foreground">{option.name}</p>
+                <p className="mt-1 text-sm tabular-nums text-foreground">
+                  {MOBILE_BANKING_NUMBER}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {option.instruction} (Personal)
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Please reference <span className="font-medium text-foreground">{invoice.number}</span>{" "}
+            when paying.
+          </p>
+        </div>
+      )}
 
       {invoice.notes && (
         <div className="relative mt-8 border-t pt-6">

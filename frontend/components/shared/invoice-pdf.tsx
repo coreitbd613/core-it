@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Document, Page, PDFDownloadLink, StyleSheet, Text, View, pdf } from "@react-pdf/renderer"
+import { Document, Image, Page, PDFDownloadLink, StyleSheet, Text, View, pdf } from "@react-pdf/renderer"
 import { DownloadIcon } from "lucide-react"
+import QRCode from "qrcode"
 
 import { Button } from "@/components/ui/button"
 import { formatBDT } from "@/lib/format"
@@ -14,11 +15,18 @@ import {
   type Invoice,
 } from "@/lib/mock/invoices"
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
+
+function invoiceViewUrl(invoiceId: string): string {
+  return `${SITE_URL}/invoices/view/${invoiceId}`
+}
+
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11, color: "#1a1a1a" },
   header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 24 },
   brand: { fontSize: 18, fontWeight: 700 },
   invoiceNumber: { fontSize: 10, color: "#666666", marginTop: 4 },
+  qrImage: { width: 56, height: 56, marginBottom: 8, alignSelf: "flex-end" },
   section: { marginBottom: 16 },
   sectionLabel: { fontSize: 9, color: "#666666", textTransform: "uppercase", marginBottom: 4 },
   metaRow: { flexDirection: "row", gap: 16 },
@@ -41,7 +49,13 @@ const styles = StyleSheet.create({
   grandTotalValue: { fontWeight: 700 },
 })
 
-function InvoiceDocument({ invoice }: { invoice: Invoice }) {
+function InvoiceDocument({
+  invoice,
+  qrCodeDataUrl,
+}: {
+  invoice: Invoice
+  qrCodeDataUrl: string | null
+}) {
   const subtotal = invoiceTotalBdt(invoice)
   const discountAmount = subtotal * (invoice.discountPercent / 100)
   const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
@@ -58,6 +72,7 @@ function InvoiceDocument({ invoice }: { invoice: Invoice }) {
             <Text style={styles.invoiceNumber}>{invoice.number}</Text>
           </View>
           <View>
+            {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={styles.qrImage} />}
             <Text style={styles.invoiceNumber}>Billed to</Text>
             <Text>{invoice.organizationName}</Text>
           </View>
@@ -138,9 +153,20 @@ function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   )
 }
 
+async function generateQrCodeDataUrl(invoiceId: string): Promise<string | null> {
+  try {
+    return await QRCode.toDataURL(invoiceViewUrl(invoiceId), { margin: 1, width: 200 })
+  } catch {
+    return null
+  }
+}
+
 /** Imperative download — for use in dropdown menu items where a render-prop component can't be mounted. */
 export async function downloadInvoicePdf(invoice: Invoice): Promise<void> {
-  const blob = await pdf(<InvoiceDocument invoice={invoice} />).toBlob()
+  const qrCodeDataUrl = await generateQrCodeDataUrl(invoice.id)
+  const blob = await pdf(
+    <InvoiceDocument invoice={invoice} qrCodeDataUrl={qrCodeDataUrl} />
+  ).toBlob()
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
@@ -150,13 +176,22 @@ export async function downloadInvoicePdf(invoice: Invoice): Promise<void> {
 }
 
 export function InvoiceDownloadButton({ invoice }: { invoice: Invoice }) {
-  const [ready, setReady] = React.useState(false)
+  const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState<string | null>(null)
+  const [qrReady, setQrReady] = React.useState(false)
 
   React.useEffect(() => {
-    setReady(true)
-  }, [])
+    let cancelled = false
+    generateQrCodeDataUrl(invoice.id).then((url) => {
+      if (cancelled) return
+      setQrCodeDataUrl(url)
+      setQrReady(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [invoice.id])
 
-  if (!ready) {
+  if (!qrReady) {
     return (
       <Button variant="outline" size="sm" disabled>
         <DownloadIcon />
@@ -167,7 +202,7 @@ export function InvoiceDownloadButton({ invoice }: { invoice: Invoice }) {
 
   return (
     <PDFDownloadLink
-      document={<InvoiceDocument invoice={invoice} />}
+      document={<InvoiceDocument invoice={invoice} qrCodeDataUrl={qrCodeDataUrl} />}
       fileName={`${invoice.number}.pdf`}
     >
       {({ loading }) => (
