@@ -6,21 +6,12 @@ export type HostingPlan = {
   ramGb: number
   storageGb: number
   bandwidthTb: number
-  priceUsd: number
-  priceBdt: number
+  priceBdt: number | "custom"
   popular?: boolean
 }
 
 // Static VPS pricing shown as-is, no backend/third-party lookup.
-const USD_TO_BDT_RATE = 122
-
-function usdToBdt(usd: number): number {
-  return Math.round(usd * USD_TO_BDT_RATE)
-}
-
-type StaticHostingPlan = Omit<HostingPlan, "priceBdt">
-
-const STATIC_HOSTING_PLANS: StaticHostingPlan[] = [
+export const HOSTING_PLANS: HostingPlan[] = [
   {
     slug: "starter",
     name: "Starter",
@@ -29,7 +20,7 @@ const STATIC_HOSTING_PLANS: StaticHostingPlan[] = [
     ramGb: 2,
     storageGb: 40,
     bandwidthTb: 1,
-    priceUsd: 6,
+    priceBdt: 1500,
   },
   {
     slug: "standard",
@@ -39,7 +30,7 @@ const STATIC_HOSTING_PLANS: StaticHostingPlan[] = [
     ramGb: 4,
     storageGb: 80,
     bandwidthTb: 2,
-    priceUsd: 12,
+    priceBdt: 2500,
     popular: true,
   },
   {
@@ -50,7 +41,7 @@ const STATIC_HOSTING_PLANS: StaticHostingPlan[] = [
     ramGb: 8,
     storageGb: 160,
     bandwidthTb: 4,
-    priceUsd: 24,
+    priceBdt: 4000,
   },
   {
     slug: "enterprise",
@@ -60,11 +51,6 @@ const STATIC_HOSTING_PLANS: StaticHostingPlan[] = [
     ramGb: 16,
     storageGb: 320,
     bandwidthTb: 8,
-    priceUsd: 48,
+    priceBdt: "custom",
   },
 ]
-
-export const HOSTING_PLANS: HostingPlan[] = STATIC_HOSTING_PLANS.map((plan) => ({
-  ...plan,
-  priceBdt: usdToBdt(plan.priceUsd),
-}))

@@ -2,8 +2,8 @@
 
 import { Sparkles } from "lucide-react";
 import { HeroTerminal } from "@/app/_components/hero-terminal";
+import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
-import { SpecularButton } from "@/components/ui/specular-button";
 import { WHATSAPP_URL } from "@/lib/contact";
 
 export function SiteHero() {
@@ -52,19 +52,13 @@ export function SiteHero() {
             >
               Contact Us
             </InteractiveHoverButton>
-            <SpecularButton
-              radius={8}
-              tint="#ffffff"
-              tintOpacity={0.85}
-              blur={6}
-              textColor="#171717"
-              lineColor="#0A2540"
-              baseColor="#0A2540"
-              className="h-12 px-8 text-base font-semibold shadow-md"
+            <Button
+              variant="outline"
+              className="h-12 rounded-lg px-8 text-base font-semibold shadow-md"
               onClick={() => document.getElementById("services")?.scrollIntoView()}
             >
               Explore Services
-            </SpecularButton>
+            </Button>
           </div>
         </div>
 

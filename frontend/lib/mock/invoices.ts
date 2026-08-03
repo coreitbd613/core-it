@@ -34,6 +34,9 @@ export type Invoice = {
   proposalId: string | null
   voidReason: string | null
   lineItems: InvoiceLineItem[]
+  taxPercent: number
+  discountPercent: number
+  notes: string | null
   payments: Payment[]
   status: InvoiceStatus
   issuedAt: string
@@ -80,12 +83,23 @@ export function invoiceTotalBdt(invoice: Pick<Invoice, "lineItems">): number {
   return invoice.lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceBdt, 0)
 }
 
+/** Subtotal after discount and tax — what the client actually owes in total. */
+export function invoiceGrandTotalBdt(
+  invoice: Pick<Invoice, "lineItems" | "taxPercent" | "discountPercent">
+): number {
+  const subtotal = invoiceTotalBdt(invoice)
+  const afterDiscount = subtotal - subtotal * (invoice.discountPercent / 100)
+  return afterDiscount + afterDiscount * (invoice.taxPercent / 100)
+}
+
 export function invoicePaidBdt(invoice: Pick<Invoice, "payments">): number {
   return invoice.payments.reduce((sum, payment) => sum + payment.amountBdt, 0)
 }
 
-export function invoiceBalanceBdt(invoice: Pick<Invoice, "lineItems" | "payments">): number {
-  return invoiceTotalBdt(invoice) - invoicePaidBdt(invoice)
+export function invoiceBalanceBdt(
+  invoice: Pick<Invoice, "lineItems" | "taxPercent" | "discountPercent" | "payments">
+): number {
+  return invoiceGrandTotalBdt(invoice) - invoicePaidBdt(invoice)
 }
 
 /** Recomputes status from payments vs total, matching how the real backend would derive it. */
@@ -97,6 +111,13 @@ export function deriveInvoiceStatus(invoice: Invoice): InvoiceStatus {
   if (invoicePaidBdt(invoice) > 0) return "PARTIALLY_PAID"
   if (new Date(invoice.dueAt) < new Date()) return "OVERDUE"
   return invoice.status
+}
+
+let invoiceNumberSeq = 3
+
+export function nextInvoiceNumber(): string {
+  invoiceNumberSeq += 1
+  return `INV-2026-${String(invoiceNumberSeq).padStart(3, "0")}`
 }
 
 export const mockInvoices: Invoice[] = [

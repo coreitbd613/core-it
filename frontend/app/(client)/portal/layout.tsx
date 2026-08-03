@@ -96,6 +96,7 @@ function buildSearchItems(): SearchItem[] {
 function buildNavItems(): PanelNavItem[] {
   return [
     { name: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon /> },
+    { name: "Statements", href: "/portal/statements", icon: <ScrollTextIcon /> },
     { name: "Domains", href: "/portal/domains/orders", icon: <GlobeIcon /> },
     { name: "Company", href: "/portal/settings/company", icon: <Building2Icon /> },
     { name: "Profile", href: "/portal/profile", icon: <User /> },

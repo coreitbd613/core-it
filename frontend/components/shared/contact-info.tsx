@@ -1,4 +1,6 @@
-import { Mail, MessageCircle } from "lucide-react"
+import { Mail, MapPin, MessageCircle } from "lucide-react"
+
+import { MAPS_URL } from "@/lib/contact"
 
 const contactPoints = [
   {
@@ -12,6 +14,12 @@ const contactPoints = [
     label: "WhatsApp",
     value: "+880 1581 633810",
     href: "https://wa.me/8801581633810",
+  },
+  {
+    icon: MapPin,
+    label: "Location",
+    value: "Get directions",
+    href: MAPS_URL,
   },
 ]
 

@@ -208,3 +208,20 @@
     animation: none;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  [data-invoice-document], [data-invoice-document] * {
+    visibility: visible;
+  }
+  [data-invoice-document] {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    max-width: none;
+    box-shadow: none;
+    border: none;
+  }
+}

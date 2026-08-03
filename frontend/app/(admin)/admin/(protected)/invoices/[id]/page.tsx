@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeftIcon, BanIcon, SendIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, BanIcon, PrinterIcon, SendIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -22,12 +22,12 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Textarea } from "@/components/ui/textarea"
+import { InvoiceDocument } from "@/components/shared/invoice-document"
 import { InvoiceDownloadButton } from "@/components/shared/invoice-pdf"
 import { useAdminAuth } from "@/contexts/admin-auth-context"
 import { formatBDT } from "@/lib/format"
@@ -36,7 +36,6 @@ import {
   invoiceBalanceBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTotalBdt,
   invoiceTypeLabels,
   mockInvoices,
   paymentMethodLabels,
@@ -70,7 +69,6 @@ export default function AdminInvoiceDetailPage() {
     )
   }
 
-  const total = invoiceTotalBdt(invoice)
   const balance = invoiceBalanceBdt(invoice)
   const status = deriveInvoiceStatus(invoice)
   const relatedProposal = invoice.proposalId
@@ -107,7 +105,7 @@ export default function AdminInvoiceDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 print:hidden">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin/invoices" aria-label="Back to invoices">
             <ArrowLeftIcon />
@@ -121,6 +119,10 @@ export default function AdminInvoiceDetailPage() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <PrinterIcon />
+            Print
+          </Button>
           <InvoiceDownloadButton invoice={invoice} />
           {canVoid && (
             <AlertDialog onOpenChange={(open) => !open && setVoidReason("")}>
@@ -160,65 +162,34 @@ export default function AdminInvoiceDetailPage() {
         </div>
       </div>
 
-      <Card className="max-w-3xl">
-        <CardHeader>
-          <CardTitle>Line items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col divide-y rounded-lg border">
-            {invoice.lineItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{item.description}</p>
-                  <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
-                </div>
-                <span className="text-sm font-medium tabular-nums text-foreground">
-                  {formatBDT(item.quantity * item.unitPriceBdt)}
-                </span>
-              </div>
-            ))}
-            <div className="flex items-center justify-between gap-4 bg-muted/40 px-4 py-3">
-              <span className="text-sm font-semibold text-foreground">Total</span>
-              <span className="text-sm font-semibold tabular-nums text-foreground">
-                {formatBDT(total)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4 px-4 py-3">
-              <span className="text-sm font-semibold text-foreground">Balance due</span>
-              <span className="text-sm font-semibold tabular-nums text-foreground">
-                {formatBDT(balance)}
-              </span>
-            </div>
-          </div>
+      <InvoiceDocument invoice={invoice} />
 
-          {relatedProposal && (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Created from proposal{" "}
-              <Link href={`/admin/proposals/${relatedProposal.id}`} className="underline">
-                {relatedProposal.proposalNumber}
-              </Link>
-              .
-            </p>
-          )}
+      {relatedProposal && (
+        <p className="mx-auto -mt-2 w-full max-w-3xl text-sm text-muted-foreground print:hidden">
+          Created from proposal{" "}
+          <Link href={`/admin/proposals/${relatedProposal.id}`} className="underline">
+            {relatedProposal.proposalNumber}
+          </Link>
+          .
+        </p>
+      )}
 
-          {invoice.status === "CANCELLED" && invoice.voidReason && (
-            <p className="mt-4 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Void reason:</span>{" "}
-              {invoice.voidReason}
-            </p>
-          )}
-        </CardContent>
-        {invoice.status === "DRAFT" && (
-          <CardFooter className="justify-end border-t">
-            <Button onClick={handleSend}>
-              <SendIcon />
-              Send to company
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
+      {invoice.status === "CANCELLED" && invoice.voidReason && (
+        <p className="mx-auto -mt-2 w-full max-w-3xl text-sm text-muted-foreground print:hidden">
+          <span className="font-medium text-foreground">Void reason:</span> {invoice.voidReason}
+        </p>
+      )}
 
-      <Card className="max-w-3xl">
+      {invoice.status === "DRAFT" && (
+        <div className="mx-auto flex w-full max-w-3xl justify-end print:hidden">
+          <Button onClick={handleSend}>
+            <SendIcon />
+            Send to company
+          </Button>
+        </div>
+      )}
+
+      <Card className="max-w-3xl print:hidden">
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>Payment history</CardTitle>
           {balance > 0 && invoice.status !== "DRAFT" && invoice.status !== "CANCELLED" && (

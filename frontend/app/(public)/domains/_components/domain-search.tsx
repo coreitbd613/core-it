@@ -11,7 +11,6 @@ import { formatBDT } from "@/lib/format"
 import type { DomainSearchResult } from "@/lib/domains"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { BorderBeam } from "@/components/ui/border-beam"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -58,11 +57,12 @@ export function DomainSearch({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          "relative flex items-center gap-2 overflow-hidden rounded-xl border border-input bg-background p-2 transition-shadow focus-within:ring-3 focus-within:ring-ring/30",
-          isPanel && "rounded-lg"
+          "relative flex items-center gap-2 rounded-xl border bg-background p-2 transition-shadow focus-within:ring-3 focus-within:ring-ring/30",
+          isPanel
+            ? "border-input rounded-lg"
+            : "border-primary/30 shadow-[0_0_0_3px_rgba(253,96,5,0.08)]"
         )}
       >
-        {!isPanel && <BorderBeam size={140} duration={7} colorFrom="#FD6005" colorTo="#0A2540" />}
         <Search className="ml-3 size-5 shrink-0 text-muted-foreground" />
         <Input
           id={DOMAIN_SEARCH_INPUT_ID}

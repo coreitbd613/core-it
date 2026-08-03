@@ -8,9 +8,10 @@ import {
   FaLinkedinIn,
   FaWhatsapp,
 } from "react-icons/fa6";
+import { SiGooglemaps } from "react-icons/si";
 
 import { Dock, DockIcon } from "@/components/ui/dock";
-import { WHATSAPP_URL } from "@/lib/contact";
+import { MAPS_URL, WHATSAPP_URL } from "@/lib/contact";
 
 const socialLinks = [
   {
@@ -36,6 +37,12 @@ const socialLinks = [
     href: "https://www.linkedin.com/company/core-it-bd",
     icon: FaLinkedinIn,
     color: "#0A66C2",
+  },
+  {
+    label: "Google Maps",
+    href: MAPS_URL,
+    icon: SiGooglemaps,
+    color: "#4285F4",
   },
 ] as const;
 
