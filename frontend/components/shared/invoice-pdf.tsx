@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Document, Image, Page, PDFDownloadLink, StyleSheet, Text, View, pdf } from "@react-pdf/renderer"
+import { Document, Image, Link, Page, PDFDownloadLink, StyleSheet, Text, View, pdf } from "@react-pdf/renderer"
 import { DownloadIcon } from "lucide-react"
 import QRCode from "qrcode"
 
 import { Button } from "@/components/ui/button"
-import { MOBILE_BANKING_NUMBER } from "@/lib/contact"
-import { formatBDT } from "@/lib/format"
+import { BUSINESS_ADDRESS, MAPS_URL, MOBILE_BANKING_NUMBER, PRIVACY_URL, TERMS_URL } from "@/lib/contact"
+import { formatDate } from "@/lib/format"
 import {
   deriveInvoiceStatus,
   invoiceBalanceBdt,
@@ -15,8 +15,10 @@ import {
   invoicePaidBdt,
   invoiceStatusLabels,
   invoiceTotalBdt,
+  paymentMethodLabels,
   type Invoice,
 } from "@/lib/mock/invoices"
+import { mockOrganizations } from "@/lib/mock/organizations"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "")
@@ -25,14 +27,16 @@ function invoiceViewUrl(invoiceId: string): string {
   return `${SITE_URL}/invoices/view/${invoiceId}`
 }
 
-function signed(amount: number, sign: "+" | "-" = "+"): string {
-  return `${sign}${formatBDT(amount)}`
+// react-pdf's default fonts have no Bengali Taka glyph ("৳"), so PDFs use a plain "Tk" prefix.
+const bdtPdfFormatter = new Intl.NumberFormat("en-BD", { maximumFractionDigits: 0 })
+function formatBdtPdf(amount: number): string {
+  return `Tk ${bdtPdfFormatter.format(amount)}`
 }
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, color: "#1a1a1a" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  logo: { width: 120, height: 31 },
+  logo: { width: 150, height: 39 },
   invoiceTitle: { fontSize: 20, fontWeight: 700, textAlign: "right" },
   invoiceNumber: { fontSize: 10, color: "#FD6005", marginTop: 4, textAlign: "right" },
   invoiceStatus: {
@@ -44,15 +48,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: "right",
   },
-  qrImage: { width: 56, height: 56, marginTop: 6, alignSelf: "flex-end" },
+  invoiceStatusPaid: { color: "#16a34a" },
+  qrImage: { width: 56, height: 56, marginBottom: 6 },
   metaSection: {
     flexDirection: "row",
-    justifyContent: "space-between",
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
     marginTop: 20,
     paddingTop: 16,
   },
+  metaColumn: { flex: 1 },
+  metaColumnRight: { flex: 1, alignItems: "flex-end" },
   sectionLabel: { fontSize: 8, color: "#666666", textTransform: "uppercase", marginBottom: 4 },
   metaRow: { flexDirection: "row", gap: 4, marginTop: 2 },
   metaLabel: { color: "#666666" },
@@ -84,14 +90,20 @@ const styles = StyleSheet.create({
   grandTotalRow: { flexDirection: "row", gap: 16, marginTop: 4 },
   grandTotalLabel: { fontWeight: 700 },
   grandTotalValue: { fontWeight: 700 },
+  txCellNumber: { width: 50, color: "#666666" },
+  txCellMethod: { flex: 1 },
+  txCellDate: { flex: 1, color: "#666666" },
+  txCellAmount: { flex: 1, textAlign: "right", fontWeight: 700 },
 })
 
 function InvoiceDocument({
   invoice,
   qrCodeDataUrl,
+  logoDataUrl,
 }: {
   invoice: Invoice
   qrCodeDataUrl: string | null
+  logoDataUrl: string | null
 }) {
   const subtotal = invoiceTotalBdt(invoice)
   const discountAmount = subtotal * (invoice.discountPercent / 100)
@@ -101,37 +113,48 @@ function InvoiceDocument({
   const balance = invoiceBalanceBdt(invoice)
   const status = deriveInvoiceStatus(invoice)
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
+  const contactName = mockOrganizations.find((org) => org.id === invoice.organizationId)?.contactName
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Image src={`${SITE_URL}/logo-light.png`} style={styles.logo} />
+          {logoDataUrl && <Image src={logoDataUrl} style={styles.logo} />}
           <View>
             <Text style={styles.invoiceTitle}>Invoice</Text>
             <Text style={styles.invoiceNumber}>#{invoice.number}</Text>
-            <Text style={styles.invoiceStatus}>{invoiceStatusLabels[status]}</Text>
-            {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={styles.qrImage} />}
+            <Text
+              style={[styles.invoiceStatus, status === "PAID" ? styles.invoiceStatusPaid : {}]}
+            >
+              {invoiceStatusLabels[status]}
+            </Text>
           </View>
         </View>
 
         <View style={styles.metaSection}>
-          <View>
+          <View style={styles.metaColumn}>
             <Text style={styles.sectionLabel}>Bill to</Text>
-            <Text style={{ fontWeight: 700 }}>{invoice.organizationName}</Text>
+            {contactName && <Text style={{ fontWeight: 700 }}>{contactName}</Text>}
+            <Text style={contactName ? styles.metaLabel : { fontWeight: 700 }}>
+              {invoice.organizationName}
+            </Text>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Invoice date:</Text>
-              <Text>{new Date(invoice.issuedAt).toLocaleDateString()}</Text>
+              <Text>{formatDate(invoice.issuedAt)}</Text>
             </View>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Due date:</Text>
-              <Text>{new Date(invoice.dueAt).toLocaleDateString()}</Text>
+              <Text>{formatDate(invoice.dueAt)}</Text>
             </View>
           </View>
-          <View style={{ alignItems: "flex-end" }}>
+          <View style={styles.metaColumnRight}>
+            {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={styles.qrImage} />}
             <Text style={{ fontWeight: 700 }}>Core IT</Text>
             <Text style={styles.metaLabel}>{SITE_HOST}</Text>
             <Text style={styles.metaLabel}>info@coreitbd.com</Text>
+            <Link src={MAPS_URL} style={[styles.metaLabel, { textAlign: "right" }]}>
+              {BUSINESS_ADDRESS}
+            </Link>
           </View>
         </View>
 
@@ -152,9 +175,9 @@ function InvoiceDocument({
                 <Text style={styles.cellIndex}>{index + 1}</Text>
                 <Text style={styles.cellDescription}>{item.description}</Text>
                 <Text style={styles.cellQty}>{item.quantity}</Text>
-                <Text style={styles.cellRate}>{signed(item.unitPriceBdt)}</Text>
+                <Text style={styles.cellRate}>{formatBdtPdf(item.unitPriceBdt)}</Text>
                 <Text style={styles.cellAmount}>
-                  {signed(item.quantity * item.unitPriceBdt)}
+                  {formatBdtPdf(item.quantity * item.unitPriceBdt)}
                 </Text>
               </View>
             ))}
@@ -163,36 +186,61 @@ function InvoiceDocument({
           <View style={styles.totalsBlock}>
             <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>Sub total</Text>
-              <Text>{signed(subtotal)}</Text>
+              <Text>{formatBdtPdf(subtotal)}</Text>
             </View>
             {invoice.discountPercent > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Discount ({invoice.discountPercent}%)</Text>
-                <Text>{signed(discountAmount, "-")}</Text>
+                <Text>-{formatBdtPdf(discountAmount)}</Text>
               </View>
             )}
             {invoice.taxPercent > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Tax ({invoice.taxPercent}%)</Text>
-                <Text>{signed(taxAmount)}</Text>
+                <Text>{formatBdtPdf(taxAmount)}</Text>
               </View>
             )}
             <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>Total</Text>
-              <Text>{signed(total)}</Text>
+              <Text>{formatBdtPdf(total)}</Text>
             </View>
             {paid > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Paid</Text>
-                <Text>{signed(paid, "-")}</Text>
+                <Text>-{formatBdtPdf(paid)}</Text>
               </View>
             )}
             <View style={styles.grandTotalRow}>
               <Text style={styles.grandTotalLabel}>Amount due</Text>
-              <Text style={styles.grandTotalValue}>{signed(balance)}</Text>
+              <Text style={styles.grandTotalValue}>{formatBdtPdf(balance)}</Text>
             </View>
           </View>
         </View>
+
+        {invoice.payments.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Transactions</Text>
+            <View style={styles.table}>
+              <View style={styles.tableHeaderRow}>
+                <Text style={[styles.tableHeaderText, styles.txCellNumber]}>Payment</Text>
+                <Text style={[styles.tableHeaderText, styles.txCellMethod]}>Method</Text>
+                <Text style={[styles.tableHeaderText, styles.txCellDate]}>Date</Text>
+                <Text style={[styles.tableHeaderText, styles.txCellAmount]}>Amount</Text>
+              </View>
+              {invoice.payments.map((payment, index) => (
+                <View
+                  key={payment.id}
+                  style={index === invoice.payments.length - 1 ? styles.tableRowLast : styles.tableRow}
+                >
+                  <Text style={styles.txCellNumber}>#{index + 1}</Text>
+                  <Text style={styles.txCellMethod}>{paymentMethodLabels[payment.method]}</Text>
+                  <Text style={styles.txCellDate}>{formatDate(payment.paidAt)}</Text>
+                  <Text style={styles.txCellAmount}>{formatBdtPdf(payment.amountBdt)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {canPay && (
           <View style={styles.section}>
@@ -216,7 +264,7 @@ function InvoiceDocument({
           <Text style={styles.sectionLabel}>Terms &amp; conditions</Text>
           <Text style={[styles.metaLabel, { fontSize: 8 }]}>
             By proceeding with this invoice and/or payment, the client acknowledges and agrees to
-            the Terms of Service and Privacy Policy available at {SITE_HOST}/terms.
+            the Terms of Service ({TERMS_URL}) and Privacy Policy ({PRIVACY_URL}).
           </Text>
         </View>
       </Page>
@@ -232,11 +280,35 @@ async function generateQrCodeDataUrl(invoiceId: string): Promise<string | null> 
   }
 }
 
+// react-pdf's <Image> can't reliably load a network URL, so the logo is fetched once and
+// reused as a base64 data URI — the same trick already works for the QR code above.
+let logoDataUrlPromise: Promise<string | null> | null = null
+function getLogoDataUrl(): Promise<string | null> {
+  if (!logoDataUrlPromise) {
+    logoDataUrlPromise = fetch(`${SITE_URL}/logo-light.png`)
+      .then((res) => res.blob())
+      .then(
+        (blob) =>
+          new Promise<string | null>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result as string)
+            reader.onerror = () => resolve(null)
+            reader.readAsDataURL(blob)
+          })
+      )
+      .catch(() => null)
+  }
+  return logoDataUrlPromise
+}
+
 /** Imperative download — for use in dropdown menu items where a render-prop component can't be mounted. */
 export async function downloadInvoicePdf(invoice: Invoice): Promise<void> {
-  const qrCodeDataUrl = await generateQrCodeDataUrl(invoice.id)
+  const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
+    generateQrCodeDataUrl(invoice.id),
+    getLogoDataUrl(),
+  ])
   const blob = await pdf(
-    <InvoiceDocument invoice={invoice} qrCodeDataUrl={qrCodeDataUrl} />
+    <InvoiceDocument invoice={invoice} qrCodeDataUrl={qrCodeDataUrl} logoDataUrl={logoDataUrl} />
   ).toBlob()
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
@@ -248,21 +320,23 @@ export async function downloadInvoicePdf(invoice: Invoice): Promise<void> {
 
 export function InvoiceDownloadButton({ invoice }: { invoice: Invoice }) {
   const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState<string | null>(null)
-  const [qrReady, setQrReady] = React.useState(false)
+  const [logoDataUrl, setLogoDataUrl] = React.useState<string | null>(null)
+  const [ready, setReady] = React.useState(false)
 
   React.useEffect(() => {
     let cancelled = false
-    generateQrCodeDataUrl(invoice.id).then((url) => {
+    Promise.all([generateQrCodeDataUrl(invoice.id), getLogoDataUrl()]).then(([qr, logo]) => {
       if (cancelled) return
-      setQrCodeDataUrl(url)
-      setQrReady(true)
+      setQrCodeDataUrl(qr)
+      setLogoDataUrl(logo)
+      setReady(true)
     })
     return () => {
       cancelled = true
     }
   }, [invoice.id])
 
-  if (!qrReady) {
+  if (!ready) {
     return (
       <Button variant="outline" size="sm" disabled>
         <DownloadIcon />
@@ -273,7 +347,9 @@ export function InvoiceDownloadButton({ invoice }: { invoice: Invoice }) {
 
   return (
     <PDFDownloadLink
-      document={<InvoiceDocument invoice={invoice} qrCodeDataUrl={qrCodeDataUrl} />}
+      document={
+        <InvoiceDocument invoice={invoice} qrCodeDataUrl={qrCodeDataUrl} logoDataUrl={logoDataUrl} />
+      }
       fileName={`${invoice.number}.pdf`}
     >
       {({ loading }) => (

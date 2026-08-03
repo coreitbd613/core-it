@@ -11,7 +11,7 @@ import {
 import { SiGooglemaps } from "react-icons/si";
 
 import { Dock, DockIcon } from "@/components/ui/dock";
-import { MAPS_URL, WHATSAPP_URL } from "@/lib/contact";
+import { BUSINESS_ADDRESS, MAPS_URL, WHATSAPP_URL } from "@/lib/contact";
 
 const socialLinks = [
   {
@@ -99,6 +99,14 @@ export function SiteFooter() {
           <p className="max-w-xs text-sm text-muted-foreground">
             Professional software solutions for every business need.
           </p>
+          <Link
+            href={MAPS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="max-w-xs text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {BUSINESS_ADDRESS}
+          </Link>
           <Dock className="mx-0 mt-0 justify-start gap-1">
             {socialLinks.map(({ label, href, icon: Icon, color }) => (
               <DockIcon key={label}>

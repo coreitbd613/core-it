@@ -3,8 +3,8 @@
 import Image from "next/image"
 
 import { useQrCodeDataUrl } from "@/hooks/use-qr-code-data-url"
-import { MOBILE_BANKING_NUMBER } from "@/lib/contact"
-import { formatBDT } from "@/lib/format"
+import { BUSINESS_ADDRESS, MAPS_URL, MOBILE_BANKING_NUMBER, PRIVACY_URL, TERMS_URL } from "@/lib/contact"
+import { formatBDT, formatDate } from "@/lib/format"
 import {
   deriveInvoiceStatus,
   invoiceBalanceBdt,
@@ -13,8 +13,10 @@ import {
   invoiceStatusLabels,
   invoiceTotalBdt,
   invoiceTypeLabels,
+  paymentMethodLabels,
   type Invoice,
 } from "@/lib/mock/invoices"
+import { mockOrganizations } from "@/lib/mock/organizations"
 import { cn } from "@/lib/utils"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
@@ -24,10 +26,6 @@ const watermarkLabels: Partial<Record<Invoice["status"], string>> = {
   PAID: "Paid",
   CANCELLED: "Void",
   OVERDUE: "Overdue",
-}
-
-function signed(amount: number, sign: "+" | "-" = "+"): string {
-  return `${sign}${formatBDT(amount)}`
 }
 
 export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
@@ -41,6 +39,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const watermark = watermarkLabels[status]
   const qrCodeUrl = useQrCodeDataUrl(`${SITE_URL}/invoices/view/${invoice.id}`)
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
+  const contactName = mockOrganizations.find((org) => org.id === invoice.organizationId)?.contactName
 
   return (
     <div
@@ -56,21 +55,21 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         </span>
       )}
 
-      {/* Header: logo left, invoice title/number/status/QR right */}
+      {/* Header: logo left, invoice title/number/status right */}
       <div className="relative flex items-start justify-between gap-6">
         <Image
           src="/logo-light.png"
           alt="Core IT"
           width={527}
           height={135}
-          className="h-9 w-auto dark:hidden"
+          className="h-12 w-auto dark:hidden"
         />
         <Image
           src="/logo-dark.png"
           alt="Core IT"
           width={527}
           height={135}
-          className="hidden h-9 w-auto dark:block"
+          className="hidden h-12 w-auto dark:block"
         />
 
         <div className="flex flex-col items-end gap-2 text-right">
@@ -81,21 +80,11 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <p
             className={cn(
               "text-xs font-semibold tracking-wide uppercase",
-              status === "PAID" ? "text-muted-foreground" : "text-destructive"
+              status === "PAID" ? "text-green-600 dark:text-green-500" : "text-destructive"
             )}
           >
             {invoiceStatusLabels[status]}
           </p>
-          {qrCodeUrl && (
-            <Image
-              src={qrCodeUrl}
-              alt="Scan to view this invoice online"
-              width={72}
-              height={72}
-              unoptimized
-              className="mt-1 size-16 rounded-md border p-1"
-            />
-          )}
         </div>
       </div>
 
@@ -103,20 +92,19 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <div className="relative mt-8 grid grid-cols-1 gap-6 border-t pt-6 sm:grid-cols-2">
         <div>
           <p className="text-xs tracking-wide text-muted-foreground uppercase">Bill to</p>
-          <p className="mt-1 font-medium text-foreground">{invoice.organizationName}</p>
+          {contactName && <p className="mt-1 font-medium text-foreground">{contactName}</p>}
+          <p className={cn("text-foreground", contactName ? "text-sm text-muted-foreground" : "mt-1 font-medium")}>
+            {invoice.organizationName}
+          </p>
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">
               <span className="text-muted-foreground">Invoice date:</span>
-              <span className="text-foreground">
-                {new Date(invoice.issuedAt).toLocaleDateString()}
-              </span>
+              <span className="text-foreground">{formatDate(invoice.issuedAt)}</span>
             </div>
             <div className="flex gap-1.5">
               <span className="text-muted-foreground">Due date:</span>
-              <span className="text-foreground">
-                {new Date(invoice.dueAt).toLocaleDateString()}
-              </span>
+              <span className="text-foreground">{formatDate(invoice.dueAt)}</span>
             </div>
             <div className="flex gap-1.5">
               <span className="text-muted-foreground">Type:</span>
@@ -125,10 +113,28 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           </div>
         </div>
 
-        <div className="sm:text-right">
+        <div className="flex flex-col items-start gap-2 sm:items-end sm:text-right">
+          {qrCodeUrl && (
+            <Image
+              src={qrCodeUrl}
+              alt="Scan to view this invoice online"
+              width={72}
+              height={72}
+              unoptimized
+              className="size-16 rounded-md border p-1"
+            />
+          )}
           <p className="font-medium text-foreground">Core IT</p>
-          <p className="mt-1 text-sm text-muted-foreground">{SITE_HOST}</p>
+          <p className="-mt-1 text-sm text-muted-foreground">{SITE_HOST}</p>
           <p className="text-sm text-muted-foreground">info@coreitbd.com</p>
+          <a
+            href={MAPS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground underline-offset-2 hover:underline"
+          >
+            {BUSINESS_ADDRESS}
+          </a>
         </div>
       </div>
 
@@ -153,10 +159,10 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
                   {item.quantity}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {signed(item.unitPriceBdt)}
+                  {formatBDT(item.unitPriceBdt)}
                 </td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
-                  {signed(item.quantity * item.unitPriceBdt)}
+                  {formatBDT(item.quantity * item.unitPriceBdt)}
                 </td>
               </tr>
             ))}
@@ -168,37 +174,75 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <div className="relative mt-6 flex flex-col items-end gap-2">
         <div className="flex w-full max-w-56 items-center justify-between text-sm">
           <span className="text-muted-foreground">Sub total</span>
-          <span className="font-medium tabular-nums text-foreground">{signed(subtotal)}</span>
+          <span className="font-medium tabular-nums text-foreground">{formatBDT(subtotal)}</span>
         </div>
         {invoice.discountPercent > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
             <span className="text-muted-foreground">Discount ({invoice.discountPercent}%)</span>
             <span className="font-medium tabular-nums text-foreground">
-              {signed(discountAmount, "-")}
+              -{formatBDT(discountAmount)}
             </span>
           </div>
         )}
         {invoice.taxPercent > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
             <span className="text-muted-foreground">Tax ({invoice.taxPercent}%)</span>
-            <span className="font-medium tabular-nums text-foreground">{signed(taxAmount)}</span>
+            <span className="font-medium tabular-nums text-foreground">{formatBDT(taxAmount)}</span>
           </div>
         )}
         <div className="flex w-full max-w-56 items-center justify-between border-t pt-2 text-sm">
           <span className="font-medium text-foreground">Total</span>
-          <span className="font-medium tabular-nums text-foreground">{signed(total)}</span>
+          <span className="font-medium tabular-nums text-foreground">{formatBDT(total)}</span>
         </div>
         {paid > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
             <span className="text-muted-foreground">Paid</span>
-            <span className="font-medium tabular-nums text-foreground">{signed(paid, "-")}</span>
+            <span className="font-medium tabular-nums text-foreground">-{formatBDT(paid)}</span>
           </div>
         )}
         <div className="flex w-full max-w-56 items-center justify-between border-t pt-2 text-base font-semibold text-foreground">
           <span>Amount due</span>
-          <span className="tabular-nums">{signed(balance)}</span>
+          <span className="tabular-nums">{formatBDT(balance)}</span>
         </div>
       </div>
+
+      {invoice.payments.length > 0 && (
+        <div className="relative mt-8 border-t pt-6">
+          <p className="mb-3 text-xs tracking-wide text-muted-foreground uppercase">
+            Transactions
+          </p>
+          <div className="overflow-hidden rounded-lg border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                  <th className="px-4 py-2.5 text-left font-medium">Payment</th>
+                  <th className="px-4 py-2.5 text-left font-medium">Method</th>
+                  <th className="px-4 py-2.5 text-left font-medium">Date</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {invoice.payments.map((payment, index) => (
+                  <tr key={payment.id}>
+                    <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                      #{index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-foreground">
+                      {paymentMethodLabels[payment.method]}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                      {formatDate(payment.paidAt)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
+                      {formatBDT(payment.amountBdt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {canPay && (
         <div className="relative mt-8 border-t pt-6">
@@ -227,7 +271,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
           By proceeding with this invoice and/or payment, the client acknowledges and agrees to
-          the Terms of Service and Privacy Policy available at {SITE_HOST}/terms.
+          the Terms of Service ({TERMS_URL}) and Privacy Policy ({PRIVACY_URL}).
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { Mail, MapPin, MessageCircle } from "lucide-react"
 
-import { MAPS_URL } from "@/lib/contact"
+import { BUSINESS_ADDRESS, MAPS_URL } from "@/lib/contact"
 
 const contactPoints = [
   {
@@ -18,7 +18,7 @@ const contactPoints = [
   {
     icon: MapPin,
     label: "Location",
-    value: "Get directions",
+    value: BUSINESS_ADDRESS,
     href: MAPS_URL,
   },
 ]
