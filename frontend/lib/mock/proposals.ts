@@ -23,6 +23,8 @@ export type Proposal = {
   timeline: string
   termsHtml: string
   validUntil: string | null
+  /** Link to a manually-made PDF (Google Drive, Dropbox, etc.) — shown instead of the auto-generated PDF when set. */
+  pdfUrl: string | null
   versionGroupId: string
   version: number
   status: ProposalStatus
@@ -128,6 +130,7 @@ export const mockProposals: Proposal[] = [
     timeline: "6-8 weeks from advance payment",
     termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-08-10",
+    pdfUrl: null,
     versionGroupId: "prop-1",
     version: 1,
     status: "SENT",
@@ -154,6 +157,7 @@ export const mockProposals: Proposal[] = [
     timeline: "Ongoing, starts immediately",
     termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-07-20",
+    pdfUrl: null,
     versionGroupId: "prop-2",
     version: 1,
     status: "APPROVED",
@@ -182,6 +186,7 @@ export const mockProposals: Proposal[] = [
     timeline: "10-12 weeks from advance payment",
     termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-06-15",
+    pdfUrl: null,
     versionGroupId: "prop-3",
     version: 1,
     status: "REJECTED",
@@ -209,6 +214,7 @@ export const mockProposals: Proposal[] = [
     timeline: "4-6 weeks from advance payment",
     termsHtml: defaultProposalTermsHtml,
     validUntil: null,
+    pdfUrl: null,
     versionGroupId: "prop-4",
     version: 1,
     status: "DRAFT",
@@ -236,6 +242,7 @@ export const mockProposals: Proposal[] = [
     timeline: "Starts immediately upon signing",
     termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-08-05",
+    pdfUrl: null,
     versionGroupId: "prop-5",
     version: 1,
     status: "APPROVED",
@@ -262,6 +269,7 @@ export const mockProposals: Proposal[] = [
     timeline: "2 weeks from advance payment",
     termsHtml: defaultProposalTermsHtml,
     validUntil: "2026-08-11",
+    pdfUrl: null,
     versionGroupId: "prop-6",
     version: 1,
     status: "APPROVED",

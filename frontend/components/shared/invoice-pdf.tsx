@@ -28,7 +28,7 @@ function invoiceViewUrl(invoiceId: string): string {
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11, color: "#1a1a1a" },
   header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 24 },
-  brand: { fontSize: 18, fontWeight: 700 },
+  logo: { width: 120, height: 31 },
   invoiceNumber: { fontSize: 10, color: "#666666", marginTop: 4 },
   qrImage: { width: 56, height: 56, marginBottom: 8, alignSelf: "flex-end" },
   section: { marginBottom: 16 },
@@ -84,7 +84,7 @@ function InvoiceDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.brand}>Core IT</Text>
+            <Image src={`${SITE_URL}/logo-light.png`} style={styles.logo} />
             <Text style={styles.invoiceNumber}>{invoice.number}</Text>
           </View>
           <View>

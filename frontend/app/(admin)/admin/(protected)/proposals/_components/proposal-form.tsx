@@ -139,6 +139,7 @@ export function ProposalForm({
       viewedAt: null,
       contractId: null,
       convertedInvoiceId: null,
+      pdfUrl: null,
       ...fields,
     })
 

@@ -57,8 +57,21 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       <div className="relative flex flex-col justify-between gap-6 sm:flex-row">
         <div>
-          <p className="text-xl font-bold text-foreground">Core IT</p>
-          <p className="mt-1 text-sm text-muted-foreground">info@coreitbd.com</p>
+          <Image
+            src="/logo-light.png"
+            alt="Core IT"
+            width={527}
+            height={135}
+            className="h-8 w-auto dark:hidden"
+          />
+          <Image
+            src="/logo-dark.png"
+            alt="Core IT"
+            width={527}
+            height={135}
+            className="hidden h-8 w-auto dark:block"
+          />
+          <p className="mt-2 text-sm text-muted-foreground">info@coreitbd.com</p>
         </div>
         <div className="flex flex-col items-start gap-3 sm:items-end">
           {qrCodeUrl && (

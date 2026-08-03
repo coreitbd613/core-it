@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { CheckIcon, XIcon } from "lucide-react"
-import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { LEAD_STAGE_ORDER, leadStageLabels, logLeadActivity, type Lead } from "@/lib/mock/leads"
+import { LEAD_STAGE_ORDER, leadStageLabels, type Lead } from "@/lib/mock/leads"
+
+import { useLeadStageChange } from "./use-lead-stage-change"
 
 export function LeadStageStepper({
   lead,
@@ -28,32 +29,15 @@ export function LeadStageStepper({
   authorName: string
   onChange: () => void
 }) {
-  const [lostReason, setLostReason] = React.useState("")
-  const [lostDialogOpen, setLostDialogOpen] = React.useState(false)
+  const {
+    attemptStageChange,
+    lostDialogOpen,
+    lostReason,
+    setLostReason,
+    confirmLost,
+    cancelLost,
+  } = useLeadStageChange(authorName, onChange)
   const currentIndex = LEAD_STAGE_ORDER.indexOf(lead.stage)
-
-  function setStage(stage: (typeof LEAD_STAGE_ORDER)[number]) {
-    if (stage === lead.stage) return
-    lead.stage = stage
-    logLeadActivity(lead, "STAGE_CHANGE", `Stage changed to ${leadStageLabels[stage]}`, authorName)
-    toast.success(`Marked as ${leadStageLabels[stage]}.`)
-    onChange()
-  }
-
-  function markLost() {
-    lead.stage = "LOST"
-    lead.lostReason = lostReason.trim() || null
-    logLeadActivity(
-      lead,
-      "STAGE_CHANGE",
-      `Stage changed to Lost${lostReason.trim() ? ` — ${lostReason.trim()}` : ""}`,
-      authorName
-    )
-    toast.success("Lead marked as lost.")
-    setLostDialogOpen(false)
-    setLostReason("")
-    onChange()
-  }
 
   if (lead.stage === "LOST") {
     return (
@@ -76,7 +60,7 @@ export function LeadStageStepper({
             )}
             <button
               type="button"
-              onClick={() => setStage(stage)}
+              onClick={() => attemptStageChange(lead, stage)}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
@@ -93,13 +77,13 @@ export function LeadStageStepper({
         )
       })}
 
-      <Dialog open={lostDialogOpen} onOpenChange={setLostDialogOpen}>
+      <Dialog open={lostDialogOpen} onOpenChange={(open) => !open && cancelLost()}>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           className="ml-2 text-muted-foreground hover:text-destructive"
-          onClick={() => setLostDialogOpen(true)}
+          onClick={() => attemptStageChange(lead, "LOST")}
         >
           <XIcon />
           Mark as lost
@@ -119,9 +103,9 @@ export function LeadStageStepper({
           />
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={cancelLost}>Cancel</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={markLost}>
+            <Button variant="destructive" onClick={confirmLost}>
               Mark as lost
             </Button>
           </DialogFooter>

@@ -83,6 +83,44 @@ export function pipelineValueBdt(leads: Lead[]): number {
     .reduce((sum, lead) => sum + (lead.estimatedValueBdt ?? 0), 0)
 }
 
+export type LeadTemperature = "HOT" | "WARM" | "COOL"
+
+export const leadTemperatureLabels: Record<LeadTemperature, string> = {
+  HOT: "Hot",
+  WARM: "Warm",
+  COOL: "Cool",
+}
+
+export const leadTemperatureVariant: Record<
+  LeadTemperature,
+  "default" | "secondary" | "outline"
+> = {
+  HOT: "default",
+  WARM: "secondary",
+  COOL: "outline",
+}
+
+export function leadTemperature(lead: Pick<Lead, "estimatedValueBdt">): LeadTemperature {
+  const value = lead.estimatedValueBdt ?? 0
+  if (value >= 200000) return "HOT"
+  if (value >= 80000) return "WARM"
+  return "COOL"
+}
+
+export function waLink(phone: string | null): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, "")
+  return digits ? `https://wa.me/${digits}` : null
+}
+
+export function findLeadByEmail(email: string, excludeId?: string): Lead | undefined {
+  const normalized = email.trim().toLowerCase()
+  if (!normalized) return undefined
+  return mockLeads.find(
+    (lead) => lead.id !== excludeId && lead.email?.toLowerCase() === normalized
+  )
+}
+
 export function logLeadActivity(
   lead: Lead,
   type: LeadActivityType,

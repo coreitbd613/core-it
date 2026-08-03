@@ -112,6 +112,7 @@ export default function AdminProposalsPage() {
       timeline: proposal.timeline,
       termsHtml: proposal.termsHtml,
       validUntil: proposal.validUntil,
+      pdfUrl: null,
       versionGroupId: proposal.versionGroupId,
       version: proposal.version + 1,
       status: "DRAFT",

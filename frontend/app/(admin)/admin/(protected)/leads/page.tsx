@@ -7,8 +7,10 @@ import {
   AlertTriangleIcon,
   ArrowRightIcon,
   EyeIcon,
+  KanbanIcon,
   PencilIcon,
   PlusIcon,
+  TableIcon,
   TargetIcon,
   Trash2Icon,
   UserPlusIcon,
@@ -17,6 +19,7 @@ import {
 import { toast } from "sonner"
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
+import { useAdminAuth } from "@/contexts/admin-auth-context"
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
@@ -38,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,18 +53,35 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { formatBDT } from "@/lib/format"
 import {
+  LEAD_OWNERS,
+  LEAD_STAGE_ORDER,
   isLeadClosed,
   isLeadOverdue,
   leadSourceLabels,
   leadStageLabels,
   leadStageVariant,
+  logLeadActivity,
   mockLeads,
   pipelineValueBdt,
   type Lead,
+  type LeadSource,
   type LeadStage,
 } from "@/lib/mock/leads"
+
+import { LeadBoard } from "./_components/lead-board"
+import { LeadQuickActions } from "./_components/lead-quick-actions"
 
 export default function AdminLeadsPage() {
   const router = useRouter()
