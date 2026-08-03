@@ -95,10 +95,15 @@ function buildSearchItems(): SearchItem[] {
 
 function buildNavItems(): PanelNavItem[] {
   return [
+    { name: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard /> },
+    { name: "Proposals", href: "/portal/proposals", icon: <FileTextIcon /> },
+    { name: "Projects", href: "/portal/projects", icon: <FolderKanbanIcon /> },
+    { name: "Domains", href: "/portal/domains/orders", icon: <GlobeIcon /> },
+    { name: "Contracts", href: "/portal/contracts", icon: <FileSignatureIcon /> },
     { name: "Invoices", href: "/portal/invoices", icon: <ReceiptTextIcon /> },
     { name: "Statements", href: "/portal/statements", icon: <ScrollTextIcon /> },
-    { name: "Domains", href: "/portal/domains/orders", icon: <GlobeIcon /> },
     { name: "Company", href: "/portal/settings/company", icon: <Building2Icon /> },
+    { name: "Team", href: "/portal/settings/team", icon: <UsersIcon /> },
     { name: "Profile", href: "/portal/profile", icon: <User /> },
   ]
 }

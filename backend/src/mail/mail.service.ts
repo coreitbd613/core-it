@@ -78,7 +78,7 @@ export class MailService {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;border:1px solid #e4e4e7;">
             <tr>
               <td style="padding:28px 32px;text-align:center;border-bottom:1px solid #f0f0f1;">
-                <span style="font-size:20px;font-weight:700;color:#18181b;letter-spacing:-0.02em;">CORE IT</span>
+                <img src="${this.frontendUrl}/logo-light.png" alt="Core IT" width="140" style="display:inline-block;height:auto;" />
               </td>
             </tr>
             <tr>

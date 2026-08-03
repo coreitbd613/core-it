@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ReceiptTextIcon,
   Settings,
+  TargetIcon,
   Users,
 } from "lucide-react"
 
@@ -21,12 +22,14 @@ import { GlobalSearch, type SearchItem } from "@/components/shared/dashboard/glo
 import { NotificationsBell } from "@/components/shared/dashboard/notifications-bell"
 import { getAdminNotifications } from "@/lib/mock/notifications"
 import { mockContracts } from "@/lib/mock/contracts"
+import { mockLeads } from "@/lib/mock/leads"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
 import { mockInvoices } from "@/lib/mock/invoices"
 
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
+  { name: "Leads", href: "/admin/leads", icon: <TargetIcon /> },
   { name: "Proposals", href: "/admin/proposals", icon: <FileTextIcon /> },
   { name: "Projects", href: "/admin/projects", icon: <FolderKanbanIcon /> },
   { name: "Contracts", href: "/admin/contracts", icon: <FileSignatureIcon /> },
@@ -39,6 +42,7 @@ const adminNavItems: PanelNavItem[] = [
 function buildAdminSearchItems(): SearchItem[] {
   const navEntries: SearchItem[] = [
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="size-4" /> },
+    { id: "nav-leads", group: "Go to", label: "Leads", href: "/admin/leads", icon: <TargetIcon className="size-4" /> },
     { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/admin/proposals", icon: <FileTextIcon className="size-4" /> },
     { id: "nav-projects", group: "Go to", label: "Projects", href: "/admin/projects", icon: <FolderKanbanIcon className="size-4" /> },
     { id: "nav-contracts", group: "Go to", label: "Contracts", href: "/admin/contracts", icon: <FileSignatureIcon className="size-4" /> },
@@ -47,6 +51,14 @@ function buildAdminSearchItems(): SearchItem[] {
     { id: "nav-customers", group: "Go to", label: "Customers", href: "/admin/customers", icon: <Users className="size-4" /> },
     { id: "nav-settings", group: "Go to", label: "Settings", href: "/admin/settings", icon: <Settings className="size-4" /> },
   ]
+
+  const leadEntries: SearchItem[] = mockLeads.map((lead) => ({
+    id: `lead-${lead.id}`,
+    group: "Leads",
+    label: lead.contactName,
+    description: lead.companyName ?? undefined,
+    href: `/admin/leads/${lead.id}`,
+  }))
 
   const proposalEntries: SearchItem[] = latestProposalVersions(mockProposals).map((p) => ({
     id: `proposal-${p.id}`,
@@ -82,6 +94,7 @@ function buildAdminSearchItems(): SearchItem[] {
 
   return [
     ...navEntries,
+    ...leadEntries,
     ...proposalEntries,
     ...projectEntries,
     ...invoiceEntries,

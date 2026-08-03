@@ -1,12 +1,15 @@
 "use client"
 
 import { useMemo } from "react"
+import { useRouter } from "next/navigation"
 import type { ColumnDef } from "@tanstack/react-table"
+import { startOfWeek } from "date-fns"
 import {
   AlertTriangleIcon,
   Building2Icon,
   FileTextIcon,
   ShieldCheck,
+  TargetIcon,
   UserPlus,
   Users,
   WalletIcon,
@@ -16,6 +19,15 @@ import { useAdminCustomers } from "@/hooks/use-customers"
 import type { AdminCustomer } from "@/lib/customers"
 import { formatBDT } from "@/lib/format"
 import { mockOrganizations } from "@/lib/mock/organizations"
+import {
+  isLeadClosed,
+  isLeadOverdue,
+  leadStageLabels,
+  leadStageVariant,
+  mockLeads,
+  pipelineValueBdt,
+  type Lead,
+} from "@/lib/mock/leads"
 import { mockProposals } from "@/lib/mock/proposals"
 import { deriveInvoiceStatus, invoiceBalanceBdt, mockInvoices } from "@/lib/mock/invoices"
 import DashboardStatsGrid, {
@@ -49,7 +61,39 @@ const columns: ColumnDef<AdminCustomer>[] = [
   },
 ]
 
+const followUpColumns: ColumnDef<Lead>[] = [
+  {
+    accessorKey: "contactName",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Lead" />,
+    cell: ({ row }) => row.original.contactName,
+  },
+  {
+    accessorKey: "companyName",
+    header: "Company",
+    cell: ({ row }) => row.original.companyName ?? "—",
+  },
+  {
+    id: "stage",
+    header: "Stage",
+    cell: ({ row }) => (
+      <Badge variant={leadStageVariant[row.original.stage]}>
+        {leadStageLabels[row.original.stage]}
+      </Badge>
+    ),
+  },
+  {
+    id: "nextFollowUpAt",
+    accessorFn: (row) => row.nextFollowUpAt,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Next Follow-up" />,
+    cell: ({ row }) =>
+      row.original.nextFollowUpAt
+        ? new Date(row.original.nextFollowUpAt).toLocaleDateString()
+        : "—",
+  },
+]
+
 export default function AdminDashboardPage() {
+  const router = useRouter()
   const { data: customers, isPending } = useAdminCustomers()
   const rows = customers ?? []
 
@@ -77,6 +121,24 @@ export default function AdminDashboardPage() {
     ]
   }, [])
 
+  const leadStats = useMemo<DashboardStatItem[]>(() => {
+    const weekStart = startOfWeek(new Date())
+    const newThisWeek = mockLeads.filter((lead) => new Date(lead.createdAt) >= weekStart).length
+    const overdue = mockLeads.filter((lead) => isLeadOverdue(lead)).length
+    return [
+      { label: "New Leads This Week", value: newThisWeek, icon: TargetIcon, tone: "primary" },
+      { label: "Overdue Follow-ups", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
+      { label: "Pipeline Value", value: formatBDT(pipelineValueBdt(mockLeads)), icon: WalletIcon, tone: "chart4" },
+    ]
+  }, [])
+
+  const followUpsDue = mockLeads
+    .filter((lead) => !isLeadClosed(lead) && lead.nextFollowUpAt)
+    .sort(
+      (a, b) => new Date(a.nextFollowUpAt!).getTime() - new Date(b.nextFollowUpAt!).getTime()
+    )
+    .slice(0, 5)
+
   const recentUsers = [...rows]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
@@ -94,8 +156,25 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Leads</h2>
+        <DashboardStatsGrid items={leadStats} />
+      </div>
+
+      <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Users</h2>
         <DashboardStatsGrid items={userStats} loading={isPending} />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Follow-ups due</h2>
+        <DataTable
+          columns={followUpColumns}
+          data={followUpsDue}
+          getRowId={(row) => row.id}
+          emptyMessage="No follow-ups due."
+          enableRowSelection={false}
+          onRowClick={(row) => router.push(`/admin/leads/${row.id}`)}
+        />
       </div>
 
       <div className="flex flex-col gap-3">

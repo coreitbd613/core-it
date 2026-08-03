@@ -38,6 +38,8 @@ export type Lead = {
 
 export const LEAD_STAGE_ORDER: LeadStage[] = ["NEW", "CONTACTED", "QUALIFIED", "WON"]
 
+export const LEAD_OWNERS = ["Rafiq Islam", "Nusrat Jahan"]
+
 export const leadStageLabels: Record<LeadStage, string> = {
   NEW: "New",
   CONTACTED: "Contacted",
