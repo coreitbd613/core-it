@@ -164,7 +164,11 @@ export default function ProposalsPage() {
             icon: <DownloadIcon />,
             separatorBefore: true,
             onClick: () => {
-              void downloadProposalPdf(row.original)
+              if (row.original.pdfUrl) {
+                window.open(row.original.pdfUrl, "_blank", "noopener,noreferrer")
+              } else {
+                void downloadProposalPdf(row.original)
+              }
             },
           })
 

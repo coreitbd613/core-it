@@ -6,6 +6,17 @@ import Link from "next/link"
 import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,12 +36,16 @@ import {
   leadSourceLabels,
   leadStageLabels,
   leadStageVariant,
+  leadTemperature,
+  leadTemperatureLabels,
+  leadTemperatureVariant,
   logLeadActivity,
   mockLeads,
 } from "@/lib/mock/leads"
 
 import { LeadActivityTimeline } from "../_components/lead-activity-timeline"
 import { LeadFollowUpCard } from "../_components/lead-follow-up-card"
+import { LeadQuickActions } from "../_components/lead-quick-actions"
 import { LeadStageStepper } from "../_components/lead-stage-stepper"
 
 export default function AdminLeadDetailPage() {
@@ -129,33 +144,24 @@ export default function AdminLeadDetailPage() {
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>Details</CardTitle>
-              <Badge variant={leadStageVariant[lead.stage]}>{leadStageLabels[lead.stage]}</Badge>
+              <div className="flex items-center gap-1.5">
+                <Badge variant={leadTemperatureVariant[leadTemperature(lead)]}>
+                  {leadTemperatureLabels[leadTemperature(lead)]}
+                </Badge>
+                <Badge variant={leadStageVariant[lead.stage]}>{leadStageLabels[lead.stage]}</Badge>
+              </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              <LeadQuickActions lead={lead} />
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-sm text-foreground">
-                    {lead.email ? (
-                      <a href={`mailto:${lead.email}`} className="hover:underline">
-                        {lead.email}
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </p>
+                  <p className="text-sm text-foreground">{lead.email ?? "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Phone</p>
-                  <p className="text-sm text-foreground">
-                    {lead.phone ? (
-                      <a href={`tel:${lead.phone}`} className="hover:underline">
-                        {lead.phone}
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </p>
+                  <p className="text-sm text-foreground">{lead.phone ?? "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Source</p>
@@ -194,10 +200,27 @@ export default function AdminLeadDetailPage() {
             </CardContent>
             {!closed && (
               <CardFooter className="border-t">
-                <Button className="w-full" onClick={handleConvert}>
-                  Convert to customer
-                  <ArrowRightIcon />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button className="w-full">
+                      Convert to customer
+                      <ArrowRightIcon />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Convert {lead.contactName} to a customer?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This marks the lead as Won. Create their account under Customers to finish
+                        onboarding.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleConvert}>Convert</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardFooter>
             )}
           </Card>

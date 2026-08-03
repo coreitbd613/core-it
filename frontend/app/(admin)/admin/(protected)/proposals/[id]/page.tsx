@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { ProposalComments } from "@/components/shared/proposal-comments"
-import { ProposalDownloadButton } from "@/components/shared/proposal-pdf"
+import { ProposalDocumentLink } from "@/components/shared/proposal-document-link"
 import { ProposalVersionStrip } from "@/components/shared/proposal-version-strip"
+import { ProposalPdfLinkCard } from "./_components/proposal-pdf-link-card"
 import { useAdminAuth } from "@/contexts/admin-auth-context"
 import { formatBDT } from "@/lib/format"
 import {
@@ -163,7 +164,7 @@ export default function AdminProposalDetailPage() {
           </p>
         </div>
         <div className="ml-auto">
-          <ProposalDownloadButton proposal={proposal} />
+          <ProposalDocumentLink proposal={proposal} />
         </div>
       </div>
 
@@ -324,6 +325,8 @@ export default function AdminProposalDetailPage() {
               </CardFooter>
             )}
           </Card>
+
+          <ProposalPdfLinkCard proposal={proposal} onSaved={() => forceRerender((n) => n + 1)} />
 
           {proposal.status === "APPROVED" && (
             <Card>

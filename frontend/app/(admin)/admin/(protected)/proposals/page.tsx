@@ -236,7 +236,11 @@ export default function AdminProposalsPage() {
               label: "Download PDF",
               icon: <DownloadIcon />,
               onClick: () => {
-                void downloadProposalPdf(proposal)
+                if (proposal.pdfUrl) {
+                  window.open(proposal.pdfUrl, "_blank", "noopener,noreferrer")
+                } else {
+                  void downloadProposalPdf(proposal)
+                }
               },
             },
           ]

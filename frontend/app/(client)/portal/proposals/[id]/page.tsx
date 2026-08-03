@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { ProposalComments } from "@/components/shared/proposal-comments"
-import { ProposalDownloadButton } from "@/components/shared/proposal-pdf"
+import { ProposalDocumentLink } from "@/components/shared/proposal-document-link"
 import { ProposalVersionStrip } from "@/components/shared/proposal-version-strip"
 import { useClientAuth } from "@/contexts/client-auth-context"
 import { formatBDT } from "@/lib/format"
@@ -120,7 +120,7 @@ export default function ProposalDetailPage() {
           </p>
         </div>
         <div className="ml-auto">
-          <ProposalDownloadButton proposal={proposal} />
+          <ProposalDocumentLink proposal={proposal} />
         </div>
       </div>
 

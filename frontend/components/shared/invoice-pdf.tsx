@@ -13,28 +13,59 @@ import {
   invoiceBalanceBdt,
   invoiceGrandTotalBdt,
   invoicePaidBdt,
+  invoiceStatusLabels,
   invoiceTotalBdt,
   type Invoice,
 } from "@/lib/mock/invoices"
 
-const mobileBankingOptions = ["bKash", "Nagad", "Rocket"]
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "")
 
 function invoiceViewUrl(invoiceId: string): string {
   return `${SITE_URL}/invoices/view/${invoiceId}`
 }
 
+function signed(amount: number, sign: "+" | "-" = "+"): string {
+  return `${sign}${formatBDT(amount)}`
+}
+
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 11, color: "#1a1a1a" },
-  header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 24 },
+  page: { padding: 40, fontSize: 10, color: "#1a1a1a" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   logo: { width: 120, height: 31 },
-  invoiceNumber: { fontSize: 10, color: "#666666", marginTop: 4 },
-  qrImage: { width: 56, height: 56, marginBottom: 8, alignSelf: "flex-end" },
-  section: { marginBottom: 16 },
-  sectionLabel: { fontSize: 9, color: "#666666", textTransform: "uppercase", marginBottom: 4 },
-  metaRow: { flexDirection: "row", gap: 16 },
+  invoiceTitle: { fontSize: 20, fontWeight: 700, textAlign: "right" },
+  invoiceNumber: { fontSize: 10, color: "#FD6005", marginTop: 4, textAlign: "right" },
+  invoiceStatus: {
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: "#c0392b",
+    marginTop: 2,
+    textAlign: "right",
+  },
+  qrImage: { width: 56, height: 56, marginTop: 6, alignSelf: "flex-end" },
+  metaSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    marginTop: 20,
+    paddingTop: 16,
+  },
+  sectionLabel: { fontSize: 8, color: "#666666", textTransform: "uppercase", marginBottom: 4 },
+  metaRow: { flexDirection: "row", gap: 4, marginTop: 2 },
+  metaLabel: { color: "#666666" },
+  section: { marginTop: 20 },
   table: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 4 },
+  tableHeaderRow: {
+    flexDirection: "row",
+    backgroundColor: "#f5f5f5",
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  tableHeaderText: { fontSize: 8, color: "#666666", textTransform: "uppercase" },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -42,25 +73,17 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tableRowLast: { flexDirection: "row", padding: 8 },
+  cellIndex: { width: 20, color: "#666666" },
   cellDescription: { flex: 3 },
-  cellQty: { flex: 1, textAlign: "right" },
-  cellAmount: { flex: 1, textAlign: "right" },
+  cellQty: { flex: 1, textAlign: "right", color: "#666666" },
+  cellRate: { flex: 1, textAlign: "right", color: "#666666" },
+  cellAmount: { flex: 1, textAlign: "right", fontWeight: 700 },
   totalsBlock: { marginTop: 12, alignItems: "flex-end", gap: 4 },
   totalsRow: { flexDirection: "row", gap: 16 },
   totalsLabel: { color: "#666666" },
   grandTotalRow: { flexDirection: "row", gap: 16, marginTop: 4 },
   grandTotalLabel: { fontWeight: 700 },
   grandTotalValue: { fontWeight: 700 },
-  paymentOptionsRow: { flexDirection: "row", gap: 8 },
-  paymentOption: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 4,
-    padding: 8,
-  },
-  paymentOptionName: { fontWeight: 700 },
-  paymentOptionMeta: { fontSize: 9, color: "#666666", marginTop: 2 },
 })
 
 function InvoiceDocument({
@@ -83,42 +106,55 @@ function InvoiceDocument({
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
+          <Image src={`${SITE_URL}/logo-light.png`} style={styles.logo} />
           <View>
-            <Image src={`${SITE_URL}/logo-light.png`} style={styles.logo} />
-            <Text style={styles.invoiceNumber}>{invoice.number}</Text>
-          </View>
-          <View>
+            <Text style={styles.invoiceTitle}>Invoice</Text>
+            <Text style={styles.invoiceNumber}>#{invoice.number}</Text>
+            <Text style={styles.invoiceStatus}>{invoiceStatusLabels[status]}</Text>
             {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={styles.qrImage} />}
-            <Text style={styles.invoiceNumber}>Billed to</Text>
-            <Text>{invoice.organizationName}</Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.metaRow}>
-            <View>
-              <Text style={styles.sectionLabel}>Issued</Text>
+        <View style={styles.metaSection}>
+          <View>
+            <Text style={styles.sectionLabel}>Bill to</Text>
+            <Text style={{ fontWeight: 700 }}>{invoice.organizationName}</Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Invoice date:</Text>
               <Text>{new Date(invoice.issuedAt).toLocaleDateString()}</Text>
             </View>
-            <View>
-              <Text style={styles.sectionLabel}>Due</Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Due date:</Text>
               <Text>{new Date(invoice.dueAt).toLocaleDateString()}</Text>
             </View>
           </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={{ fontWeight: 700 }}>Core IT</Text>
+            <Text style={styles.metaLabel}>{SITE_HOST}</Text>
+            <Text style={styles.metaLabel}>info@coreitbd.com</Text>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Line items</Text>
           <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableHeaderText, styles.cellIndex]}>#</Text>
+              <Text style={[styles.tableHeaderText, styles.cellDescription]}>Item</Text>
+              <Text style={[styles.tableHeaderText, styles.cellQty]}>Qty</Text>
+              <Text style={[styles.tableHeaderText, styles.cellRate]}>Rate</Text>
+              <Text style={[styles.tableHeaderText, styles.cellAmount]}>Amount</Text>
+            </View>
             {invoice.lineItems.map((item, index) => (
               <View
                 key={item.id}
                 style={index === invoice.lineItems.length - 1 ? styles.tableRowLast : styles.tableRow}
               >
+                <Text style={styles.cellIndex}>{index + 1}</Text>
                 <Text style={styles.cellDescription}>{item.description}</Text>
-                <Text style={styles.cellQty}>Qty {item.quantity}</Text>
+                <Text style={styles.cellQty}>{item.quantity}</Text>
+                <Text style={styles.cellRate}>{signed(item.unitPriceBdt)}</Text>
                 <Text style={styles.cellAmount}>
-                  {formatBDT(item.quantity * item.unitPriceBdt)}
+                  {signed(item.quantity * item.unitPriceBdt)}
                 </Text>
               </View>
             ))}
@@ -126,52 +162,45 @@ function InvoiceDocument({
 
           <View style={styles.totalsBlock}>
             <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>Subtotal</Text>
-              <Text>{formatBDT(subtotal)}</Text>
+              <Text style={styles.totalsLabel}>Sub total</Text>
+              <Text>{signed(subtotal)}</Text>
             </View>
             {invoice.discountPercent > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Discount ({invoice.discountPercent}%)</Text>
-                <Text>-{formatBDT(discountAmount)}</Text>
+                <Text>{signed(discountAmount, "-")}</Text>
               </View>
             )}
             {invoice.taxPercent > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Tax ({invoice.taxPercent}%)</Text>
-                <Text>{formatBDT(taxAmount)}</Text>
+                <Text>{signed(taxAmount)}</Text>
               </View>
             )}
             <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>Total</Text>
-              <Text>{formatBDT(total)}</Text>
+              <Text>{signed(total)}</Text>
             </View>
             {paid > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Paid</Text>
-                <Text>-{formatBDT(paid)}</Text>
+                <Text>{signed(paid, "-")}</Text>
               </View>
             )}
             <View style={styles.grandTotalRow}>
-              <Text style={styles.grandTotalLabel}>Balance due</Text>
-              <Text style={styles.grandTotalValue}>{formatBDT(balance)}</Text>
+              <Text style={styles.grandTotalLabel}>Amount due</Text>
+              <Text style={styles.grandTotalValue}>{signed(balance)}</Text>
             </View>
           </View>
         </View>
 
         {canPay && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>How to pay</Text>
-            <View style={styles.paymentOptionsRow}>
-              {mobileBankingOptions.map((name) => (
-                <View key={name} style={styles.paymentOption}>
-                  <Text style={styles.paymentOptionName}>{name}</Text>
-                  <Text>{MOBILE_BANKING_NUMBER}</Text>
-                  <Text style={styles.paymentOptionMeta}>Send Money (Personal)</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={styles.paymentOptionMeta}>
-              Please reference {invoice.number} when paying.
+            <Text style={styles.sectionLabel}>Offline payment</Text>
+            <Text>bKash / Nagad / Rocket</Text>
+            <Text>Send Money to {MOBILE_BANKING_NUMBER} (Personal)</Text>
+            <Text style={[styles.metaLabel, { marginTop: 4, fontSize: 8 }]}>
+              Please add {invoice.number} as the reference.
             </Text>
           </View>
         )}
@@ -182,6 +211,14 @@ function InvoiceDocument({
             <Text>{invoice.notes}</Text>
           </View>
         )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Terms &amp; conditions</Text>
+          <Text style={[styles.metaLabel, { fontSize: 8 }]}>
+            By proceeding with this invoice and/or payment, the client acknowledges and agrees to
+            the Terms of Service and Privacy Policy available at {SITE_HOST}/terms.
+          </Text>
+        </View>
       </Page>
     </Document>
   )

@@ -1,7 +1,9 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AlertTriangleIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -15,7 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { LEAD_OWNERS, leadSourceLabels, mockLeads, type Lead, type LeadSource } from "@/lib/mock/leads"
+import {
+  LEAD_OWNERS,
+  findLeadByEmail,
+  leadSourceLabels,
+  mockLeads,
+  type Lead,
+  type LeadSource,
+} from "@/lib/mock/leads"
 
 export function LeadForm({
   mode,
@@ -31,6 +40,7 @@ export function LeadForm({
   const [contactName, setContactName] = React.useState(lead?.contactName ?? "")
   const [companyName, setCompanyName] = React.useState(lead?.companyName ?? "")
   const [email, setEmail] = React.useState(lead?.email ?? "")
+  const [duplicateLead, setDuplicateLead] = React.useState<Lead | undefined>(undefined)
   const [phone, setPhone] = React.useState(lead?.phone ?? "")
   const [source, setSource] = React.useState<LeadSource>(lead?.source ?? "WEBSITE")
   const [ownerName, setOwnerName] = React.useState(lead?.ownerName ?? "unassigned")
@@ -122,9 +132,26 @@ export function LeadForm({
                     id="lead-email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      setDuplicateLead(undefined)
+                    }}
+                    onBlur={(e) => {
+                      if (mode === "create") {
+                        setDuplicateLead(findLeadByEmail(e.target.value))
+                      }
+                    }}
                     placeholder="jane@acme.com"
                   />
+                  {mode === "create" && duplicateLead && (
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <AlertTriangleIcon className="size-3.5 shrink-0" />
+                      A lead with this email already exists:{" "}
+                      <Link href={`/admin/leads/${duplicateLead.id}`} className="underline">
+                        {duplicateLead.contactName}
+                      </Link>
+                    </p>
+                  )}
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="lead-phone">Phone</FieldLabel>
