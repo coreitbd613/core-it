@@ -21,10 +21,7 @@ const serviceImages: Partial<Record<string, string>> = {
 
 const ServicesAccordion = ({ className }: ServicesAccordionProps) => {
   return (
-    <section
-      id="services"
-      className={cn("relative z-10 bg-background py-32", className)}
-    >
+    <section id="services" className={cn("bg-background py-32", className)}>
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <h2 className="text-4xl font-medium text-foreground md:text-6xl">

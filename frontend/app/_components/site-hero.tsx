@@ -8,7 +8,7 @@ import { WHATSAPP_URL } from "@/lib/contact";
 
 export function SiteHero() {
   return (
-    <section className="bg-background sticky top-0 z-0 min-h-screen overflow-hidden lg:h-screen">
+    <section className="bg-background min-h-screen overflow-hidden lg:h-screen">
       {/* Slowly drifting light gradient background */}
       <div
         aria-hidden
