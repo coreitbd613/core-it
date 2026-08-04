@@ -10,7 +10,7 @@ function toNumber(value: DecimalLike): number {
 }
 
 export interface InvoiceTotalsInput {
-  lineItems: { quantity: number; unitPriceBdt: DecimalLike }[];
+  lineItems: { unitPriceBdt: DecimalLike }[];
   taxPercent: number;
   discountPercent: number;
   payments: { amountBdt: DecimalLike }[];
@@ -18,11 +18,12 @@ export interface InvoiceTotalsInput {
   dueAt: Date | string;
 }
 
+/** Each line's unitPriceBdt IS its Amount — quantity is a display-only label, not a multiplier. */
 export function subtotalBdt(
   input: Pick<InvoiceTotalsInput, 'lineItems'>,
 ): number {
   return input.lineItems.reduce(
-    (sum, item) => sum + item.quantity * toNumber(item.unitPriceBdt),
+    (sum, item) => sum + toNumber(item.unitPriceBdt),
     0,
   );
 }

@@ -81,7 +81,7 @@ function buildAdminSearchItems(invoices: Invoice[]): SearchItem[] {
     id: `invoice-${inv.id}`,
     group: "Invoices",
     label: inv.number,
-    description: inv.organization.name,
+    description: inv.organization?.name ?? inv.customerName ?? undefined,
     href: `/admin/invoices/${inv.id}`,
   }))
 

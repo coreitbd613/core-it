@@ -138,7 +138,7 @@ export default function AdminInvoicesPage() {
       },
       {
         id: "organizationName",
-        accessorFn: (row) => row.organization.name,
+        accessorFn: (row) => row.organization?.name ?? row.customerName,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
       },
       {

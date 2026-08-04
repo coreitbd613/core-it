@@ -8,14 +8,23 @@ import {
   IsString,
   IsUUID,
   Max,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { CreateInvoiceLineItemDto } from './create-invoice-line-item.dto';
 
 export class CreateInvoiceDto {
+  // Exactly one of organizationId / customerName must be set — checked in
+  // the service, since it's a cross-field rule class-validator can't express cleanly.
+  @IsOptional()
   @IsUUID()
-  organizationId: string;
+  organizationId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  customerName?: string;
 
   @IsOptional()
   @IsString()

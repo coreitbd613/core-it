@@ -95,8 +95,7 @@ const styles = StyleSheet.create({
   tableRowLast: { flexDirection: "row", padding: 8 },
   cellIndex: { width: 20, color: "#1a1a1a" },
   cellDescription: { flex: 3, fontWeight: 700 },
-  cellQty: { flex: 1, textAlign: "right", color: "#1a1a1a" },
-  cellRate: { flex: 1, textAlign: "right", color: "#1a1a1a" },
+  cellQty: { flex: 1.5, textAlign: "right", color: "#1a1a1a" },
   cellAmount: { flex: 1, textAlign: "right", fontWeight: 700 },
   totalsBlock: { marginTop: 12, alignItems: "flex-end", gap: 4 },
   totalsRow: { flexDirection: "row", gap: 16 },
@@ -147,7 +146,9 @@ function InvoiceDocument({
         <View style={styles.metaSection}>
           <View style={styles.metaColumn}>
             <Text style={styles.sectionLabel}>Bill to</Text>
-            <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>{invoice.organization.name}</Text>
+            <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>
+              {invoice.organization?.name ?? invoice.customerName}
+            </Text>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Invoice date:</Text>
               <Text>{formatDate(invoice.issuedAt)}</Text>
@@ -177,7 +178,6 @@ function InvoiceDocument({
               <Text style={[styles.tableHeaderText, styles.cellIndex]}>#</Text>
               <Text style={[styles.tableHeaderText, styles.cellDescription]}>Item</Text>
               <Text style={[styles.tableHeaderText, styles.cellQty]}>Qty</Text>
-              <Text style={[styles.tableHeaderText, styles.cellRate]}>Rate</Text>
               <Text style={[styles.tableHeaderText, styles.cellAmount]}>Amount</Text>
             </View>
             {invoice.lineItems.map((item, index) => (
@@ -188,10 +188,7 @@ function InvoiceDocument({
                 <Text style={styles.cellIndex}>{index + 1}</Text>
                 <Text style={styles.cellDescription}>{item.description}</Text>
                 <Text style={styles.cellQty}>{item.quantity}</Text>
-                <Text style={styles.cellRate}>{formatBDT(Number(item.unitPriceBdt))}</Text>
-                <Text style={styles.cellAmount}>
-                  {formatBDT(item.quantity * Number(item.unitPriceBdt))}
-                </Text>
+                <Text style={styles.cellAmount}>{formatBDT(Number(item.unitPriceBdt))}</Text>
               </View>
             ))}
           </View>

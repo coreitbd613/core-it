@@ -39,8 +39,10 @@ export type InvoiceLineItem = {
   id: string
   invoiceId: string
   description: string
-  quantity: number
+  // Freeform label only (e.g. "1 year", "2 licenses") — not used in Amount math.
+  quantity: string | null
   // Decimal fields serialize as strings over the wire — parse with Number() when doing math.
+  // This is the line's Amount directly; quantity does not multiply it.
   unitPriceBdt: string
 }
 
@@ -67,8 +69,10 @@ export type InvoiceComputed = {
 export type Invoice = {
   id: string
   number: string
-  organizationId: string
-  organization: { id: string; name: string }
+  organizationId: string | null
+  organization: { id: string; name: string } | null
+  // Set instead of organization for one-off billing to a customer with no Organization record.
+  customerName: string | null
   proposalId: string | null
   status: InvoiceStatus
   voidReason: string | null
@@ -86,12 +90,14 @@ export type Invoice = {
 
 export type InvoiceLineItemInput = {
   description: string
-  quantity: number
+  quantity?: string
   unitPriceBdt: number
 }
 
 export type CreateInvoiceInput = {
-  organizationId: string
+  // Provide exactly one of the two.
+  organizationId?: string
+  customerName?: string
   proposalId?: string
   dueAt: string
   lineItems: InvoiceLineItemInput[]

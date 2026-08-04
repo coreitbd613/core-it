@@ -1,13 +1,21 @@
-import { IsInt, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateInvoiceLineItemDto {
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @IsInt()
-  @Min(1)
-  quantity: number;
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  quantity?: string;
 
   @IsNumber()
   @Min(0)

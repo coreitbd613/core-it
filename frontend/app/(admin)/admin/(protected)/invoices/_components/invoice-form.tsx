@@ -18,7 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { DatePickerField } from "@/components/shared/date-picker-field"
 import { useAdminOrganizations } from "@/hooks/use-organization"
 import { useCreateInvoice } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
@@ -27,16 +29,17 @@ import { mockProposals } from "@/lib/mock/proposals"
 type FormLineItem = {
   id: string
   description: string
-  quantity: number
+  quantity: string
   unitPriceBdt: number
 }
 
 function newLineItem(): FormLineItem {
-  return { id: crypto.randomUUID(), description: "", quantity: 1, unitPriceBdt: 0 }
+  return { id: crypto.randomUUID(), description: "", quantity: "", unitPriceBdt: 0 }
 }
 
+/** Each line's unitPriceBdt IS its Amount — quantity is a display-only label. */
 function subtotalOf(lineItems: FormLineItem[]): number {
-  return lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceBdt, 0)
+  return lineItems.reduce((sum, item) => sum + item.unitPriceBdt, 0)
 }
 
 function grandTotalOf(lineItems: FormLineItem[], taxPercent: number, discountPercent: number): number {
@@ -63,13 +66,22 @@ export function InvoiceForm() {
   const { data: organizations = [], isLoading: organizationsLoading } = useAdminOrganizations()
   const createInvoice = useCreateInvoice()
 
+  const [customerMode, setCustomerMode] = React.useState<"organization" | "adhoc">("organization")
   const [organizationId, setOrganizationId] = React.useState(
     sourceProposal?.organizationId ?? ""
   )
+  const [customerName, setCustomerName] = React.useState("")
   const [dueAt, setDueAt] = React.useState(defaultDueDate())
   const [lineItems, setLineItems] = React.useState<FormLineItem[]>(
     sourceProposal
-      ? sourceProposal.lineItems.map((item) => ({ ...item, id: crypto.randomUUID() }))
+      ? sourceProposal.lineItems.map((item) => ({
+          id: crypto.randomUUID(),
+          description: item.description,
+          // Proposal line items still multiply qty*rate — fold that into a
+          // single Amount here and keep the qty as a display label.
+          quantity: item.quantity > 1 ? String(item.quantity) : "",
+          unitPriceBdt: item.quantity * item.unitPriceBdt,
+        }))
       : [newLineItem()]
   )
   const [taxPercent, setTaxPercent] = React.useState(sourceProposal?.taxPercent ?? 0)
@@ -96,19 +108,29 @@ export function InvoiceForm() {
   }
 
   async function handleSubmit(status: "DRAFT" | "SENT") {
-    if (!effectiveOrganizationId || lineItems.length === 0) {
-      toast.error("Fill in a company and at least one line item.")
+    const trimmedCustomerName = customerName.trim()
+    if (customerMode === "organization" && !effectiveOrganizationId) {
+      toast.error("Select a company.")
+      return
+    }
+    if (customerMode === "adhoc" && !trimmedCustomerName) {
+      toast.error("Enter a customer name.")
+      return
+    }
+    if (lineItems.length === 0) {
+      toast.error("Add at least one line item.")
       return
     }
 
     try {
       const invoice = await createInvoice.mutateAsync({
-        organizationId: effectiveOrganizationId,
+        organizationId: customerMode === "organization" ? effectiveOrganizationId : undefined,
+        customerName: customerMode === "adhoc" ? trimmedCustomerName : undefined,
         proposalId: sourceProposal?.id,
         dueAt,
         lineItems: lineItems.map(({ description, quantity, unitPriceBdt }) => ({
           description,
-          quantity,
+          quantity: quantity.trim() || undefined,
           unitPriceBdt,
         })),
         taxPercent,
@@ -151,40 +173,53 @@ export function InvoiceForm() {
             </CardHeader>
             <CardContent>
               <FieldGroup>
+                <Field>
+                  <FieldLabel>Bill to</FieldLabel>
+                  <Tabs
+                    value={customerMode}
+                    onValueChange={(value) => setCustomerMode(value as "organization" | "adhoc")}
+                  >
+                    <TabsList>
+                      <TabsTrigger value="organization">Existing company</TabsTrigger>
+                      <TabsTrigger value="adhoc">One-off customer</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </Field>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel htmlFor="invoice-org">Company</FieldLabel>
-                    <Select
-                      value={effectiveOrganizationId}
-                      onValueChange={setOrganizationId}
-                      disabled={organizationsLoading}
-                    >
-                      <SelectTrigger id="invoice-org" className="w-full">
-                        <SelectValue placeholder={organizationsLoading ? "Loading..." : "Select a company"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {organizations.map((org) => (
-                          <SelectItem key={org.id} value={org.id}>
-                            {org.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="invoice-number">Invoice number</FieldLabel>
-                    <Input id="invoice-number" value="Assigned automatically" disabled />
-                  </Field>
-                </div>
-                <div className="grid gap-5 sm:grid-cols-2">
+                  {customerMode === "organization" ? (
+                    <Field>
+                      <FieldLabel htmlFor="invoice-org">Company</FieldLabel>
+                      <Select
+                        value={effectiveOrganizationId}
+                        onValueChange={setOrganizationId}
+                        disabled={organizationsLoading}
+                      >
+                        <SelectTrigger id="invoice-org" className="w-full">
+                          <SelectValue placeholder={organizationsLoading ? "Loading..." : "Select a company"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizations.map((org) => (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  ) : (
+                    <Field>
+                      <FieldLabel htmlFor="invoice-customer-name">Customer name</FieldLabel>
+                      <Input
+                        id="invoice-customer-name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="e.g. Jane Doe"
+                      />
+                    </Field>
+                  )}
                   <Field>
                     <FieldLabel htmlFor="invoice-due">Due date</FieldLabel>
-                    <Input
-                      id="invoice-due"
-                      type="date"
-                      value={dueAt}
-                      onChange={(e) => setDueAt(e.target.value)}
-                    />
+                    <DatePickerField id="invoice-due" value={dueAt} onChange={setDueAt} />
                   </Field>
                 </div>
               </FieldGroup>
@@ -199,7 +234,7 @@ export function InvoiceForm() {
               {lineItems.map((item) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_5rem_8rem_2.5rem]"
+                  className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_7rem_8rem_2.5rem]"
                 >
                   <Field className="col-span-2 sm:col-span-1">
                     <FieldLabel className="text-xs">Description</FieldLabel>
@@ -212,14 +247,13 @@ export function InvoiceForm() {
                   <Field>
                     <FieldLabel className="text-xs">Qty</FieldLabel>
                     <Input
-                      type="number"
-                      min={1}
                       value={item.quantity}
-                      onChange={(e) => updateLineItem(item.id, "quantity", Number(e.target.value) || 1)}
+                      onChange={(e) => updateLineItem(item.id, "quantity", e.target.value)}
+                      placeholder="e.g. 1 year"
                     />
                   </Field>
                   <Field>
-                    <FieldLabel className="text-xs">Unit price (BDT)</FieldLabel>
+                    <FieldLabel className="text-xs">Amount (BDT)</FieldLabel>
                     <Input
                       type="number"
                       min={0}

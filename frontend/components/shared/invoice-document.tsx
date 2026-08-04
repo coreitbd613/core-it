@@ -80,7 +80,9 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <div className="relative mt-8 grid grid-cols-1 gap-6 border-t pt-6 sm:grid-cols-2">
         <div>
           <p className="text-xs font-semibold tracking-wider text-foreground uppercase">Bill to</p>
-          <p className="mt-1 font-medium text-foreground">{invoice.organization.name}</p>
+          <p className="mt-1 font-medium text-foreground">
+            {invoice.organization?.name ?? invoice.customerName}
+          </p>
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">
@@ -122,7 +124,6 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
               <th className="w-10 px-4 py-2.5 text-left font-semibold">#</th>
               <th className="px-4 py-2.5 text-left font-semibold">Item</th>
               <th className="px-4 py-2.5 text-right font-semibold">Qty</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Rate</th>
               <th className="px-4 py-2.5 text-right font-semibold">Amount</th>
             </tr>
           </thead>
@@ -131,14 +132,9 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
               <tr key={item.id}>
                 <td className="px-4 py-3 text-foreground tabular-nums">{index + 1}</td>
                 <td className="px-4 py-3 font-medium text-foreground">{item.description}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                  {item.quantity}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                  {formatBDT(Number(item.unitPriceBdt))}
-                </td>
+                <td className="px-4 py-3 text-right text-foreground">{item.quantity}</td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
-                  {formatBDT(item.quantity * Number(item.unitPriceBdt))}
+                  {formatBDT(Number(item.unitPriceBdt))}
                 </td>
               </tr>
             ))}

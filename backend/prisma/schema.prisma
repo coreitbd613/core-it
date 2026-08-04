@@ -206,10 +206,15 @@ enum PaymentMethod {
 }
 
 model Invoice {
-  id             String       @id @default(uuid())
-  number         String       @unique
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  number         String        @unique
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Set instead of organizationId for one-off billing to a customer who
+  // isn't a registered Organization. Exactly one of the two must be set —
+  // enforced in the service, not the DB.
+  customerName String?
 
   proposalId String? // no real Proposal backend exists yet — freeform, not a FK
 
@@ -239,8 +244,8 @@ model InvoiceLineItem {
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   description  String
-  quantity     Int
-  unitPriceBdt Decimal
+  quantity     String? // freeform label, e.g. "1 year", "2 licenses" — not used in Amount math
+  unitPriceBdt Decimal // the line's Amount directly, no quantity multiplication
 
   @@index([invoiceId])
 }

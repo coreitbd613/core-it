@@ -79,6 +79,7 @@ export default function AdminInvoiceDetailPage() {
 
   const balance = invoice.computed.balanceBdt
   const status = invoice.computed.status
+  const billToName = invoice.organization?.name ?? invoice.customerName
   const relatedProposal = invoice.proposalId
     ? mockProposals.find((p) => p.id === invoice.proposalId)
     : null
@@ -87,7 +88,7 @@ export default function AdminInvoiceDetailPage() {
   async function handleSend() {
     try {
       await sendInvoice.mutateAsync()
-      toast.success(`Sent to ${invoice!.organization.name}.`)
+      toast.success(`Sent to ${billToName}.`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't send this invoice.")
     }
@@ -122,7 +123,7 @@ export default function AdminInvoiceDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{invoice.number}</h1>
-          <p className="text-muted-foreground">{invoice.organization.name}</p>
+          <p className="text-muted-foreground">{billToName}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -42,7 +43,7 @@ export class InvoicesService {
   /** Attaches derived totals/status without ever overwriting the stored `status`. */
   private attachComputed<
     T extends {
-      lineItems: { quantity: number; unitPriceBdt: unknown }[];
+      lineItems: { unitPriceBdt: unknown }[];
       payments: { amountBdt: unknown }[];
       taxPercent: number;
       discountPercent: number;
@@ -62,11 +63,25 @@ export class InvoicesService {
   }
 
   async createInvoice(dto: CreateInvoiceDto) {
-    const organization = await this.prisma.organization.findUnique({
-      where: { id: dto.organizationId },
-    });
-    if (!organization) {
-      throw new NotFoundException('Organization not found.');
+    const customerName = dto.customerName?.trim() || undefined;
+    if (!dto.organizationId && !customerName) {
+      throw new BadRequestException(
+        'Provide either an organizationId or a customerName.',
+      );
+    }
+    if (dto.organizationId && customerName) {
+      throw new BadRequestException(
+        'Provide either an organizationId or a customerName, not both.',
+      );
+    }
+
+    if (dto.organizationId) {
+      const organization = await this.prisma.organization.findUnique({
+        where: { id: dto.organizationId },
+      });
+      if (!organization) {
+        throw new NotFoundException('Organization not found.');
+      }
     }
 
     const created = await this.prisma.$transaction(async (tx) => {
@@ -75,6 +90,7 @@ export class InvoicesService {
         data: {
           number,
           organizationId: dto.organizationId,
+          customerName,
           proposalId: dto.proposalId,
           status: dto.status ?? 'DRAFT',
           taxPercent: dto.taxPercent ?? 0,
@@ -255,9 +271,10 @@ export class InvoicesService {
     }
 
     const orgIds = await getActiveOrganizationIds(this.prisma, userId);
-    if (!orgIds.includes(invoice.organizationId)) {
+    if (!invoice.organizationId || !orgIds.includes(invoice.organizationId)) {
       // 404, not 403 — avoid revealing that an invoice with this id exists
-      // for an organization the requester doesn't belong to.
+      // for an organization the requester doesn't belong to (or that it's
+      // an ad-hoc invoice with no organization at all).
       throw new NotFoundException('Invoice not found.');
     }
 

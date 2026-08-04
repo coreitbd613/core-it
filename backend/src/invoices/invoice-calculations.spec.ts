@@ -7,39 +7,36 @@ import {
   subtotalBdt,
 } from './invoice-calculations';
 
-const lineItems = [
-  { quantity: 2, unitPriceBdt: 5000 },
-  { quantity: 1, unitPriceBdt: 10000 },
-];
+const lineItems = [{ unitPriceBdt: 5000 }, { unitPriceBdt: 10000 }];
 
 describe('subtotalBdt', () => {
-  it('sums quantity * unitPriceBdt across line items', () => {
-    expect(subtotalBdt({ lineItems })).toBe(20000);
+  it('sums unitPriceBdt across line items (quantity is not a multiplier)', () => {
+    expect(subtotalBdt({ lineItems })).toBe(15000);
   });
 
   it('handles Decimal-like values with toNumber()', () => {
     const decimalLike = { toNumber: () => 5000 };
-    expect(
-      subtotalBdt({ lineItems: [{ quantity: 2, unitPriceBdt: decimalLike }] }),
-    ).toBe(10000);
+    expect(subtotalBdt({ lineItems: [{ unitPriceBdt: decimalLike }] })).toBe(
+      5000,
+    );
   });
 });
 
 describe('grandTotalBdt', () => {
   it('applies discount to the subtotal, then tax on the discounted amount', () => {
-    // subtotal 20000, 10% discount -> 18000, 5% tax -> 18900
+    // subtotal 15000, 10% discount -> 13500, 5% tax -> 14175
     const total = grandTotalBdt({
       lineItems,
       taxPercent: 5,
       discountPercent: 10,
     });
-    expect(total).toBe(18900);
+    expect(total).toBe(14175);
   });
 
   it('returns the raw subtotal when there is no discount or tax', () => {
     expect(
       grandTotalBdt({ lineItems, taxPercent: 0, discountPercent: 0 }),
-    ).toBe(20000);
+    ).toBe(15000);
   });
 });
 
@@ -54,7 +51,7 @@ describe('paidBdt / balanceBdt', () => {
       dueAt: new Date(Date.now() + 86_400_000),
     };
     expect(paidBdt(input)).toBe(7000);
-    expect(balanceBdt(input)).toBe(13000);
+    expect(balanceBdt(input)).toBe(8000);
   });
 });
 
@@ -152,10 +149,10 @@ describe('computeInvoiceTotals', () => {
       dueAt: new Date(Date.now() + 86_400_000),
     });
     expect(result).toEqual({
-      subtotalBdt: 20000,
-      grandTotalBdt: 18900,
+      subtotalBdt: 15000,
+      grandTotalBdt: 14175,
       paidBdt: 9000,
-      balanceBdt: 9900,
+      balanceBdt: 5175,
       status: 'PARTIALLY_PAID',
     });
   });
