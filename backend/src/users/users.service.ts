@@ -56,7 +56,10 @@ export class UsersService {
     return this.prisma.user.update({ where: { id }, data });
   }
 
-  updatePendingRegistration(id: string, data: { name?: string; password: string }) {
+  updatePendingRegistration(
+    id: string,
+    data: { name?: string; password: string },
+  ) {
     return this.prisma.user.update({ where: { id }, data });
   }
 

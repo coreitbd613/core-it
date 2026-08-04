@@ -94,7 +94,9 @@ export class AuthService {
       return null;
     }
     if (!user.emailVerified) {
-      throw new ForbiddenException('Please verify your email before logging in.');
+      throw new ForbiddenException(
+        'Please verify your email before logging in.',
+      );
     }
     return sanitize(user);
   }
@@ -110,10 +112,13 @@ export class AuthService {
 
       // Unverified signup from before: refresh their details and resend the
       // verification link instead of permanently locking them out.
-      const user = await this.usersService.updatePendingRegistration(existing.id, {
-        name: dto.name,
-        password: hashedPassword,
-      });
+      const user = await this.usersService.updatePendingRegistration(
+        existing.id,
+        {
+          name: dto.name,
+          password: hashedPassword,
+        },
+      );
       await this.sendVerificationEmail(user.id, user.email, user.name);
       return { user: sanitize(user) };
     }
@@ -139,13 +144,22 @@ export class AuthService {
   }
 
   async verifyEmail(rawToken: string) {
-    const record = await this.consumeAuthToken(rawToken, AuthTokenType.EMAIL_VERIFICATION);
+    const record = await this.consumeAuthToken(
+      rawToken,
+      AuthTokenType.EMAIL_VERIFICATION,
+    );
     if (!record) {
-      throw new BadRequestException('This verification link is invalid or has expired.');
+      throw new BadRequestException(
+        'This verification link is invalid or has expired.',
+      );
     }
 
     const user = await this.usersService.markEmailVerified(record.userId);
-    const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
+    const tokens = await this.issueTokens(
+      user.id,
+      user.email,
+      AuthScope.CLIENT,
+    );
     return { user: sanitize(user), ...tokens };
   }
 
@@ -157,7 +171,11 @@ export class AuthService {
         AuthTokenType.PASSWORD_RESET,
         PASSWORD_RESET_TTL_MS,
       );
-      await this.mailService.sendPasswordResetEmail(user.email, user.name, rawToken);
+      await this.mailService.sendPasswordResetEmail(
+        user.email,
+        user.name,
+        rawToken,
+      );
     }
     // Always respond the same way so this endpoint can't be used to probe
     // which emails are registered.
@@ -165,9 +183,14 @@ export class AuthService {
   }
 
   async resetPassword(rawToken: string, newPassword: string) {
-    const record = await this.consumeAuthToken(rawToken, AuthTokenType.PASSWORD_RESET);
+    const record = await this.consumeAuthToken(
+      rawToken,
+      AuthTokenType.PASSWORD_RESET,
+    );
     if (!record) {
-      throw new BadRequestException('This reset link is invalid or has expired.');
+      throw new BadRequestException(
+        'This reset link is invalid or has expired.',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
@@ -190,7 +213,10 @@ export class AuthService {
       );
     }
 
-    const currentMatches = await bcrypt.compare(dto.currentPassword, user.password);
+    const currentMatches = await bcrypt.compare(
+      dto.currentPassword,
+      user.password,
+    );
     if (!currentMatches) {
       throw new UnauthorizedException('Current password is incorrect.');
     }
@@ -239,7 +265,11 @@ export class AuthService {
 
   async loginWithGoogle(profile: GoogleProfile) {
     const user = await this.validateGoogleUser(profile);
-    const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
+    const tokens = await this.issueTokens(
+      user.id,
+      user.email,
+      AuthScope.CLIENT,
+    );
     return { user: sanitize(user), ...tokens };
   }
 
@@ -252,7 +282,11 @@ export class AuthService {
       throw new ForbiddenException("Can't log in as an admin account.");
     }
 
-    const tokens = await this.issueTokens(user.id, user.email, AuthScope.CLIENT);
+    const tokens = await this.issueTokens(
+      user.id,
+      user.email,
+      AuthScope.CLIENT,
+    );
     return { user: sanitize(user), ...tokens };
   }
 
@@ -322,15 +356,17 @@ export class AuthService {
       return;
     }
 
-    const payload = this.jwtService.decode(rawRefreshToken) as
-      | { sub?: string }
-      | null;
+    const payload = this.jwtService.decode(rawRefreshToken);
     if (!payload?.sub) {
       return;
     }
 
     const matched = await this.prisma.refreshToken.findFirst({
-      where: { userId: payload.sub, revokedAt: null, hash: hashToken(rawRefreshToken) },
+      where: {
+        userId: payload.sub,
+        revokedAt: null,
+        hash: hashToken(rawRefreshToken),
+      },
     });
     if (matched) {
       await this.prisma.refreshToken.update({
@@ -340,7 +376,11 @@ export class AuthService {
     }
   }
 
-  private async sendVerificationEmail(userId: string, email: string, name: string | null) {
+  private async sendVerificationEmail(
+    userId: string,
+    email: string,
+    name: string | null,
+  ) {
     const rawToken = await this.createAuthToken(
       userId,
       AuthTokenType.EMAIL_VERIFICATION,
@@ -410,10 +450,8 @@ export class AuthService {
       expiresIn: refreshExpiresIn as JwtSignOptions['expiresIn'],
     });
 
-    const accessDecoded = this.jwtService.decode(accessToken) as { exp: number };
-    const refreshDecoded = this.jwtService.decode(refreshToken) as {
-      exp: number;
-    };
+    const accessDecoded = this.jwtService.decode(accessToken);
+    const refreshDecoded = this.jwtService.decode(refreshToken);
 
     await this.prisma.refreshToken.create({
       data: {

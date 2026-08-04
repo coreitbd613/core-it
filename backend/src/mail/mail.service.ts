@@ -22,13 +22,17 @@ export class MailService {
     );
   }
 
-  async sendVerificationEmail(to: string, name: string | null, rawToken: string) {
+  async sendVerificationEmail(
+    to: string,
+    name: string | null,
+    rawToken: string,
+  ) {
     const link = `${this.frontendUrl}/verify-email?token=${rawToken}`;
     await this.send({
       to,
       subject: 'Verify your email',
       html: this.wrap(`
-        <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi ${escapeHtml(name ?? "there")},</p>
+        <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi ${escapeHtml(name ?? 'there')},</p>
         <p style="margin:0 0 24px;">Confirm your email address to finish setting up your Core IT account.</p>
         ${this.button('Verify email', link)}
         <p style="margin:24px 0 0;font-size:13px;color:#a1a1aa;">This link expires in 24 hours. If you didn't request this, you can safely ignore this email.</p>
@@ -37,13 +41,17 @@ export class MailService {
     });
   }
 
-  async sendPasswordResetEmail(to: string, name: string | null, rawToken: string) {
+  async sendPasswordResetEmail(
+    to: string,
+    name: string | null,
+    rawToken: string,
+  ) {
     const link = `${this.frontendUrl}/reset-password?token=${rawToken}`;
     await this.send({
       to,
       subject: 'Reset your password',
       html: this.wrap(`
-        <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi ${escapeHtml(name ?? "there")},</p>
+        <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi ${escapeHtml(name ?? 'there')},</p>
         <p style="margin:0 0 24px;">We received a request to reset your Core IT password.</p>
         ${this.button('Reset password', link)}
         <p style="margin:24px 0 0;font-size:13px;color:#a1a1aa;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
@@ -115,7 +123,9 @@ export class MailService {
     });
 
     if (error) {
-      this.logger.error(`Failed to send "${input.subject}" to ${input.to}: ${error.message}`);
+      this.logger.error(
+        `Failed to send "${input.subject}" to ${input.to}: ${error.message}`,
+      );
       throw new Error(`Failed to send email: ${error.message}`);
     }
   }

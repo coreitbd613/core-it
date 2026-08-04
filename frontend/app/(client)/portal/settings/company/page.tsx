@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { useRef, useState } from "react"
-import { Building2, Camera, Globe, Landmark, Mail, MapPin, ScrollText } from "lucide-react"
-import { FaFacebook } from "react-icons/fa"
+import { Building2, Camera, Globe, Mail, MapPin, ScrollText } from "lucide-react"
+import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa"
 import { toast } from "sonner"
 
 import { useMockRole } from "@/contexts/mock-role-context"
@@ -43,11 +43,10 @@ type CompanyProfile = {
   tradeLicense: string
   tin: string
   bin: string
-  bkashNumber: string
-  nagadNumber: string
-  rocketNumber: string
   whatsappBusiness: string
   facebookPage: string
+  instagramPage: string
+  linkedinPage: string
 }
 
 const initialProfile: CompanyProfile = {
@@ -65,11 +64,10 @@ const initialProfile: CompanyProfile = {
   tradeLicense: "",
   tin: "",
   bin: "",
-  bkashNumber: "",
-  nagadNumber: "",
-  rocketNumber: "",
   whatsappBusiness: "",
   facebookPage: "",
+  instagramPage: "",
+  linkedinPage: "",
 }
 
 function getInitials(name: string) {
@@ -378,53 +376,11 @@ export default function CompanySettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Payments & social</CardTitle>
-            <CardDescription>How clients can pay you and find you online.</CardDescription>
+            <CardTitle>Social</CardTitle>
+            <CardDescription>How clients can find you online.</CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="company-bkash">bKash number</FieldLabel>
-                <div className="relative">
-                  <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="company-bkash"
-                    value={form.bkashNumber}
-                    onChange={(e) => update("bkashNumber", e.target.value)}
-                    placeholder="01XXXXXXXXX"
-                    className="pl-9"
-                  />
-                </div>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="company-nagad">Nagad number</FieldLabel>
-                <div className="relative">
-                  <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="company-nagad"
-                    value={form.nagadNumber}
-                    onChange={(e) => update("nagadNumber", e.target.value)}
-                    placeholder="01XXXXXXXXX"
-                    className="pl-9"
-                  />
-                </div>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="company-rocket">Rocket number</FieldLabel>
-                <div className="relative">
-                  <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="company-rocket"
-                    value={form.rocketNumber}
-                    onChange={(e) => update("rocketNumber", e.target.value)}
-                    placeholder="01XXXXXXXXX"
-                    className="pl-9"
-                  />
-                </div>
-              </Field>
-
-              <Separator />
-
               <Field>
                 <FieldLabel htmlFor="company-whatsapp-business">WhatsApp business number</FieldLabel>
                 <PhoneNumberInput
@@ -443,6 +399,34 @@ export default function CompanySettingsPage() {
                     value={form.facebookPage}
                     onChange={(e) => update("facebookPage", e.target.value)}
                     placeholder="https://facebook.com/..."
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-instagram">Instagram page</FieldLabel>
+                <div className="relative">
+                  <FaInstagram className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-instagram"
+                    type="url"
+                    value={form.instagramPage}
+                    onChange={(e) => update("instagramPage", e.target.value)}
+                    placeholder="https://instagram.com/..."
+                    className="pl-9"
+                  />
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-linkedin">LinkedIn page</FieldLabel>
+                <div className="relative">
+                  <FaLinkedin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="company-linkedin"
+                    type="url"
+                    value={form.linkedinPage}
+                    onChange={(e) => update("linkedinPage", e.target.value)}
+                    placeholder="https://linkedin.com/company/..."
                     className="pl-9"
                   />
                 </div>

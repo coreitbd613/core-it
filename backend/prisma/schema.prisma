@@ -4,10 +4,10 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider      = "prisma-client"
-  output        = "../generated/prisma"
-  moduleFormat  = "cjs"
-  runtime       = "nodejs"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+  runtime      = "nodejs"
 }
 
 datasource db {
@@ -42,6 +42,7 @@ model User {
   authTokens      AuthToken[]
   domainOrders    DomainOrder[]
   memberships     Membership[]
+  payments        Payment[]
 }
 
 enum MembershipRole {
@@ -58,12 +59,34 @@ enum MembershipStatus {
 }
 
 model Organization {
-  id        String    @id @default(uuid())
-  name      String
-  slug      String    @unique
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
 
-  billingEmail  String?
-  billingPhone  String?
+  logoUrl     String?
+  industry    String?
+  description String?
+
+  email   String?
+  phone   String?
+  website String?
+
+  addressLine1  String?
+  city          String?
+  stateProvince String?
+  country       String?
+
+  tradeLicense String?
+  tin          String?
+  bin          String?
+
+  whatsappBusiness String?
+  facebookPage     String?
+  instagramPage    String?
+  linkedinPage     String?
+
+  billingEmail   String?
+  billingPhone   String?
   billingAddress String?
 
   createdAt DateTime  @default(now())
@@ -71,14 +94,15 @@ model Organization {
   deletedAt DateTime?
 
   memberships Membership[]
+  invoices    Invoice[]
 }
 
 model Membership {
-  id             String            @id @default(uuid())
+  id             String       @id @default(uuid())
   userId         String
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organizationId String
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   role   MembershipRole   @default(MEMBER)
   status MembershipStatus @default(ACTIVE)
@@ -112,14 +136,14 @@ model AuthToken {
 }
 
 model RefreshToken {
-  id         String    @id @default(uuid())
-  hash       String
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scope      AuthScope @default(CLIENT)
-  expiresAt  DateTime
-  createdAt  DateTime  @default(now())
-  revokedAt  DateTime?
+  id        String    @id @default(uuid())
+  hash      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope     AuthScope @default(CLIENT)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
 
   @@index([userId])
 }
@@ -146,19 +170,101 @@ model DomainOrder {
   status    DomainOrderStatus @default(PENDING)
   adminNote String?
 
-  registrantFirstName    String
-  registrantLastName     String
-  registrantAddress1     String
-  registrantAddress2     String?
-  registrantCity         String
+  registrantFirstName     String
+  registrantLastName      String
+  registrantAddress1      String
+  registrantAddress2      String?
+  registrantCity          String
   registrantStateProvince String
-  registrantCountry      String
-  registrantPhone        String
-  registrantEmail        String
+  registrantCountry       String
+  registrantPhone         String
+  registrantEmail         String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  ROCKET
+  BANK_TRANSFER
+  CASH
+  OTHER
+}
+
+model Invoice {
+  id             String       @id @default(uuid())
+  number         String       @unique
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  proposalId String? // no real Proposal backend exists yet — freeform, not a FK
+
+  status     InvoiceStatus @default(DRAFT)
+  voidReason String?
+
+  taxPercent      Float   @default(0)
+  discountPercent Float   @default(0)
+  notes           String?
+
+  issuedAt DateTime @default(now())
+  dueAt    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model InvoiceLineItem {
+  id        String  @id @default(uuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description  String
+  quantity     Int
+  unitPriceBdt Decimal
+
+  @@index([invoiceId])
+}
+
+model Payment {
+  id        String  @id @default(uuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  amountBdt Decimal
+  method    PaymentMethod
+  note      String?
+
+  recordedByUserId String?
+  recordedByUser   User?   @relation(fields: [recordedByUserId], references: [id], onDelete: SetNull)
+
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+  @@index([recordedByUserId])
+}
+
+model InvoiceSequence {
+  year       Int @id
+  lastNumber Int @default(0)
 }

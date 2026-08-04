@@ -1,0 +1,90 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
+import { assertCanManageOrg } from '../common/membership.helper';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
+
+@Injectable()
+export class OrganizationsService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {}
+
+  private async getPrimaryMembership(userId: string) {
+    const membership = await this.prisma.membership.findFirst({
+      where: { userId, status: 'ACTIVE' },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!membership) {
+      throw new NotFoundException('You are not a member of any organization.');
+    }
+    return membership;
+  }
+
+  async getMine(userId: string) {
+    const membership = await this.getPrimaryMembership(userId);
+    return this.prisma.organization.findUniqueOrThrow({
+      where: { id: membership.organizationId },
+    });
+  }
+
+  async updateMine(userId: string, dto: UpdateOrganizationDto) {
+    const membership = await this.getPrimaryMembership(userId);
+    await assertCanManageOrg(this.prisma, userId, membership.organizationId);
+    return this.prisma.organization.update({
+      where: { id: membership.organizationId },
+      data: dto,
+    });
+  }
+
+  async updateLogo(userId: string, file: Express.Multer.File) {
+    const membership = await this.getPrimaryMembership(userId);
+    await assertCanManageOrg(this.prisma, userId, membership.organizationId);
+
+    const organization = await this.prisma.organization.findUniqueOrThrow({
+      where: { id: membership.organizationId },
+    });
+
+    const logoUrl = await this.storageService.upload(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+    );
+
+    const updated = await this.prisma.organization.update({
+      where: { id: membership.organizationId },
+      data: { logoUrl },
+    });
+
+    if (organization.logoUrl) {
+      const oldBlobName = organization.logoUrl.split('/').pop();
+      if (oldBlobName) {
+        await this.storageService.delete(oldBlobName).catch(() => undefined);
+      }
+    }
+
+    return updated;
+  }
+
+  async listForAdmin() {
+    return this.prisma.organization.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getForAdmin(id: string) {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id },
+    });
+    if (!organization) {
+      throw new NotFoundException('Organization not found.');
+    }
+    return organization;
+  }
+
+  async updateForAdmin(id: string, dto: UpdateOrganizationDto) {
+    await this.getForAdmin(id);
+    return this.prisma.organization.update({ where: { id }, data: dto });
+  }
+}

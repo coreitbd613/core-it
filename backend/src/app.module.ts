@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { StorageModule } from './storage/storage.module';
 import { NamecheapModule } from './namecheap/namecheap.module';
 import { DomainModule } from './domains/domain.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { OrganizationsModule } from './organizations/organizations.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { DomainModule } from './domains/domain.module';
     StorageModule,
     NamecheapModule,
     DomainModule,
+    InvoicesModule,
+    OrganizationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

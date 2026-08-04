@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE "Organization" ADD COLUMN     "addressLine1" TEXT,
+ADD COLUMN     "bin" TEXT,
+ADD COLUMN     "city" TEXT,
+ADD COLUMN     "country" TEXT,
+ADD COLUMN     "description" TEXT,
+ADD COLUMN     "email" TEXT,
+ADD COLUMN     "facebookPage" TEXT,
+ADD COLUMN     "industry" TEXT,
+ADD COLUMN     "instagramPage" TEXT,
+ADD COLUMN     "linkedinPage" TEXT,
+ADD COLUMN     "logoUrl" TEXT,
+ADD COLUMN     "phone" TEXT,
+ADD COLUMN     "stateProvince" TEXT,
+ADD COLUMN     "tin" TEXT,
+ADD COLUMN     "tradeLicense" TEXT,
+ADD COLUMN     "website" TEXT,
+ADD COLUMN     "whatsappBusiness" TEXT;

@@ -49,10 +49,7 @@ export class StorageService {
     return this.containerClient.getBlockBlobClient(blobName).url;
   }
 
-  async getSignedUrl(
-    blobName: string,
-    expiresInMinutes = 15,
-  ): Promise<string> {
+  async getSignedUrl(blobName: string, expiresInMinutes = 15): Promise<string> {
     const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
     return blockBlobClient.generateSasUrl({
       permissions: BlobSASPermissions.parse('r'),

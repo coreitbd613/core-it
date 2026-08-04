@@ -75,10 +75,10 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <p className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             Invoice
           </p>
-          <p className="text-sm font-medium text-primary">#{invoice.number}</p>
+          <p className="text-sm font-semibold tracking-wide text-primary">#{invoice.number}</p>
           <p
             className={cn(
-              "text-xs font-semibold tracking-wide uppercase",
+              "text-xs font-semibold tracking-wider uppercase",
               status === "PAID" ? "text-green-600 dark:text-green-500" : "text-destructive"
             )}
           >
@@ -90,7 +90,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       {/* Bill to / Company details */}
       <div className="relative mt-8 grid grid-cols-1 gap-6 border-t pt-6 sm:grid-cols-2">
         <div>
-          <p className="text-xs tracking-wide text-foreground uppercase">Bill to</p>
+          <p className="text-xs font-semibold tracking-wider text-foreground uppercase">Bill to</p>
           {contactName && <p className="mt-1 font-medium text-foreground">{contactName}</p>}
           <p className={cn("text-foreground", !contactName && "mt-1 font-medium")}>
             {invoice.organizationName}
@@ -132,12 +132,12 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <div className="relative mt-8 overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-muted/40 text-xs tracking-wide text-foreground uppercase">
-              <th className="w-10 px-4 py-2.5 text-left font-medium">#</th>
-              <th className="px-4 py-2.5 text-left font-medium">Item</th>
-              <th className="px-4 py-2.5 text-right font-medium">Qty</th>
-              <th className="px-4 py-2.5 text-right font-medium">Rate</th>
-              <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+            <tr className="bg-muted/40 text-xs tracking-wider text-foreground uppercase">
+              <th className="w-10 px-4 py-2.5 text-left font-semibold">#</th>
+              <th className="px-4 py-2.5 text-left font-semibold">Item</th>
+              <th className="px-4 py-2.5 text-right font-semibold">Qty</th>
+              <th className="px-4 py-2.5 text-right font-semibold">Rate</th>
+              <th className="px-4 py-2.5 text-right font-semibold">Amount</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -198,17 +198,17 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       {invoice.payments.length > 0 && (
         <div className="relative mt-8 border-t pt-6">
-          <p className="mb-3 text-xs tracking-wide text-foreground uppercase">
+          <p className="mb-3 text-xs font-semibold tracking-wider text-foreground uppercase">
             Transactions
           </p>
           <div className="overflow-hidden rounded-lg border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-muted/40 text-xs tracking-wide text-foreground uppercase">
-                  <th className="px-4 py-2.5 text-left font-medium">Payment</th>
-                  <th className="px-4 py-2.5 text-left font-medium">Method</th>
-                  <th className="px-4 py-2.5 text-left font-medium">Date</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+                <tr className="bg-muted/40 text-xs tracking-wider text-foreground uppercase">
+                  <th className="px-4 py-2.5 text-left font-semibold">Payment</th>
+                  <th className="px-4 py-2.5 text-left font-semibold">Method</th>
+                  <th className="px-4 py-2.5 text-left font-semibold">Date</th>
+                  <th className="px-4 py-2.5 text-right font-semibold">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -236,7 +236,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       {canPay && (
         <div className="relative mt-8 border-t pt-6">
-          <p className="text-xs tracking-wide text-foreground uppercase">Offline payment</p>
+          <p className="text-xs font-semibold tracking-wider text-foreground uppercase">Offline payment</p>
           <p className="mt-2 text-sm text-foreground">bKash / Nagad / Rocket</p>
           <p className="text-sm tabular-nums text-foreground">
             Send Money to {MOBILE_BANKING_NUMBER} <span className="text-foreground">(Personal)</span>
@@ -250,13 +250,13 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       {invoice.notes && (
         <div className="relative mt-8 border-t pt-6">
-          <p className="text-xs tracking-wide text-foreground uppercase">Notes</p>
+          <p className="text-xs font-semibold tracking-wider text-foreground uppercase">Notes</p>
           <p className="mt-2 text-sm whitespace-pre-line text-foreground">{invoice.notes}</p>
         </div>
       )}
 
       <div className="relative mt-8 border-t pt-6">
-        <p className="text-xs tracking-wide text-foreground uppercase">
+        <p className="text-xs font-semibold tracking-wider text-foreground uppercase">
           Terms &amp; conditions
         </p>
         <p className="mt-2 text-xs leading-relaxed text-foreground">
