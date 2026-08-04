@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeftIcon, BanIcon, PrinterIcon, SendIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, BanIcon, CopyIcon, PrinterIcon, SendIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -36,7 +36,6 @@ import {
   invoiceBalanceBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTypeLabels,
   mockInvoices,
   paymentMethodLabels,
   type PaymentMethod,
@@ -44,6 +43,8 @@ import {
 import { mockProposals } from "@/lib/mock/proposals"
 
 import { RecordPaymentDialog } from "./_components/record-payment-dialog"
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 
 export default function AdminInvoiceDetailPage() {
   const params = useParams<{ id: string }>()
@@ -113,12 +114,21 @@ export default function AdminInvoiceDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{invoice.number}</h1>
-          <p className="text-muted-foreground">
-            {invoice.organizationName} · {invoiceTypeLabels[invoice.type]}
-          </p>
+          <p className="text-muted-foreground">{invoice.organizationName}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              navigator.clipboard.writeText(`${SITE_URL}/invoices/view/${invoice.id}`)
+              toast.success("Link copied.")
+            }}
+          >
+            <CopyIcon />
+            Copy link
+          </Button>
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <PrinterIcon />
             Print

@@ -22,11 +22,9 @@ import { formatBDT } from "@/lib/format"
 import {
   invoiceGrandTotalBdt,
   invoiceTotalBdt,
-  invoiceTypeLabels,
   mockInvoices,
   nextInvoiceNumber,
   type InvoiceLineItem,
-  type InvoiceType,
 } from "@/lib/mock/invoices"
 import { mockOrganizations } from "@/lib/mock/organizations"
 import { mockProposals } from "@/lib/mock/proposals"
@@ -54,7 +52,6 @@ export function InvoiceForm() {
   const [organizationId, setOrganizationId] = React.useState(
     sourceProposal?.organizationId ?? mockOrganizations[0]?.id ?? ""
   )
-  const [type, setType] = React.useState<InvoiceType>("FINAL")
   const [dueAt, setDueAt] = React.useState(defaultDueDate())
   const [lineItems, setLineItems] = React.useState<InvoiceLineItem[]>(
     sourceProposal
@@ -93,7 +90,6 @@ export function InvoiceForm() {
       number: invoiceNumber,
       organizationId: organization.id,
       organizationName: organization.name,
-      type,
       proposalId: sourceProposal?.id ?? null,
       voidReason: null,
       lineItems,
@@ -167,21 +163,6 @@ export function InvoiceForm() {
                       value={dueAt}
                       onChange={(e) => setDueAt(e.target.value)}
                     />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="invoice-type">Type</FieldLabel>
-                    <Select value={type} onValueChange={(value) => setType(value as InvoiceType)}>
-                      <SelectTrigger id="invoice-type" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.keys(invoiceTypeLabels) as InvoiceType[]).map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {invoiceTypeLabels[key]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </Field>
                 </div>
               </FieldGroup>

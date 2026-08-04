@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Document, Image, Link, Page, PDFDownloadLink, StyleSheet, Text, View, pdf } from "@react-pdf/renderer"
+import { Document, Font, Image, Link, Page, PDFDownloadLink, StyleSheet, Text, View, pdf } from "@react-pdf/renderer"
 import { DownloadIcon } from "lucide-react"
 import QRCode from "qrcode"
 
 import { Button } from "@/components/ui/button"
 import { BUSINESS_ADDRESS, MAPS_URL, MOBILE_BANKING_NUMBER, PRIVACY_URL, TERMS_URL } from "@/lib/contact"
-import { formatDate } from "@/lib/format"
+import { formatBDT, formatDate } from "@/lib/format"
 import {
   deriveInvoiceStatus,
   invoiceBalanceBdt,
@@ -20,6 +20,16 @@ import {
 } from "@/lib/mock/invoices"
 import { mockOrganizations } from "@/lib/mock/organizations"
 
+// react-pdf's default fonts (Helvetica) have no Bengali Taka glyph ("৳"), so the whole
+// document uses Noto Sans Bengali instead — it covers both Bengali and Latin/ASCII text.
+Font.register({
+  family: "NotoSansBengali",
+  fonts: [
+    { src: "/fonts/NotoSansBengali-Regular.ttf", fontWeight: 400 },
+    { src: "/fonts/NotoSansBengali-Bold.ttf", fontWeight: 700 },
+  ],
+})
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "")
 
@@ -27,14 +37,8 @@ function invoiceViewUrl(invoiceId: string): string {
   return `${SITE_URL}/invoices/view/${invoiceId}`
 }
 
-// react-pdf's default fonts have no Bengali Taka glyph ("৳"), so PDFs use a plain "Tk" prefix.
-const bdtPdfFormatter = new Intl.NumberFormat("en-BD", { maximumFractionDigits: 0 })
-function formatBdtPdf(amount: number): string {
-  return `Tk ${bdtPdfFormatter.format(amount)}`
-}
-
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, color: "#1a1a1a" },
+  page: { padding: 40, fontSize: 10, color: "#1a1a1a", fontFamily: "NotoSansBengali" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   logo: { width: 150, height: 39 },
   invoiceTitle: { fontSize: 20, fontWeight: 700, textAlign: "right" },
@@ -59,9 +63,9 @@ const styles = StyleSheet.create({
   },
   metaColumn: { flex: 1 },
   metaColumnRight: { flex: 1, alignItems: "flex-end" },
-  sectionLabel: { fontSize: 8, color: "#666666", textTransform: "uppercase", marginBottom: 4 },
+  sectionLabel: { fontSize: 8, textTransform: "uppercase", marginBottom: 4, color: "#1a1a1a" },
   metaRow: { flexDirection: "row", gap: 4, marginTop: 2 },
-  metaLabel: { color: "#666666" },
+  metaLabel: { color: "#1a1a1a" },
   section: { marginTop: 20 },
   table: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 4 },
   tableHeaderRow: {
@@ -71,7 +75,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
-  tableHeaderText: { fontSize: 8, color: "#666666", textTransform: "uppercase" },
+  tableHeaderText: { fontSize: 8, textTransform: "uppercase", color: "#1a1a1a" },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -79,20 +83,20 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tableRowLast: { flexDirection: "row", padding: 8 },
-  cellIndex: { width: 20, color: "#666666" },
-  cellDescription: { flex: 3 },
-  cellQty: { flex: 1, textAlign: "right", color: "#666666" },
-  cellRate: { flex: 1, textAlign: "right", color: "#666666" },
+  cellIndex: { width: 20, color: "#1a1a1a" },
+  cellDescription: { flex: 3, fontWeight: 700 },
+  cellQty: { flex: 1, textAlign: "right", color: "#1a1a1a" },
+  cellRate: { flex: 1, textAlign: "right", color: "#1a1a1a" },
   cellAmount: { flex: 1, textAlign: "right", fontWeight: 700 },
   totalsBlock: { marginTop: 12, alignItems: "flex-end", gap: 4 },
   totalsRow: { flexDirection: "row", gap: 16 },
-  totalsLabel: { color: "#666666" },
+  totalsLabel: { color: "#1a1a1a" },
   grandTotalRow: { flexDirection: "row", gap: 16, marginTop: 4 },
   grandTotalLabel: { fontWeight: 700 },
   grandTotalValue: { fontWeight: 700 },
-  txCellNumber: { width: 50, color: "#666666" },
+  txCellNumber: { width: 50, color: "#1a1a1a" },
   txCellMethod: { flex: 1 },
-  txCellDate: { flex: 1, color: "#666666" },
+  txCellDate: { flex: 1, color: "#1a1a1a" },
   txCellAmount: { flex: 1, textAlign: "right", fontWeight: 700 },
 })
 
@@ -134,8 +138,10 @@ function InvoiceDocument({
         <View style={styles.metaSection}>
           <View style={styles.metaColumn}>
             <Text style={styles.sectionLabel}>Bill to</Text>
-            {contactName && <Text style={{ fontWeight: 700 }}>{contactName}</Text>}
-            <Text style={contactName ? styles.metaLabel : { fontWeight: 700 }}>
+            {contactName && (
+              <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>{contactName}</Text>
+            )}
+            <Text style={contactName ? styles.metaLabel : { fontWeight: 700, color: "#1a1a1a" }}>
               {invoice.organizationName}
             </Text>
             <View style={styles.metaRow}>
@@ -149,10 +155,13 @@ function InvoiceDocument({
           </View>
           <View style={styles.metaColumnRight}>
             {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={styles.qrImage} />}
-            <Text style={{ fontWeight: 700 }}>Core IT</Text>
+            <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>Core IT</Text>
             <Text style={styles.metaLabel}>{SITE_HOST}</Text>
             <Text style={styles.metaLabel}>info@coreitbd.com</Text>
-            <Link src={MAPS_URL} style={[styles.metaLabel, { textAlign: "right" }]}>
+            <Link
+              src={MAPS_URL}
+              style={[styles.metaLabel, { textAlign: "right", color: "#1a1a1a", textDecoration: "none" }]}
+            >
               {BUSINESS_ADDRESS}
             </Link>
           </View>
@@ -175,9 +184,9 @@ function InvoiceDocument({
                 <Text style={styles.cellIndex}>{index + 1}</Text>
                 <Text style={styles.cellDescription}>{item.description}</Text>
                 <Text style={styles.cellQty}>{item.quantity}</Text>
-                <Text style={styles.cellRate}>{formatBdtPdf(item.unitPriceBdt)}</Text>
+                <Text style={styles.cellRate}>{formatBDT(item.unitPriceBdt)}</Text>
                 <Text style={styles.cellAmount}>
-                  {formatBdtPdf(item.quantity * item.unitPriceBdt)}
+                  {formatBDT(item.quantity * item.unitPriceBdt)}
                 </Text>
               </View>
             ))}
@@ -186,33 +195,33 @@ function InvoiceDocument({
           <View style={styles.totalsBlock}>
             <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>Sub total</Text>
-              <Text>{formatBdtPdf(subtotal)}</Text>
+              <Text>{formatBDT(subtotal)}</Text>
             </View>
             {invoice.discountPercent > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Discount ({invoice.discountPercent}%)</Text>
-                <Text>-{formatBdtPdf(discountAmount)}</Text>
+                <Text>-{formatBDT(discountAmount)}</Text>
               </View>
             )}
             {invoice.taxPercent > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Tax ({invoice.taxPercent}%)</Text>
-                <Text>{formatBdtPdf(taxAmount)}</Text>
+                <Text>{formatBDT(taxAmount)}</Text>
               </View>
             )}
             <View style={styles.totalsRow}>
               <Text style={styles.totalsLabel}>Total</Text>
-              <Text>{formatBdtPdf(total)}</Text>
+              <Text>{formatBDT(total)}</Text>
             </View>
             {paid > 0 && (
               <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Paid</Text>
-                <Text>-{formatBdtPdf(paid)}</Text>
+                <Text>-{formatBDT(paid)}</Text>
               </View>
             )}
             <View style={styles.grandTotalRow}>
               <Text style={styles.grandTotalLabel}>Amount due</Text>
-              <Text style={styles.grandTotalValue}>{formatBdtPdf(balance)}</Text>
+              <Text style={styles.grandTotalValue}>{formatBDT(balance)}</Text>
             </View>
           </View>
         </View>
@@ -235,7 +244,7 @@ function InvoiceDocument({
                   <Text style={styles.txCellNumber}>#{index + 1}</Text>
                   <Text style={styles.txCellMethod}>{paymentMethodLabels[payment.method]}</Text>
                   <Text style={styles.txCellDate}>{formatDate(payment.paidAt)}</Text>
-                  <Text style={styles.txCellAmount}>{formatBdtPdf(payment.amountBdt)}</Text>
+                  <Text style={styles.txCellAmount}>{formatBDT(payment.amountBdt)}</Text>
                 </View>
               ))}
             </View>
@@ -247,8 +256,10 @@ function InvoiceDocument({
             <Text style={styles.sectionLabel}>Offline payment</Text>
             <Text>bKash / Nagad / Rocket</Text>
             <Text>Send Money to {MOBILE_BANKING_NUMBER} (Personal)</Text>
-            <Text style={[styles.metaLabel, { marginTop: 4, fontSize: 8 }]}>
-              Please add {invoice.number} as the reference.
+            <Text style={{ marginTop: 4, fontSize: 8, color: "#1a1a1a" }}>
+              Please add{" "}
+              <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>{invoice.number}</Text> as the
+              reference.
             </Text>
           </View>
         )}
@@ -262,7 +273,7 @@ function InvoiceDocument({
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Terms &amp; conditions</Text>
-          <Text style={[styles.metaLabel, { fontSize: 8 }]}>
+          <Text style={{ fontSize: 8, color: "#1a1a1a" }}>
             By proceeding with this invoice and/or payment, the client acknowledges and agrees to
             the Terms of Service ({TERMS_URL}) and Privacy Policy ({PRIVACY_URL}).
           </Text>
@@ -282,10 +293,12 @@ async function generateQrCodeDataUrl(invoiceId: string): Promise<string | null> 
 
 // react-pdf's <Image> can't reliably load a network URL, so the logo is fetched once and
 // reused as a base64 data URI — the same trick already works for the QR code above.
+// Fetched by relative path (not SITE_URL) so it always matches the origin actually serving
+// the page, even when NEXT_PUBLIC_SITE_URL is misconfigured (e.g. wrong protocol locally).
 let logoDataUrlPromise: Promise<string | null> | null = null
 function getLogoDataUrl(): Promise<string | null> {
   if (!logoDataUrlPromise) {
-    logoDataUrlPromise = fetch(`${SITE_URL}/logo-light.png`)
+    logoDataUrlPromise = fetch("/logo-light.png")
       .then((res) => res.blob())
       .then(
         (blob) =>
@@ -297,6 +310,9 @@ function getLogoDataUrl(): Promise<string | null> {
           })
       )
       .catch(() => null)
+    logoDataUrlPromise.then((result) => {
+      if (!result) logoDataUrlPromise = null
+    })
   }
   return logoDataUrlPromise
 }

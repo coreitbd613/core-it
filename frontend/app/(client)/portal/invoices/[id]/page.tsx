@@ -21,7 +21,6 @@ import {
   deriveInvoiceStatus,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTypeLabels,
   mockInvoices,
   paymentMethodLabels,
 } from "@/lib/mock/invoices"
@@ -72,8 +71,7 @@ export default function InvoiceDetailPage() {
         <div>
           <h1 className="text-2xl font-bold">{invoice.number}</h1>
           <p className="text-muted-foreground">
-            {invoiceTypeLabels[invoice.type]} · Issued{" "}
-            {new Date(invoice.issuedAt).toLocaleDateString()} · Due{" "}
+            Issued {new Date(invoice.issuedAt).toLocaleDateString()} · Due{" "}
             {new Date(invoice.dueAt).toLocaleDateString()}
           </p>
         </div>

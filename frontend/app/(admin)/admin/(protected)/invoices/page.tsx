@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   AlertTriangleIcon,
+  CopyIcon,
   DownloadIcon,
   EyeIcon,
   PlusIcon,
@@ -58,18 +59,17 @@ import {
   invoicePaidBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTypeLabels,
   mockInvoices,
   type Invoice,
   type InvoiceStatus,
-  type InvoiceType,
 } from "@/lib/mock/invoices"
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 
 export default function AdminInvoicesPage() {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
-  const [typeFilter, setTypeFilter] = useState<InvoiceType | "ALL">("ALL")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [renderTick, forceRerender] = useState(0)
 
@@ -77,11 +77,10 @@ export default function AdminInvoicesPage() {
     () =>
       mockInvoices.filter((inv) => {
         if (statusFilter !== "ALL" && deriveInvoiceStatus(inv) !== statusFilter) return false
-        if (typeFilter !== "ALL" && inv.type !== typeFilter) return false
         return true
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [statusFilter, typeFilter, renderTick]
+    [statusFilter, renderTick]
   )
   const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
   const selectedCount = selectedIds.length
@@ -151,16 +150,6 @@ export default function AdminInvoicesPage() {
       {
         accessorKey: "organizationName",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
-      },
-      {
-        id: "type",
-        accessorFn: (row) => row.type,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {invoiceTypeLabels[row.original.type]}
-          </span>
-        ),
       },
       {
         id: "issuedAt",
@@ -240,6 +229,14 @@ export default function AdminInvoicesPage() {
                 void downloadInvoicePdf(invoice)
               },
             },
+            {
+              label: "Copy public link",
+              icon: <CopyIcon />,
+              onClick: () => {
+                navigator.clipboard.writeText(`${SITE_URL}/invoices/view/${invoice.id}`)
+                toast.success("Link copied.")
+              },
+            },
           ]
 
           if (deriveInvoiceStatus(invoice) === "DRAFT") {
@@ -286,46 +283,27 @@ export default function AdminInvoicesPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search invoices..."
-        showReset={statusFilter !== "ALL" || typeFilter !== "ALL"}
+        showReset={statusFilter !== "ALL"}
         onReset={() => {
           setStatusFilter("ALL")
-          setTypeFilter("ALL")
         }}
         filters={
-          <>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {invoiceStatusLabels[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={typeFilter}
-              onValueChange={(value) => setTypeFilter(value as InvoiceType | "ALL")}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All types</SelectItem>
-                {(Object.keys(invoiceTypeLabels) as InvoiceType[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {invoiceTypeLabels[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All statuses</SelectItem>
+              {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {invoiceStatusLabels[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         }
         bulkActions={
           selectedCount > 0 && (

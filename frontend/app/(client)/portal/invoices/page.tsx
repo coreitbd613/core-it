@@ -26,11 +26,9 @@ import {
   invoiceGrandTotalBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  invoiceTypeLabels,
   mockInvoices,
   type Invoice,
   type InvoiceStatus,
-  type InvoiceType,
 } from "@/lib/mock/invoices"
 
 const CURRENT_ORG_ID = "org-1"
@@ -38,7 +36,6 @@ const CURRENT_ORG_ID = "org-1"
 export default function InvoicesPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
-  const [typeFilter, setTypeFilter] = useState<InvoiceType | "ALL">("ALL")
   const orgInvoices = useMemo(
     () => mockInvoices.filter((inv) => inv.organizationId === CURRENT_ORG_ID),
     []
@@ -47,10 +44,9 @@ export default function InvoicesPage() {
     () =>
       orgInvoices.filter((inv) => {
         if (statusFilter !== "ALL" && deriveInvoiceStatus(inv) !== statusFilter) return false
-        if (typeFilter !== "ALL" && inv.type !== typeFilter) return false
         return true
       }),
-    [orgInvoices, statusFilter, typeFilter]
+    [orgInvoices, statusFilter]
   )
 
   const stats = useMemo<DashboardStatItem[]>(() => {
@@ -73,16 +69,6 @@ export default function InvoicesPage() {
           <Link href={`/portal/invoices/${row.original.id}`} className="font-medium text-foreground hover:underline">
             {row.original.number}
           </Link>
-        ),
-      },
-      {
-        id: "type",
-        accessorFn: (row) => row.type,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {invoiceTypeLabels[row.original.type]}
-          </span>
         ),
       },
       {
@@ -136,46 +122,27 @@ export default function InvoicesPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search invoices..."
-        showReset={statusFilter !== "ALL" || typeFilter !== "ALL"}
+        showReset={statusFilter !== "ALL"}
         onReset={() => {
           setStatusFilter("ALL")
-          setTypeFilter("ALL")
         }}
         filters={
-          <>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {invoiceStatusLabels[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={typeFilter}
-              onValueChange={(value) => setTypeFilter(value as InvoiceType | "ALL")}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All types</SelectItem>
-                {(Object.keys(invoiceTypeLabels) as InvoiceType[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {invoiceTypeLabels[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All statuses</SelectItem>
+              {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {invoiceStatusLabels[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         }
       />
 

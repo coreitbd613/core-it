@@ -6,8 +6,7 @@ export type InvoiceStatus =
   | "PAID"
   | "OVERDUE"
   | "CANCELLED"
-export type PaymentMethod = "BANK_TRANSFER" | "CASH" | "OTHER"
-export type InvoiceType = "ADVANCE" | "MILESTONE" | "FINAL" | "RECURRING"
+export type PaymentMethod = "BKASH" | "NAGAD" | "ROCKET" | "BANK_TRANSFER" | "CASH" | "OTHER"
 
 export type InvoiceLineItem = {
   id: string
@@ -30,7 +29,6 @@ export type Invoice = {
   number: string
   organizationId: string
   organizationName: string
-  type: InvoiceType
   proposalId: string | null
   voidReason: string | null
   lineItems: InvoiceLineItem[]
@@ -66,14 +64,10 @@ export const invoiceStatusVariant: Record<
   CANCELLED: "destructive",
 }
 
-export const invoiceTypeLabels: Record<InvoiceType, string> = {
-  ADVANCE: "Advance",
-  MILESTONE: "Milestone",
-  FINAL: "Final",
-  RECURRING: "Recurring",
-}
-
 export const paymentMethodLabels: Record<PaymentMethod, string> = {
+  BKASH: "bKash",
+  NAGAD: "Nagad",
+  ROCKET: "Rocket",
   BANK_TRANSFER: "Bank transfer",
   CASH: "Cash",
   OTHER: "Other",
@@ -126,7 +120,6 @@ export const mockInvoices: Invoice[] = [
     number: "INV-2026-001",
     organizationId: "org-1",
     organizationName: "Acme Corp",
-    type: "MILESTONE",
     proposalId: null,
     voidReason: null,
     lineItems: [{ id: "ili-1", description: "5 revision credits", quantity: 1, unitPriceBdt: 15000 }],
@@ -152,7 +145,6 @@ export const mockInvoices: Invoice[] = [
     number: "INV-2026-002",
     organizationId: "org-1",
     organizationName: "Acme Corp",
-    type: "RECURRING",
     proposalId: null,
     voidReason: null,
     lineItems: [
@@ -180,7 +172,6 @@ export const mockInvoices: Invoice[] = [
     number: "INV-2026-003",
     organizationId: "org-2",
     organizationName: "Bay Traders Ltd",
-    type: "MILESTONE",
     proposalId: null,
     voidReason: null,
     lineItems: [

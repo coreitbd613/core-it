@@ -12,7 +12,6 @@ import {
   invoicePaidBdt,
   invoiceStatusLabels,
   invoiceTotalBdt,
-  invoiceTypeLabels,
   paymentMethodLabels,
   type Invoice,
 } from "@/lib/mock/invoices"
@@ -91,24 +90,20 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       {/* Bill to / Company details */}
       <div className="relative mt-8 grid grid-cols-1 gap-6 border-t pt-6 sm:grid-cols-2">
         <div>
-          <p className="text-xs tracking-wide text-muted-foreground uppercase">Bill to</p>
+          <p className="text-xs tracking-wide text-foreground uppercase">Bill to</p>
           {contactName && <p className="mt-1 font-medium text-foreground">{contactName}</p>}
-          <p className={cn("text-foreground", contactName ? "text-sm text-muted-foreground" : "mt-1 font-medium")}>
+          <p className={cn("text-foreground", !contactName && "mt-1 font-medium")}>
             {invoice.organizationName}
           </p>
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">
-              <span className="text-muted-foreground">Invoice date:</span>
+              <span className="text-foreground">Invoice date:</span>
               <span className="text-foreground">{formatDate(invoice.issuedAt)}</span>
             </div>
             <div className="flex gap-1.5">
-              <span className="text-muted-foreground">Due date:</span>
+              <span className="text-foreground">Due date:</span>
               <span className="text-foreground">{formatDate(invoice.dueAt)}</span>
-            </div>
-            <div className="flex gap-1.5">
-              <span className="text-muted-foreground">Type:</span>
-              <span className="text-foreground">{invoiceTypeLabels[invoice.type]}</span>
             </div>
           </div>
         </div>
@@ -125,14 +120,9 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
             />
           )}
           <p className="font-medium text-foreground">Core IT</p>
-          <p className="-mt-1 text-sm text-muted-foreground">{SITE_HOST}</p>
-          <p className="text-sm text-muted-foreground">info@coreitbd.com</p>
-          <a
-            href={MAPS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground underline-offset-2 hover:underline"
-          >
+          <p className="-mt-1 text-sm text-foreground">{SITE_HOST}</p>
+          <p className="text-sm text-foreground">info@coreitbd.com</p>
+          <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="text-sm text-foreground no-underline">
             {BUSINESS_ADDRESS}
           </a>
         </div>
@@ -142,7 +132,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <div className="relative mt-8 overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+            <tr className="bg-muted/40 text-xs tracking-wide text-foreground uppercase">
               <th className="w-10 px-4 py-2.5 text-left font-medium">#</th>
               <th className="px-4 py-2.5 text-left font-medium">Item</th>
               <th className="px-4 py-2.5 text-right font-medium">Qty</th>
@@ -153,12 +143,12 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <tbody className="divide-y">
             {invoice.lineItems.map((item, index) => (
               <tr key={item.id}>
-                <td className="px-4 py-3 text-muted-foreground tabular-nums">{index + 1}</td>
+                <td className="px-4 py-3 text-foreground tabular-nums">{index + 1}</td>
                 <td className="px-4 py-3 font-medium text-foreground">{item.description}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                <td className="px-4 py-3 text-right tabular-nums text-foreground">
                   {item.quantity}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                <td className="px-4 py-3 text-right tabular-nums text-foreground">
                   {formatBDT(item.unitPriceBdt)}
                 </td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
@@ -173,12 +163,12 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       {/* Totals */}
       <div className="relative mt-6 flex flex-col items-end gap-2">
         <div className="flex w-full max-w-56 items-center justify-between text-sm">
-          <span className="text-muted-foreground">Sub total</span>
+          <span className="text-foreground">Sub total</span>
           <span className="font-medium tabular-nums text-foreground">{formatBDT(subtotal)}</span>
         </div>
         {invoice.discountPercent > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
-            <span className="text-muted-foreground">Discount ({invoice.discountPercent}%)</span>
+            <span className="text-foreground">Discount ({invoice.discountPercent}%)</span>
             <span className="font-medium tabular-nums text-foreground">
               -{formatBDT(discountAmount)}
             </span>
@@ -186,7 +176,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         )}
         {invoice.taxPercent > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
-            <span className="text-muted-foreground">Tax ({invoice.taxPercent}%)</span>
+            <span className="text-foreground">Tax ({invoice.taxPercent}%)</span>
             <span className="font-medium tabular-nums text-foreground">{formatBDT(taxAmount)}</span>
           </div>
         )}
@@ -196,7 +186,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         </div>
         {paid > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
-            <span className="text-muted-foreground">Paid</span>
+            <span className="text-foreground">Paid</span>
             <span className="font-medium tabular-nums text-foreground">-{formatBDT(paid)}</span>
           </div>
         )}
@@ -208,13 +198,13 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       {invoice.payments.length > 0 && (
         <div className="relative mt-8 border-t pt-6">
-          <p className="mb-3 text-xs tracking-wide text-muted-foreground uppercase">
+          <p className="mb-3 text-xs tracking-wide text-foreground uppercase">
             Transactions
           </p>
           <div className="overflow-hidden rounded-lg border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                <tr className="bg-muted/40 text-xs tracking-wide text-foreground uppercase">
                   <th className="px-4 py-2.5 text-left font-medium">Payment</th>
                   <th className="px-4 py-2.5 text-left font-medium">Method</th>
                   <th className="px-4 py-2.5 text-left font-medium">Date</th>
@@ -224,13 +214,13 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
               <tbody className="divide-y">
                 {invoice.payments.map((payment, index) => (
                   <tr key={payment.id}>
-                    <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                    <td className="px-4 py-3 text-foreground tabular-nums">
                       #{index + 1}
                     </td>
                     <td className="px-4 py-3 text-foreground">
                       {paymentMethodLabels[payment.method]}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                    <td className="px-4 py-3 text-foreground tabular-nums">
                       {formatDate(payment.paidAt)}
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
@@ -246,12 +236,12 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       {canPay && (
         <div className="relative mt-8 border-t pt-6">
-          <p className="text-xs tracking-wide text-muted-foreground uppercase">Offline payment</p>
+          <p className="text-xs tracking-wide text-foreground uppercase">Offline payment</p>
           <p className="mt-2 text-sm text-foreground">bKash / Nagad / Rocket</p>
           <p className="text-sm tabular-nums text-foreground">
-            Send Money to {MOBILE_BANKING_NUMBER} <span className="text-muted-foreground">(Personal)</span>
+            Send Money to {MOBILE_BANKING_NUMBER} <span className="text-foreground">(Personal)</span>
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-foreground">
             Please add <span className="font-medium text-foreground">{invoice.number}</span> as
             the reference.
           </p>
@@ -260,16 +250,16 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
 
       {invoice.notes && (
         <div className="relative mt-8 border-t pt-6">
-          <p className="text-xs tracking-wide text-muted-foreground uppercase">Notes</p>
-          <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">{invoice.notes}</p>
+          <p className="text-xs tracking-wide text-foreground uppercase">Notes</p>
+          <p className="mt-2 text-sm whitespace-pre-line text-foreground">{invoice.notes}</p>
         </div>
       )}
 
       <div className="relative mt-8 border-t pt-6">
-        <p className="text-xs tracking-wide text-muted-foreground uppercase">
+        <p className="text-xs tracking-wide text-foreground uppercase">
           Terms &amp; conditions
         </p>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-xs leading-relaxed text-foreground">
           By proceeding with this invoice and/or payment, the client acknowledges and agrees to
           the Terms of Service ({TERMS_URL}) and Privacy Policy ({PRIVACY_URL}).
         </p>

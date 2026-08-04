@@ -26,7 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { paymentMethodLabels, type PaymentMethod } from "@/lib/mock/invoices"
 
-const methods: PaymentMethod[] = ["BANK_TRANSFER", "CASH", "OTHER"]
+const methods: PaymentMethod[] = ["BKASH", "NAGAD", "ROCKET", "BANK_TRANSFER", "CASH", "OTHER"]
 
 export function RecordPaymentDialog({
   maxAmount,
@@ -37,7 +37,7 @@ export function RecordPaymentDialog({
 }) {
   const [open, setOpen] = React.useState(false)
   const [amount, setAmount] = React.useState(maxAmount)
-  const [method, setMethod] = React.useState<PaymentMethod>("BANK_TRANSFER")
+  const [method, setMethod] = React.useState<PaymentMethod>("BKASH")
   const [note, setNote] = React.useState("")
 
   React.useEffect(() => {
