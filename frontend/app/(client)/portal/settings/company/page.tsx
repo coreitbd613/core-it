@@ -7,6 +7,12 @@ import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa"
 import { toast } from "sonner"
 
 import { useMockRole } from "@/contexts/mock-role-context"
+import {
+  useMyOrganization,
+  useUpdateOrganization,
+  useUploadOrganizationLogo,
+} from "@/hooks/use-organization"
+import type { Organization, UpdateOrganizationInput } from "@/lib/organizations"
 import { CountrySelect } from "@/components/shared/country-select"
 import { CitySelect, StateSelect } from "@/components/shared/location-select"
 import { PhoneNumberInput } from "@/components/shared/phone-number-input"
@@ -49,14 +55,14 @@ type CompanyProfile = {
   linkedinPage: string
 }
 
-const initialProfile: CompanyProfile = {
-  name: "Acme Corp",
+const emptyProfile: CompanyProfile = {
+  name: "",
   logoUrl: null,
-  industry: "Retail & E-commerce",
+  industry: "",
   description: "",
-  email: "hello@acmecorp.com",
-  phone: "+8801712345678",
-  website: "https://acmecorp.com",
+  email: "",
+  phone: "",
+  website: "",
   addressLine1: "",
   city: "",
   stateProvince: "",
@@ -70,6 +76,54 @@ const initialProfile: CompanyProfile = {
   linkedinPage: "",
 }
 
+function toProfile(organization: Organization): CompanyProfile {
+  return {
+    name: organization.name,
+    logoUrl: organization.logoUrl,
+    industry: organization.industry ?? "",
+    description: organization.description ?? "",
+    email: organization.email ?? "",
+    phone: organization.phone ?? "",
+    website: organization.website ?? "",
+    addressLine1: organization.addressLine1 ?? "",
+    city: organization.city ?? "",
+    stateProvince: organization.stateProvince ?? "",
+    country: organization.country ?? "BD",
+    tradeLicense: organization.tradeLicense ?? "",
+    tin: organization.tin ?? "",
+    bin: organization.bin ?? "",
+    whatsappBusiness: organization.whatsappBusiness ?? "",
+    facebookPage: organization.facebookPage ?? "",
+    instagramPage: organization.instagramPage ?? "",
+    linkedinPage: organization.linkedinPage ?? "",
+  }
+}
+
+// @IsUrl()/@IsEmail() on the backend reject empty strings, so blank optional
+// fields are omitted from the payload rather than sent as "".
+function toUpdateInput(form: CompanyProfile): UpdateOrganizationInput {
+  const input: UpdateOrganizationInput = {
+    name: form.name,
+    industry: form.industry || undefined,
+    description: form.description || undefined,
+    email: form.email || undefined,
+    phone: form.phone || undefined,
+    website: form.website || undefined,
+    addressLine1: form.addressLine1 || undefined,
+    city: form.city || undefined,
+    stateProvince: form.stateProvince || undefined,
+    country: form.country || undefined,
+    tradeLicense: form.tradeLicense || undefined,
+    tin: form.tin || undefined,
+    bin: form.bin || undefined,
+    whatsappBusiness: form.whatsappBusiness || undefined,
+    facebookPage: form.facebookPage || undefined,
+    instagramPage: form.instagramPage || undefined,
+    linkedinPage: form.linkedinPage || undefined,
+  }
+  return input
+}
+
 function getInitials(name: string) {
   const words = name.trim().split(/\s+/).filter(Boolean)
   if (!words.length) return "C"
@@ -79,9 +133,21 @@ function getInitials(name: string) {
 export default function CompanySettingsPage() {
   const { canManageCompany } = useMockRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [saved, setSaved] = useState<CompanyProfile>(initialProfile)
-  const [form, setForm] = useState<CompanyProfile>(initialProfile)
-  const [isSaving, setIsSaving] = useState(false)
+  const { data: organization, isLoading } = useMyOrganization()
+  const updateOrganization = useUpdateOrganization()
+  const uploadLogo = useUploadOrganizationLogo()
+
+  const [saved, setSaved] = useState<CompanyProfile>(emptyProfile)
+  const [form, setForm] = useState<CompanyProfile>(emptyProfile)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+
+  React.useEffect(() => {
+    if (!organization) return
+    const profile = toProfile(organization)
+    setSaved(profile)
+    setForm(profile)
+    setHasLoadedOnce(true)
+  }, [organization])
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(saved)
 
@@ -89,7 +155,7 @@ export default function CompanySettingsPage() {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  function handleLogoSelect(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleLogoSelect(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     event.target.value = ""
     if (!file) return
@@ -103,23 +169,39 @@ export default function CompanySettingsPage() {
       return
     }
 
-    const url = URL.createObjectURL(file)
-    update("logoUrl", url)
+    try {
+      const updated = await uploadLogo.mutateAsync(file)
+      update("logoUrl", updated.logoUrl)
+      setSaved((prev) => ({ ...prev, logoUrl: updated.logoUrl }))
+      toast.success("Logo updated.")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't upload your logo.")
+    }
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setIsSaving(true)
-    // Mock only — no backend call yet. Once approved, this becomes a real
-    // PATCH against the Organization record.
-    setTimeout(() => {
-      setSaved(form)
-      setIsSaving(false)
+    try {
+      const updated = await updateOrganization.mutateAsync(toUpdateInput(form))
+      const profile = toProfile(updated)
+      setSaved(profile)
+      setForm(profile)
       toast.success("Company profile updated.")
-    }, 400)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't save your company profile.")
+    }
   }
 
+  const isSaving = updateOrganization.isPending
   const initials = getInitials(form.name || "Company")
+
+  if (isLoading && !hasLoadedOnce) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">

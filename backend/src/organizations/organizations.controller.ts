@@ -15,6 +15,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AdminJwtAuthGuard } from '../auth/guards/admin-jwt-auth.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OrganizationsService } from './organizations.service';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 const MAX_LOGO_SIZE_BYTES = 5 * 1024 * 1024;
@@ -26,6 +27,12 @@ interface RequestUser {
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Post()
+  create(@CurrentUser() user: RequestUser, @Body() dto: CreateOrganizationDto) {
+    return this.organizationsService.createMine(user.id, dto);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('mine')

@@ -6,6 +6,7 @@ import Image from "next/image"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
+import { useCreateOrganization } from "@/hooks/use-organization"
 import { Button } from "@/components/ui/button"
 import { BorderBeam } from "@/components/ui/border-beam"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,18 +17,19 @@ import { Spinner } from "@/components/ui/spinner"
 export default function OnboardingPage() {
   const router = useRouter()
   const [companyName, setCompanyName] = React.useState("")
-  const [isPending, setIsPending] = React.useState(false)
+  const createOrganization = useCreateOrganization()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!companyName.trim()) return
 
-    setIsPending(true)
-    // Mock only — no backend call yet. Once approved, this becomes a
-    // real POST that creates the Organization + Membership(OWNER).
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    toast.success(`${companyName} is ready.`)
-    router.push("/portal/dashboard")
+    try {
+      const organization = await createOrganization.mutateAsync(companyName.trim())
+      toast.success(`${organization.name} is ready.`)
+      router.push("/portal/dashboard")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't create your company workspace.")
+    }
   }
 
   return (
@@ -77,7 +79,7 @@ export default function OnboardingPage() {
                     required
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    disabled={isPending}
+                    disabled={createOrganization.isPending}
                     autoFocus
                   />
                   <FieldDescription>
@@ -85,8 +87,8 @@ export default function OnboardingPage() {
                   </FieldDescription>
                 </Field>
                 <Field>
-                  <Button type="submit" disabled={isPending}>
-                    {isPending && <Spinner className="size-4" />}
+                  <Button type="submit" disabled={createOrganization.isPending}>
+                    {createOrganization.isPending && <Spinner className="size-4" />}
                     Continue
                   </Button>
                 </Field>

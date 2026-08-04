@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Building2Icon,
   FileSignatureIcon,
@@ -19,6 +19,9 @@ import {
 
 import { useClientAuth } from "@/contexts/client-auth-context"
 import { MockRoleProvider } from "@/contexts/mock-role-context"
+import { useMyOrganization } from "@/hooks/use-organization"
+import { useMyInvoices } from "@/hooks/use-invoices"
+import type { Invoice } from "@/lib/invoices"
 import { Button } from "@/components/ui/button"
 import PanelDashboardShell, {
   type PanelNavItem,
@@ -29,11 +32,10 @@ import { getClientNotifications } from "@/lib/mock/notifications"
 import { mockContracts } from "@/lib/mock/contracts"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
-import { mockInvoices } from "@/lib/mock/invoices"
 
 const CURRENT_ORG_ID = "org-1"
 
-function buildSearchItems(): SearchItem[] {
+function buildSearchItems(invoices: Invoice[]): SearchItem[] {
   const navEntries: SearchItem[] = [
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard className="size-4" /> },
     { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/portal/proposals", icon: <FileTextIcon className="size-4" /> },
@@ -66,14 +68,12 @@ function buildSearchItems(): SearchItem[] {
       href: `/portal/projects/${p.id}`,
     }))
 
-  const invoiceEntries: SearchItem[] = mockInvoices
-    .filter((inv) => inv.organizationId === CURRENT_ORG_ID)
-    .map((inv) => ({
-      id: `invoice-${inv.id}`,
-      group: "Invoices",
-      label: inv.number,
-      href: `/portal/invoices/${inv.id}`,
-    }))
+  const invoiceEntries: SearchItem[] = invoices.map((inv) => ({
+    id: `invoice-${inv.id}`,
+    group: "Invoices",
+    label: inv.number,
+    href: `/portal/invoices/${inv.id}`,
+  }))
 
   const contractEntries: SearchItem[] = mockContracts
     .filter((c) => c.organizationId === CURRENT_ORG_ID)
@@ -122,7 +122,17 @@ export default function ClientLayout({
 
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, isPending, logout } = useClientAuth()
+  const isOnboarding = pathname === "/portal/onboarding"
+  const { isError: hasNoOrganization, isLoading: organizationLoading } = useMyOrganization()
+  const { data: invoices = [] } = useMyInvoices()
+
+  React.useEffect(() => {
+    if (hasNoOrganization && !isOnboarding) {
+      router.replace("/portal/onboarding")
+    }
+  }, [hasNoOrganization, isOnboarding, router])
 
   async function handleLogout() {
     await logout()
@@ -141,8 +151,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       }}
       profileHref="/portal/profile"
       onLogout={handleLogout}
-      loading={isPending}
-      search={<GlobalSearch items={buildSearchItems()} />}
+      loading={isPending || (organizationLoading && !isOnboarding)}
+      search={<GlobalSearch items={buildSearchItems(invoices)} />}
       notifications={<NotificationsBell items={getClientNotifications(CURRENT_ORG_ID)} />}
       sidebarFooterExtra={
         user?.role === "ADMIN" ? (

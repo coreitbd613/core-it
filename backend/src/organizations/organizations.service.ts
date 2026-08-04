@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { assertCanManageOrg } from '../common/membership.helper';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
@@ -20,6 +21,45 @@ export class OrganizationsService {
       throw new NotFoundException('You are not a member of any organization.');
     }
     return membership;
+  }
+
+  private slugify(name: string): string {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  private async generateUniqueSlug(name: string): Promise<string> {
+    const base = this.slugify(name) || 'organization';
+    let candidate = base;
+    let suffix = 2;
+    while (
+      await this.prisma.organization.findUnique({ where: { slug: candidate } })
+    ) {
+      candidate = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    return candidate;
+  }
+
+  async createMine(userId: string, dto: CreateOrganizationDto) {
+    const slug = await this.generateUniqueSlug(dto.name);
+    return this.prisma.$transaction(async (tx) => {
+      const organization = await tx.organization.create({
+        data: { name: dto.name, slug },
+      });
+      await tx.membership.create({
+        data: {
+          userId,
+          organizationId: organization.id,
+          role: 'OWNER',
+          status: 'ACTIVE',
+        },
+      });
+      return organization;
+    });
   }
 
   async getMine(userId: string) {
