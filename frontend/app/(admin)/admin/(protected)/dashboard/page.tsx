@@ -16,9 +16,10 @@ import {
 } from "lucide-react"
 
 import { useAdminCustomers } from "@/hooks/use-customers"
+import { useAdminInvoices } from "@/hooks/use-invoices"
+import { useAdminOrganizations } from "@/hooks/use-organization"
 import type { AdminCustomer } from "@/lib/customers"
 import { formatBDT } from "@/lib/format"
-import { mockOrganizations } from "@/lib/mock/organizations"
 import {
   isLeadClosed,
   isLeadOverdue,
@@ -29,7 +30,6 @@ import {
   type Lead,
 } from "@/lib/mock/leads"
 import { mockProposals } from "@/lib/mock/proposals"
-import { deriveInvoiceStatus, invoiceBalanceBdt, mockInvoices } from "@/lib/mock/invoices"
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
@@ -95,6 +95,8 @@ const followUpColumns: ColumnDef<Lead>[] = [
 export default function AdminDashboardPage() {
   const router = useRouter()
   const { data: customers, isPending } = useAdminCustomers()
+  const { data: organizations = [] } = useAdminOrganizations()
+  const { data: invoices = [] } = useAdminInvoices()
   const rows = customers ?? []
 
   const userStats = useMemo<DashboardStatItem[]>(() => {
@@ -110,16 +112,16 @@ export default function AdminDashboardPage() {
 
   const businessStats = useMemo<DashboardStatItem[]>(() => {
     const openProposals = mockProposals.filter((p) => p.status === "SENT").length
-    const activeInvoices = mockInvoices.filter((inv) => deriveInvoiceStatus(inv) !== "CANCELLED")
-    const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
-    const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+    const activeInvoices = invoices.filter((inv) => inv.computed.status !== "CANCELLED")
+    const outstanding = activeInvoices.reduce((sum, inv) => sum + inv.computed.balanceBdt, 0)
+    const overdue = activeInvoices.filter((inv) => inv.computed.status === "OVERDUE").length
     return [
-      { label: "Active Companies", value: mockOrganizations.length, icon: Building2Icon, tone: "primary" },
+      { label: "Active Companies", value: organizations.length, icon: Building2Icon, tone: "primary" },
       { label: "Open Proposals", value: openProposals, icon: FileTextIcon, tone: "chart2" },
       { label: "Outstanding Revenue", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
       { label: "Overdue Invoices", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
     ]
-  }, [])
+  }, [organizations, invoices])
 
   const leadStats = useMemo<DashboardStatItem[]>(() => {
     const weekStart = startOfWeek(new Date())

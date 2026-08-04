@@ -153,7 +153,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       onLogout={handleLogout}
       loading={isPending || (organizationLoading && !isOnboarding)}
       search={<GlobalSearch items={buildSearchItems(invoices)} />}
-      notifications={<NotificationsBell items={getClientNotifications(CURRENT_ORG_ID)} />}
+      notifications={<NotificationsBell items={getClientNotifications(CURRENT_ORG_ID, invoices)} />}
       sidebarFooterExtra={
         user?.role === "ADMIN" ? (
           <Button variant="outline" size="sm" className="w-full justify-start gap-2" asChild>

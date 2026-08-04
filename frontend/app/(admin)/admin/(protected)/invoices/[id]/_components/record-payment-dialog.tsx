@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { paymentMethodLabels, type PaymentMethod } from "@/lib/mock/invoices"
+import { paymentMethodLabels, type PaymentMethod } from "@/lib/invoices"
 
 const methods: PaymentMethod[] = ["BKASH", "NAGAD", "ROCKET", "BANK_TRANSFER", "CASH", "OTHER"]
 

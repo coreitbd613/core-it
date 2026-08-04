@@ -5,40 +5,29 @@ import Image from "next/image"
 import { useQrCodeDataUrl } from "@/hooks/use-qr-code-data-url"
 import { BUSINESS_ADDRESS, MAPS_URL, MOBILE_BANKING_NUMBER, PRIVACY_URL, TERMS_URL } from "@/lib/contact"
 import { formatBDT, formatDate } from "@/lib/format"
-import {
-  deriveInvoiceStatus,
-  invoiceBalanceBdt,
-  invoiceGrandTotalBdt,
-  invoicePaidBdt,
-  invoiceStatusLabels,
-  invoiceTotalBdt,
-  paymentMethodLabels,
-  type Invoice,
-} from "@/lib/mock/invoices"
-import { mockOrganizations } from "@/lib/mock/organizations"
+import { invoiceStatusLabels, paymentMethodLabels, type Invoice, type InvoiceStatus } from "@/lib/invoices"
 import { cn } from "@/lib/utils"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "")
 
-const watermarkLabels: Partial<Record<Invoice["status"], string>> = {
+const watermarkLabels: Partial<Record<InvoiceStatus, string>> = {
   PAID: "Paid",
   CANCELLED: "Void",
   OVERDUE: "Overdue",
 }
 
 export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
-  const subtotal = invoiceTotalBdt(invoice)
+  const subtotal = invoice.computed.subtotalBdt
   const discountAmount = subtotal * (invoice.discountPercent / 100)
   const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
-  const total = invoiceGrandTotalBdt(invoice)
-  const paid = invoicePaidBdt(invoice)
-  const balance = invoiceBalanceBdt(invoice)
-  const status = deriveInvoiceStatus(invoice)
+  const total = invoice.computed.grandTotalBdt
+  const paid = invoice.computed.paidBdt
+  const balance = invoice.computed.balanceBdt
+  const status = invoice.computed.status
   const watermark = watermarkLabels[status]
   const qrCodeUrl = useQrCodeDataUrl(`${SITE_URL}/invoices/view/${invoice.id}`)
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
-  const contactName = mockOrganizations.find((org) => org.id === invoice.organizationId)?.contactName
 
   return (
     <div
@@ -91,10 +80,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <div className="relative mt-8 grid grid-cols-1 gap-6 border-t pt-6 sm:grid-cols-2">
         <div>
           <p className="text-xs font-semibold tracking-wider text-foreground uppercase">Bill to</p>
-          {contactName && <p className="mt-1 font-medium text-foreground">{contactName}</p>}
-          <p className={cn("text-foreground", !contactName && "mt-1 font-medium")}>
-            {invoice.organizationName}
-          </p>
+          <p className="mt-1 font-medium text-foreground">{invoice.organization.name}</p>
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">
@@ -149,10 +135,10 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
                   {item.quantity}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                  {formatBDT(item.unitPriceBdt)}
+                  {formatBDT(Number(item.unitPriceBdt))}
                 </td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
-                  {formatBDT(item.quantity * item.unitPriceBdt)}
+                  {formatBDT(item.quantity * Number(item.unitPriceBdt))}
                 </td>
               </tr>
             ))}
@@ -224,7 +210,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
                       {formatDate(payment.paidAt)}
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
-                      {formatBDT(payment.amountBdt)}
+                      {formatBDT(Number(payment.amountBdt))}
                     </td>
                   </tr>
                 ))}

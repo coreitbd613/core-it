@@ -26,20 +26,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { InvoiceDocument } from "@/components/shared/invoice-document"
 import { InvoiceDownloadButton } from "@/components/shared/invoice-pdf"
-import { useAdminAuth } from "@/contexts/admin-auth-context"
-import { formatBDT } from "@/lib/format"
 import {
-  deriveInvoiceStatus,
-  invoiceBalanceBdt,
-  invoiceStatusLabels,
-  invoiceStatusVariant,
-  mockInvoices,
-  paymentMethodLabels,
-  type PaymentMethod,
-} from "@/lib/mock/invoices"
+  useAdminInvoice,
+  useRecordPayment,
+  useSendInvoice,
+  useVoidInvoice,
+} from "@/hooks/use-invoices"
+import { formatBDT } from "@/lib/format"
+import { invoiceStatusLabels, invoiceStatusVariant, paymentMethodLabels, type PaymentMethod } from "@/lib/invoices"
 import { mockProposals } from "@/lib/mock/proposals"
 
 import { RecordPaymentDialog } from "./_components/record-payment-dialog"
@@ -48,11 +46,20 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 
 export default function AdminInvoiceDetailPage() {
   const params = useParams<{ id: string }>()
-  const { user } = useAdminAuth()
-  const [, forceRerender] = React.useState(0)
   const [voidReason, setVoidReason] = React.useState("")
 
-  const invoice = mockInvoices.find((inv) => inv.id === params.id)
+  const { data: invoice, isLoading } = useAdminInvoice(params.id)
+  const sendInvoice = useSendInvoice(params.id)
+  const voidInvoice = useVoidInvoice(params.id)
+  const recordPayment = useRecordPayment(params.id)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!invoice) {
     return (
@@ -70,38 +77,39 @@ export default function AdminInvoiceDetailPage() {
     )
   }
 
-  const balance = invoiceBalanceBdt(invoice)
-  const status = deriveInvoiceStatus(invoice)
+  const balance = invoice.computed.balanceBdt
+  const status = invoice.computed.status
   const relatedProposal = invoice.proposalId
     ? mockProposals.find((p) => p.id === invoice.proposalId)
     : null
   const canVoid = status !== "DRAFT" && status !== "CANCELLED" && status !== "PAID"
 
-  function handleSend() {
-    invoice!.status = "SENT"
-    forceRerender((n) => n + 1)
-    toast.success(`Sent to ${invoice!.organizationName}.`)
+  async function handleSend() {
+    try {
+      await sendInvoice.mutateAsync()
+      toast.success(`Sent to ${invoice!.organization.name}.`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't send this invoice.")
+    }
   }
 
-  function handleVoid() {
-    invoice!.status = "CANCELLED"
-    invoice!.voidReason = voidReason.trim()
-    setVoidReason("")
-    forceRerender((n) => n + 1)
-    toast.success("Invoice voided.")
+  async function handleVoid() {
+    try {
+      await voidInvoice.mutateAsync(voidReason.trim())
+      setVoidReason("")
+      toast.success("Invoice voided.")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't void this invoice.")
+    }
   }
 
-  function handleRecordPayment(amount: number, method: PaymentMethod, note: string) {
-    invoice!.payments.push({
-      id: crypto.randomUUID(),
-      amountBdt: amount,
-      method,
-      note,
-      recordedBy: user?.name ?? user?.email ?? "Core IT",
-      paidAt: new Date().toISOString().slice(0, 10),
-    })
-    forceRerender((n) => n + 1)
-    toast.success("Payment recorded.")
+  async function handleRecordPayment(amount: number, method: PaymentMethod, note: string) {
+    try {
+      await recordPayment.mutateAsync({ amountBdt: amount, method, note })
+      toast.success("Payment recorded.")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't record this payment.")
+    }
   }
 
   return (
@@ -114,7 +122,7 @@ export default function AdminInvoiceDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{invoice.number}</h1>
-          <p className="text-muted-foreground">{invoice.organizationName}</p>
+          <p className="text-muted-foreground">{invoice.organization.name}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
@@ -218,13 +226,15 @@ export default function AdminInvoiceDetailPage() {
                       {paymentMethodLabels[payment.method]}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(payment.paidAt).toLocaleDateString()} · recorded by{" "}
-                      {payment.recordedBy}
+                      {new Date(payment.paidAt).toLocaleDateString()}
+                      {payment.recordedByUser
+                        ? ` · recorded by ${payment.recordedByUser.name ?? payment.recordedByUser.email}`
+                        : ""}
                       {payment.note ? ` · ${payment.note}` : ""}
                     </p>
                   </div>
                   <span className="text-sm font-medium tabular-nums text-foreground">
-                    {formatBDT(payment.amountBdt)}
+                    {formatBDT(Number(payment.amountBdt))}
                   </span>
                 </div>
               ))}

@@ -14,30 +14,25 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 import { InvoiceDocument } from "@/components/shared/invoice-document"
 import { InvoiceDownloadButton } from "@/components/shared/invoice-pdf"
+import { useMyInvoice } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
-import {
-  deriveInvoiceStatus,
-  invoiceStatusLabels,
-  invoiceStatusVariant,
-  mockInvoices,
-  paymentMethodLabels,
-} from "@/lib/mock/invoices"
+import { invoiceStatusLabels, invoiceStatusVariant, paymentMethodLabels } from "@/lib/invoices"
 import { mockProposals } from "@/lib/mock/proposals"
 
 export default function InvoiceDetailPage() {
   const params = useParams<{ id: string }>()
-  const [, forceRerender] = React.useState(0)
-  const invoice = mockInvoices.find((inv) => inv.id === params.id)
+  const { data: invoice, isLoading } = useMyInvoice(params.id)
 
-  React.useEffect(() => {
-    if (invoice && invoice.status === "SENT") {
-      invoice.status = "VIEWED"
-      forceRerender((n) => n + 1)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invoice?.id])
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!invoice) {
     return (
@@ -55,7 +50,7 @@ export default function InvoiceDetailPage() {
     )
   }
 
-  const status = deriveInvoiceStatus(invoice)
+  const status = invoice.computed.status
   const relatedProposal = invoice.proposalId
     ? mockProposals.find((p) => p.id === invoice.proposalId)
     : null
@@ -126,7 +121,7 @@ export default function InvoiceDetailPage() {
                     </p>
                   </div>
                   <span className="text-sm font-medium tabular-nums text-foreground">
-                    {formatBDT(payment.amountBdt)}
+                    {formatBDT(Number(payment.amountBdt))}
                   </span>
                 </div>
               ))}

@@ -1,10 +1,13 @@
 import type { NotificationItem } from "@/components/shared/dashboard/notifications-bell"
+import type { Invoice } from "@/lib/invoices"
 import { mockContracts } from "@/lib/mock/contracts"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
-import { deriveInvoiceStatus, mockInvoices } from "@/lib/mock/invoices"
 import { mockRevisionRequests, mockProjects } from "@/lib/mock/projects"
 
-export function getClientNotifications(organizationId: string): NotificationItem[] {
+export function getClientNotifications(
+  organizationId: string,
+  invoices: Invoice[] = []
+): NotificationItem[] {
   const items: NotificationItem[] = []
 
   for (const p of latestProposalVersions(
@@ -21,9 +24,8 @@ export function getClientNotifications(organizationId: string): NotificationItem
     }
   }
 
-  for (const inv of mockInvoices.filter((inv) => inv.organizationId === organizationId)) {
-    const status = deriveInvoiceStatus(inv)
-    if (status === "OVERDUE") {
+  for (const inv of invoices.filter((inv) => inv.organizationId === organizationId)) {
+    if (inv.computed.status === "OVERDUE") {
       items.push({
         id: `invoice-overdue-${inv.id}`,
         title: "Invoice overdue",
@@ -64,7 +66,7 @@ export function getClientNotifications(organizationId: string): NotificationItem
   return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 }
 
-export function getAdminNotifications(): NotificationItem[] {
+export function getAdminNotifications(invoices: Invoice[] = []): NotificationItem[] {
   const items: NotificationItem[] = []
 
   for (const r of mockRevisionRequests.filter((r) => r.status === "OPEN")) {
@@ -102,11 +104,11 @@ export function getAdminNotifications(): NotificationItem[] {
     })
   }
 
-  for (const inv of mockInvoices) {
-    if (deriveInvoiceStatus(inv) === "OVERDUE") {
+  for (const inv of invoices) {
+    if (inv.computed.status === "OVERDUE") {
       items.push({
         id: `invoice-overdue-admin-${inv.id}`,
-        title: `Invoice overdue — ${inv.organizationName}`,
+        title: `Invoice overdue — ${inv.organization.name}`,
         description: `${inv.number} was due ${new Date(inv.dueAt).toLocaleDateString()}`,
         href: `/admin/invoices/${inv.id}`,
         createdAt: inv.dueAt,

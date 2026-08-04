@@ -17,20 +17,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
+import { useAdminOrganizations } from "@/hooks/use-organization"
+import { useCreateInvoice } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
-import {
-  invoiceGrandTotalBdt,
-  invoiceTotalBdt,
-  mockInvoices,
-  nextInvoiceNumber,
-  type InvoiceLineItem,
-} from "@/lib/mock/invoices"
-import { mockOrganizations } from "@/lib/mock/organizations"
 import { mockProposals } from "@/lib/mock/proposals"
 
-function newLineItem(): InvoiceLineItem {
+type FormLineItem = {
+  id: string
+  description: string
+  quantity: number
+  unitPriceBdt: number
+}
+
+function newLineItem(): FormLineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, unitPriceBdt: 0 }
+}
+
+function subtotalOf(lineItems: FormLineItem[]): number {
+  return lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceBdt, 0)
+}
+
+function grandTotalOf(lineItems: FormLineItem[], taxPercent: number, discountPercent: number): number {
+  const subtotal = subtotalOf(lineItems)
+  const afterDiscount = subtotal - subtotal * (discountPercent / 100)
+  return afterDiscount + afterDiscount * (taxPercent / 100)
 }
 
 function defaultDueDate() {
@@ -48,12 +60,14 @@ export function InvoiceForm() {
     [proposalId]
   )
 
-  const [invoiceNumber] = React.useState(() => nextInvoiceNumber())
+  const { data: organizations = [], isLoading: organizationsLoading } = useAdminOrganizations()
+  const createInvoice = useCreateInvoice()
+
   const [organizationId, setOrganizationId] = React.useState(
-    sourceProposal?.organizationId ?? mockOrganizations[0]?.id ?? ""
+    sourceProposal?.organizationId ?? ""
   )
   const [dueAt, setDueAt] = React.useState(defaultDueDate())
-  const [lineItems, setLineItems] = React.useState<InvoiceLineItem[]>(
+  const [lineItems, setLineItems] = React.useState<FormLineItem[]>(
     sourceProposal
       ? sourceProposal.lineItems.map((item) => ({ ...item, id: crypto.randomUUID() }))
       : [newLineItem()]
@@ -64,50 +78,54 @@ export function InvoiceForm() {
   )
   const [notes, setNotes] = React.useState("")
 
-  const subtotal = invoiceTotalBdt({ lineItems })
+  // Falls back to the first loaded org until the admin picks one explicitly —
+  // derived at render time instead of synced via effect.
+  const effectiveOrganizationId = organizationId || organizations[0]?.id || ""
+
+  const subtotal = subtotalOf(lineItems)
   const discountAmount = subtotal * (discountPercent / 100)
   const taxAmount = (subtotal - discountAmount) * (taxPercent / 100)
-  const total = invoiceGrandTotalBdt({ lineItems, taxPercent, discountPercent })
+  const total = grandTotalOf(lineItems, taxPercent, discountPercent)
 
-  function updateLineItem<K extends keyof InvoiceLineItem>(
+  function updateLineItem<K extends keyof FormLineItem>(
     id: string,
     key: K,
-    value: InvoiceLineItem[K]
+    value: FormLineItem[K]
   ) {
     setLineItems((prev) => prev.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
   }
 
-  function handleSubmit(status: "DRAFT" | "SENT") {
-    const organization = mockOrganizations.find((org) => org.id === organizationId)
-    if (!organization || lineItems.length === 0) {
+  async function handleSubmit(status: "DRAFT" | "SENT") {
+    if (!effectiveOrganizationId || lineItems.length === 0) {
       toast.error("Fill in a company and at least one line item.")
       return
     }
 
-    const invoiceId = crypto.randomUUID()
-    mockInvoices.unshift({
-      id: invoiceId,
-      number: invoiceNumber,
-      organizationId: organization.id,
-      organizationName: organization.name,
-      proposalId: sourceProposal?.id ?? null,
-      voidReason: null,
-      lineItems,
-      taxPercent,
-      discountPercent,
-      notes: notes.trim() || null,
-      payments: [],
-      status,
-      issuedAt: new Date().toISOString().slice(0, 10),
-      dueAt,
-    })
+    try {
+      const invoice = await createInvoice.mutateAsync({
+        organizationId: effectiveOrganizationId,
+        proposalId: sourceProposal?.id,
+        dueAt,
+        lineItems: lineItems.map(({ description, quantity, unitPriceBdt }) => ({
+          description,
+          quantity,
+          unitPriceBdt,
+        })),
+        taxPercent,
+        discountPercent,
+        notes: notes.trim() || undefined,
+        status,
+      })
 
-    if (sourceProposal) {
-      sourceProposal.convertedInvoiceId = invoiceId
+      if (sourceProposal) {
+        sourceProposal.convertedInvoiceId = invoice.id
+      }
+
+      toast.success(status === "SENT" ? "Invoice sent." : "Invoice saved as draft.")
+      router.push(`/admin/invoices/${invoice.id}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't create this invoice.")
     }
-
-    toast.success(status === "SENT" ? "Invoice sent." : "Invoice saved as draft.")
-    router.push(`/admin/invoices/${invoiceId}`)
   }
 
   return (
@@ -136,12 +154,16 @@ export function InvoiceForm() {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field>
                     <FieldLabel htmlFor="invoice-org">Company</FieldLabel>
-                    <Select value={organizationId} onValueChange={setOrganizationId}>
+                    <Select
+                      value={effectiveOrganizationId}
+                      onValueChange={setOrganizationId}
+                      disabled={organizationsLoading}
+                    >
                       <SelectTrigger id="invoice-org" className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder={organizationsLoading ? "Loading..." : "Select a company"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {mockOrganizations.map((org) => (
+                        {organizations.map((org) => (
                           <SelectItem key={org.id} value={org.id}>
                             {org.name}
                           </SelectItem>
@@ -151,7 +173,7 @@ export function InvoiceForm() {
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="invoice-number">Invoice number</FieldLabel>
-                    <Input id="invoice-number" value={invoiceNumber} disabled />
+                    <Input id="invoice-number" value="Assigned automatically" disabled />
                   </Field>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -302,10 +324,20 @@ export function InvoiceForm() {
               </FieldGroup>
             </CardContent>
             <CardFooter className="flex-col gap-2 border-t">
-              <Button className="w-full" onClick={() => handleSubmit("SENT")}>
+              <Button
+                className="w-full"
+                disabled={createInvoice.isPending}
+                onClick={() => handleSubmit("SENT")}
+              >
+                {createInvoice.isPending && <Spinner className="size-4" />}
                 Send to company
               </Button>
-              <Button className="w-full" variant="outline" onClick={() => handleSubmit("DRAFT")}>
+              <Button
+                className="w-full"
+                variant="outline"
+                disabled={createInvoice.isPending}
+                onClick={() => handleSubmit("DRAFT")}
+              >
                 Save as draft
               </Button>
             </CardFooter>

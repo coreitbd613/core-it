@@ -7,13 +7,22 @@ import { MessageCircleIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 import { InvoiceDocument } from "@/components/shared/invoice-document"
+import { usePublicInvoice } from "@/hooks/use-invoices"
 import { WHATSAPP_URL } from "@/lib/contact"
-import { deriveInvoiceStatus, invoiceBalanceBdt, mockInvoices } from "@/lib/mock/invoices"
 
 export default function PublicInvoiceViewPage() {
   const params = useParams<{ id: string }>()
-  const invoice = mockInvoices.find((inv) => inv.id === params.id)
+  const { data: invoice, isLoading } = usePublicInvoice(params.id)
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!invoice) {
     return (
@@ -33,8 +42,8 @@ export default function PublicInvoiceViewPage() {
     )
   }
 
-  const status = deriveInvoiceStatus(invoice)
-  const balance = invoiceBalanceBdt(invoice)
+  const status = invoice.computed.status
+  const balance = invoice.computed.balanceBdt
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
 
   return (

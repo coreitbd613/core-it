@@ -8,17 +8,7 @@ import QRCode from "qrcode"
 import { Button } from "@/components/ui/button"
 import { BUSINESS_ADDRESS, MAPS_URL, MOBILE_BANKING_NUMBER, PRIVACY_URL, TERMS_URL } from "@/lib/contact"
 import { formatBDT, formatDate } from "@/lib/format"
-import {
-  deriveInvoiceStatus,
-  invoiceBalanceBdt,
-  invoiceGrandTotalBdt,
-  invoicePaidBdt,
-  invoiceStatusLabels,
-  invoiceTotalBdt,
-  paymentMethodLabels,
-  type Invoice,
-} from "@/lib/mock/invoices"
-import { mockOrganizations } from "@/lib/mock/organizations"
+import { invoiceStatusLabels, paymentMethodLabels, type Invoice } from "@/lib/invoices"
 
 // react-pdf's default fonts (Helvetica) have no Bengali Taka glyph ("৳"), so the whole
 // document uses Noto Sans Bengali instead — it covers both Bengali and Latin/ASCII text.
@@ -129,15 +119,14 @@ function InvoiceDocument({
   qrCodeDataUrl: string | null
   logoDataUrl: string | null
 }) {
-  const subtotal = invoiceTotalBdt(invoice)
+  const subtotal = invoice.computed.subtotalBdt
   const discountAmount = subtotal * (invoice.discountPercent / 100)
   const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
-  const total = invoiceGrandTotalBdt(invoice)
-  const paid = invoicePaidBdt(invoice)
-  const balance = invoiceBalanceBdt(invoice)
-  const status = deriveInvoiceStatus(invoice)
+  const total = invoice.computed.grandTotalBdt
+  const paid = invoice.computed.paidBdt
+  const balance = invoice.computed.balanceBdt
+  const status = invoice.computed.status
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
-  const contactName = mockOrganizations.find((org) => org.id === invoice.organizationId)?.contactName
 
   return (
     <Document>
@@ -158,12 +147,7 @@ function InvoiceDocument({
         <View style={styles.metaSection}>
           <View style={styles.metaColumn}>
             <Text style={styles.sectionLabel}>Bill to</Text>
-            {contactName && (
-              <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>{contactName}</Text>
-            )}
-            <Text style={contactName ? styles.metaLabel : { fontWeight: 700, color: "#1a1a1a" }}>
-              {invoice.organizationName}
-            </Text>
+            <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>{invoice.organization.name}</Text>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Invoice date:</Text>
               <Text>{formatDate(invoice.issuedAt)}</Text>
@@ -204,9 +188,9 @@ function InvoiceDocument({
                 <Text style={styles.cellIndex}>{index + 1}</Text>
                 <Text style={styles.cellDescription}>{item.description}</Text>
                 <Text style={styles.cellQty}>{item.quantity}</Text>
-                <Text style={styles.cellRate}>{formatBDT(item.unitPriceBdt)}</Text>
+                <Text style={styles.cellRate}>{formatBDT(Number(item.unitPriceBdt))}</Text>
                 <Text style={styles.cellAmount}>
-                  {formatBDT(item.quantity * item.unitPriceBdt)}
+                  {formatBDT(item.quantity * Number(item.unitPriceBdt))}
                 </Text>
               </View>
             ))}
@@ -264,7 +248,7 @@ function InvoiceDocument({
                   <Text style={styles.txCellNumber}>#{index + 1}</Text>
                   <Text style={styles.txCellMethod}>{paymentMethodLabels[payment.method]}</Text>
                   <Text style={styles.txCellDate}>{formatDate(payment.paidAt)}</Text>
-                  <Text style={styles.txCellAmount}>{formatBDT(payment.amountBdt)}</Text>
+                  <Text style={styles.txCellAmount}>{formatBDT(Number(payment.amountBdt))}</Text>
                 </View>
               ))}
             </View>

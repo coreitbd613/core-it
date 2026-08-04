@@ -55,27 +55,6 @@ type CompanyProfile = {
   linkedinPage: string
 }
 
-const emptyProfile: CompanyProfile = {
-  name: "",
-  logoUrl: null,
-  industry: "",
-  description: "",
-  email: "",
-  phone: "",
-  website: "",
-  addressLine1: "",
-  city: "",
-  stateProvince: "",
-  country: "BD",
-  tradeLicense: "",
-  tin: "",
-  bin: "",
-  whatsappBusiness: "",
-  facebookPage: "",
-  instagramPage: "",
-  linkedinPage: "",
-}
-
 function toProfile(organization: Organization): CompanyProfile {
   return {
     name: organization.name,
@@ -131,23 +110,34 @@ function getInitials(name: string) {
 }
 
 export default function CompanySettingsPage() {
+  const { data: organization, isLoading } = useMyOrganization()
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
+
+  if (!organization) {
+    return null
+  }
+
+  // Keyed by org id so a different org's data never leaks into stale form
+  // state — React remounts (and re-derives initial state) instead of an
+  // effect syncing fetched data into state after the fact.
+  return <CompanyProfileForm key={organization.id} organization={organization} />
+}
+
+function CompanyProfileForm({ organization }: { organization: Organization }) {
   const { canManageCompany } = useMockRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { data: organization, isLoading } = useMyOrganization()
   const updateOrganization = useUpdateOrganization()
   const uploadLogo = useUploadOrganizationLogo()
 
-  const [saved, setSaved] = useState<CompanyProfile>(emptyProfile)
-  const [form, setForm] = useState<CompanyProfile>(emptyProfile)
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
-
-  React.useEffect(() => {
-    if (!organization) return
-    const profile = toProfile(organization)
-    setSaved(profile)
-    setForm(profile)
-    setHasLoadedOnce(true)
-  }, [organization])
+  const [saved, setSaved] = useState<CompanyProfile>(() => toProfile(organization))
+  const [form, setForm] = useState<CompanyProfile>(() => toProfile(organization))
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(saved)
 
@@ -194,14 +184,6 @@ export default function CompanySettingsPage() {
 
   const isSaving = updateOrganization.isPending
   const initials = getInitials(form.name || "Company")
-
-  if (isLoading && !hasLoadedOnce) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Spinner className="size-6" />
-      </div>
-    )
-  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -250,8 +232,10 @@ export default function CompanySettingsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={uploadLogo.isPending}
                 className="w-fit"
               >
+                {uploadLogo.isPending && <Spinner className="size-4" />}
                 Change logo
               </Button>
               <p className="text-xs text-muted-foreground">JPG or PNG, up to 5MB.</p>

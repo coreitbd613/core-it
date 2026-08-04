@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { RichTextEditor } from "@/components/shared/rich-text-editor"
+import { useAdminOrganizations } from "@/hooks/use-organization"
 import { formatBDT } from "@/lib/format"
-import { mockOrganizations } from "@/lib/mock/organizations"
 import { mockProposalTemplates } from "@/lib/mock/proposal-templates"
 import { defaultProposalTermsHtml } from "@/lib/mock/proposal-terms"
 import {
@@ -53,9 +53,12 @@ export function ProposalForm({
   proposal: Proposal
 }) {
   const router = useRouter()
-  const [organizationId, setOrganizationId] = React.useState(
-    proposal?.organizationId ?? mockOrganizations[0]?.id ?? ""
-  )
+  const { data: organizations = [] } = useAdminOrganizations()
+  const [organizationId, setOrganizationId] = React.useState(proposal?.organizationId ?? "")
+
+  // Falls back to the first loaded org until the admin picks one explicitly —
+  // derived at render time instead of synced via effect.
+  const effectiveOrganizationId = organizationId || organizations[0]?.id || ""
   const [proposalNumber] = React.useState(() => proposal?.proposalNumber ?? nextProposalNumber())
   const [title, setTitle] = React.useState(proposal?.title ?? "")
   const [descriptionHtml, setDescriptionHtml] = React.useState(proposal?.descriptionHtml ?? "")
@@ -97,7 +100,7 @@ export function ProposalForm({
   }
 
   function handleSubmit(status: "DRAFT" | "SENT") {
-    const organization = mockOrganizations.find((org) => org.id === organizationId)
+    const organization = organizations.find((org) => org.id === effectiveOrganizationId)
     if (!organization || !title.trim() || lineItems.length === 0) {
       toast.error("Fill in a company, title, and at least one line item.")
       return
@@ -187,12 +190,12 @@ export function ProposalForm({
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field>
                     <FieldLabel htmlFor="proposal-org">Company</FieldLabel>
-                    <Select value={organizationId} onValueChange={setOrganizationId}>
+                    <Select value={effectiveOrganizationId} onValueChange={setOrganizationId}>
                       <SelectTrigger id="proposal-org" className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {mockOrganizations.map((org) => (
+                        {organizations.map((org) => (
                           <SelectItem key={org.id} value={org.id}>
                             {org.name}
                           </SelectItem>

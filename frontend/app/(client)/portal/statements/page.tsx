@@ -7,10 +7,8 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useMyInvoices } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
-import { invoiceGrandTotalBdt, mockInvoices } from "@/lib/mock/invoices"
-
-const CURRENT_ORG_ID = "org-1"
 
 type LedgerEntry = {
   id: string
@@ -23,9 +21,9 @@ type LedgerEntry = {
 }
 
 export default function StatementsPage() {
-  const entries = useMemo<LedgerEntry[]>(() => {
-    const invoices = mockInvoices.filter((inv) => inv.organizationId === CURRENT_ORG_ID)
+  const { data: invoices = [] } = useMyInvoices()
 
+  const entries = useMemo<LedgerEntry[]>(() => {
     const rows: Omit<LedgerEntry, "balance">[] = []
     for (const invoice of invoices) {
       rows.push({
@@ -33,7 +31,7 @@ export default function StatementsPage() {
         date: invoice.issuedAt,
         description: `Invoice ${invoice.number} issued`,
         invoiceId: invoice.id,
-        debit: invoiceGrandTotalBdt(invoice),
+        debit: invoice.computed.grandTotalBdt,
         credit: 0,
       })
       for (const payment of invoice.payments) {
@@ -43,7 +41,7 @@ export default function StatementsPage() {
           description: `Payment for ${invoice.number}`,
           invoiceId: invoice.id,
           debit: 0,
-          credit: payment.amountBdt,
+          credit: Number(payment.amountBdt),
         })
       }
     }
@@ -55,7 +53,7 @@ export default function StatementsPage() {
       running += row.debit - row.credit
       return { ...row, balance: running }
     })
-  }, [])
+  }, [invoices])
 
   const currentBalance = entries.at(-1)?.balance ?? 0
 

@@ -19,40 +19,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useMyInvoices } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
 import {
-  deriveInvoiceStatus,
-  invoiceBalanceBdt,
-  invoiceGrandTotalBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  mockInvoices,
   type Invoice,
   type InvoiceStatus,
-} from "@/lib/mock/invoices"
-
-const CURRENT_ORG_ID = "org-1"
+} from "@/lib/invoices"
 
 export default function InvoicesPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
-  const orgInvoices = useMemo(
-    () => mockInvoices.filter((inv) => inv.organizationId === CURRENT_ORG_ID),
-    []
-  )
+  const { data: orgInvoices = [] } = useMyInvoices()
   const invoices = useMemo(
     () =>
       orgInvoices.filter((inv) => {
-        if (statusFilter !== "ALL" && deriveInvoiceStatus(inv) !== statusFilter) return false
+        if (statusFilter !== "ALL" && inv.computed.status !== statusFilter) return false
         return true
       }),
     [orgInvoices, statusFilter]
   )
 
   const stats = useMemo<DashboardStatItem[]>(() => {
-    const activeInvoices = orgInvoices.filter((inv) => deriveInvoiceStatus(inv) !== "CANCELLED")
-    const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
-    const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+    const activeInvoices = orgInvoices.filter((inv) => inv.computed.status !== "CANCELLED")
+    const outstanding = activeInvoices.reduce((sum, inv) => sum + inv.computed.balanceBdt, 0)
+    const overdue = activeInvoices.filter((inv) => inv.computed.status === "OVERDUE").length
     return [
       { label: "Total Invoices", value: orgInvoices.length, icon: ReceiptIcon, tone: "primary" },
       { label: "Outstanding Balance", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
@@ -73,21 +65,21 @@ export default function InvoicesPage() {
       },
       {
         id: "total",
-        accessorFn: (row) => invoiceGrandTotalBdt(row),
+        accessorFn: (row) => row.computed.grandTotalBdt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(invoiceGrandTotalBdt(row.original))}
+            {formatBDT(row.original.computed.grandTotalBdt)}
           </span>
         ),
       },
       {
         id: "balance",
-        accessorFn: (row) => invoiceBalanceBdt(row),
+        accessorFn: (row) => row.computed.balanceBdt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Balance" />,
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(invoiceBalanceBdt(row.original))}
+            {formatBDT(row.original.computed.balanceBdt)}
           </span>
         ),
       },
@@ -95,7 +87,7 @@ export default function InvoicesPage() {
         id: "status",
         header: "Status",
         cell: ({ row }) => {
-          const status = deriveInvoiceStatus(row.original)
+          const status = row.original.computed.status
           return <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
         },
       },

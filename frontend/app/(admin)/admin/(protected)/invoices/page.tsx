@@ -51,18 +51,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { downloadInvoicePdf } from "@/components/shared/invoice-pdf"
+import { useAdminInvoices, useDeleteInvoice } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
 import {
-  deriveInvoiceStatus,
-  invoiceBalanceBdt,
-  invoiceGrandTotalBdt,
-  invoicePaidBdt,
   invoiceStatusLabels,
   invoiceStatusVariant,
-  mockInvoices,
   type Invoice,
   type InvoiceStatus,
-} from "@/lib/mock/invoices"
+} from "@/lib/invoices"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coreitbd.com"
 
@@ -71,55 +67,49 @@ export default function AdminInvoicesPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const [renderTick, forceRerender] = useState(0)
 
-  const invoices = useMemo(
-    () =>
-      mockInvoices.filter((inv) => {
-        if (statusFilter !== "ALL" && deriveInvoiceStatus(inv) !== statusFilter) return false
-        return true
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [statusFilter, renderTick]
+  const { data: invoices = [] } = useAdminInvoices(
+    statusFilter !== "ALL" ? { status: statusFilter } : undefined
   )
+  const deleteInvoice = useDeleteInvoice()
   const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
   const selectedCount = selectedIds.length
 
-  function handleBulkDelete() {
-    for (const id of selectedIds) {
-      const index = mockInvoices.findIndex((inv) => inv.id === id)
-      if (index !== -1) mockInvoices.splice(index, 1)
+  async function handleBulkDelete() {
+    try {
+      await Promise.all(selectedIds.map((id) => deleteInvoice.mutateAsync(id)))
+      setRowSelection({})
+      toast.success(`Deleted ${selectedIds.length} draft invoice${selectedIds.length > 1 ? "s" : ""}.`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't delete those invoices.")
     }
-    setRowSelection({})
-    forceRerender((n) => n + 1)
-    toast.success(`Deleted ${selectedIds.length} draft invoice${selectedIds.length > 1 ? "s" : ""}.`)
   }
 
-  function handleDeleteOne(invoice: Invoice) {
-    const index = mockInvoices.findIndex((inv) => inv.id === invoice.id)
-    if (index !== -1) mockInvoices.splice(index, 1)
-    forceRerender((n) => n + 1)
-    toast.success(`Deleted ${invoice.number}.`)
+  async function handleDeleteOne(invoice: Invoice) {
+    try {
+      await deleteInvoice.mutateAsync(invoice.id)
+      toast.success(`Deleted ${invoice.number}.`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't delete this invoice.")
+    }
   }
 
   const stats = useMemo<DashboardStatItem[]>(() => {
-    const activeInvoices = mockInvoices.filter(
-      (inv) => deriveInvoiceStatus(inv) !== "CANCELLED"
-    )
-    const outstanding = activeInvoices.reduce((sum, inv) => sum + invoiceBalanceBdt(inv), 0)
-    const overdue = activeInvoices.filter((inv) => deriveInvoiceStatus(inv) === "OVERDUE").length
+    const activeInvoices = invoices.filter((inv) => inv.computed.status !== "CANCELLED")
+    const outstanding = activeInvoices.reduce((sum, inv) => sum + inv.computed.balanceBdt, 0)
+    const overdue = activeInvoices.filter((inv) => inv.computed.status === "OVERDUE").length
 
     const now = new Date()
-    const collectedThisMonth = mockInvoices.reduce((sum, inv) => {
+    const collectedThisMonth = invoices.reduce((sum, inv) => {
       const monthPayments = inv.payments.filter((payment) => {
         const paidAt = new Date(payment.paidAt)
         return paidAt.getFullYear() === now.getFullYear() && paidAt.getMonth() === now.getMonth()
       })
-      return sum + monthPayments.reduce((paymentSum, payment) => paymentSum + payment.amountBdt, 0)
+      return sum + monthPayments.reduce((paymentSum, payment) => paymentSum + Number(payment.amountBdt), 0)
     }, 0)
 
     return [
-      { label: "Total Invoices", value: mockInvoices.length, icon: ReceiptIcon, tone: "primary" },
+      { label: "Total Invoices", value: invoices.length, icon: ReceiptIcon, tone: "primary" },
       { label: "Outstanding", value: formatBDT(outstanding), icon: WalletIcon, tone: "chart4" },
       { label: "Overdue", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
       {
@@ -129,8 +119,7 @@ export default function AdminInvoicesPage() {
         tone: "primary",
       },
     ]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderTick])
+  }, [invoices])
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -148,7 +137,8 @@ export default function AdminInvoicesPage() {
         ),
       },
       {
-        accessorKey: "organizationName",
+        id: "organizationName",
+        accessorFn: (row) => row.organization.name,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
       },
       {
@@ -165,39 +155,37 @@ export default function AdminInvoicesPage() {
       },
       {
         id: "total",
-        accessorFn: (row) => invoiceGrandTotalBdt(row),
+        accessorFn: (row) => row.computed.grandTotalBdt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(invoiceGrandTotalBdt(row.original))}
+            {formatBDT(row.original.computed.grandTotalBdt)}
           </span>
         ),
       },
       {
         id: "paid",
-        accessorFn: (row) => invoicePaidBdt(row),
+        accessorFn: (row) => row.computed.paidBdt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Paid" />,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-muted-foreground">
-            {formatBDT(invoicePaidBdt(row.original))}
+            {formatBDT(row.original.computed.paidBdt)}
           </span>
         ),
       },
       {
         id: "balance",
-        accessorFn: (row) => invoiceBalanceBdt(row),
+        accessorFn: (row) => row.computed.balanceBdt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Balance" />,
         cell: ({ row }) => {
-          const status = deriveInvoiceStatus(row.original)
-          const total = invoiceGrandTotalBdt(row.original)
-          const paid = invoicePaidBdt(row.original)
+          const { status, grandTotalBdt, paidBdt, balanceBdt } = row.original.computed
           return (
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium tabular-nums text-foreground">
-                {formatBDT(invoiceBalanceBdt(row.original))}
+                {formatBDT(balanceBdt)}
               </span>
-              {status === "PARTIALLY_PAID" && total > 0 && (
-                <Progress value={(paid / total) * 100} className="h-1 w-24" />
+              {status === "PARTIALLY_PAID" && grandTotalBdt > 0 && (
+                <Progress value={(paidBdt / grandTotalBdt) * 100} className="h-1 w-24" />
               )}
             </div>
           )
@@ -207,7 +195,7 @@ export default function AdminInvoicesPage() {
         id: "status",
         header: "Status",
         cell: ({ row }) => {
-          const status = deriveInvoiceStatus(row.original)
+          const status = row.original.computed.status
           return <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
         },
       },
@@ -239,7 +227,7 @@ export default function AdminInvoicesPage() {
             },
           ]
 
-          if (deriveInvoiceStatus(invoice) === "DRAFT") {
+          if (invoice.computed.status === "DRAFT") {
             actions.push({
               label: "Delete",
               icon: <Trash2Icon />,
@@ -259,7 +247,7 @@ export default function AdminInvoicesPage() {
         size: 40,
       },
     ],
-    []
+    [router]
   )
 
   return (
@@ -361,9 +349,9 @@ export default function AdminInvoicesPage() {
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
-        enableRowSelection={(row) => deriveInvoiceStatus(row) === "DRAFT"}
+        enableRowSelection={(row) => row.computed.status === "DRAFT"}
         getRowClassName={(row) =>
-          deriveInvoiceStatus(row) === "OVERDUE" ? "bg-destructive/5 hover:bg-destructive/10" : undefined
+          row.computed.status === "OVERDUE" ? "bg-destructive/5 hover:bg-destructive/10" : undefined
         }
       />
     </div>

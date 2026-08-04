@@ -15,6 +15,8 @@ import {
 } from "lucide-react"
 
 import { AdminAuthProvider, useAdminAuth } from "@/contexts/admin-auth-context"
+import { useAdminInvoices } from "@/hooks/use-invoices"
+import type { Invoice } from "@/lib/invoices"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -25,7 +27,6 @@ import { mockContracts } from "@/lib/mock/contracts"
 import { mockLeads } from "@/lib/mock/leads"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 import { mockProjects } from "@/lib/mock/projects"
-import { mockInvoices } from "@/lib/mock/invoices"
 
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
@@ -39,7 +40,7 @@ const adminNavItems: PanelNavItem[] = [
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },
 ]
 
-function buildAdminSearchItems(): SearchItem[] {
+function buildAdminSearchItems(invoices: Invoice[]): SearchItem[] {
   const navEntries: SearchItem[] = [
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="size-4" /> },
     { id: "nav-leads", group: "Go to", label: "Leads", href: "/admin/leads", icon: <TargetIcon className="size-4" /> },
@@ -76,11 +77,11 @@ function buildAdminSearchItems(): SearchItem[] {
     href: `/admin/projects/${p.id}`,
   }))
 
-  const invoiceEntries: SearchItem[] = mockInvoices.map((inv) => ({
+  const invoiceEntries: SearchItem[] = invoices.map((inv) => ({
     id: `invoice-${inv.id}`,
     group: "Invoices",
     label: inv.number,
-    description: inv.organizationName,
+    description: inv.organization.name,
     href: `/admin/invoices/${inv.id}`,
   }))
 
@@ -105,6 +106,7 @@ function buildAdminSearchItems(): SearchItem[] {
 function AdminProtectedShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, isPending, logout } = useAdminAuth()
+  const { data: invoices = [] } = useAdminInvoices()
 
   async function handleLogout() {
     await logout()
@@ -124,8 +126,8 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
       profileHref="/admin/profile"
       onLogout={handleLogout}
       loading={isPending}
-      search={<GlobalSearch items={buildAdminSearchItems()} />}
-      notifications={<NotificationsBell items={getAdminNotifications()} />}
+      search={<GlobalSearch items={buildAdminSearchItems(invoices)} />}
+      notifications={<NotificationsBell items={getAdminNotifications(invoices)} />}
     >
       {children}
     </PanelDashboardShell>
