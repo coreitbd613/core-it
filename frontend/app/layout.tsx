@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
 import { ClientAuthProvider } from "@/contexts/client-auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { WhatsAppFloatingButton } from "@/components/shared/whatsapp-floating-button";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -96,6 +97,7 @@ export default function RootLayout({
           <QueryProvider>
             <ClientAuthProvider>
               {children}
+              <WhatsAppFloatingButton />
               <Toaster />
             </ClientAuthProvider>
           </QueryProvider>
