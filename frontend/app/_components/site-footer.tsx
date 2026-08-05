@@ -80,20 +80,20 @@ export function SiteFooter() {
     <footer className="border-t border-border bg-background">
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-12 lg:px-8">
         <div className="col-span-2 flex flex-col gap-4 lg:col-span-1">
-          <Link href="/" className="flex h-8 w-fit items-center" aria-label="CORE IT home">
+          <Link href="/" className="flex h-10 w-fit items-center" aria-label="CORE IT home">
             <Image
               src="/logo-light.png"
               alt="CORE IT"
               width={527}
               height={135}
-              className="h-8 w-auto dark:hidden"
+              className="h-10 w-auto dark:hidden"
             />
             <Image
               src="/logo-dark.png"
               alt="CORE IT"
               width={527}
               height={135}
-              className="hidden h-8 w-auto dark:block"
+              className="hidden h-10 w-auto dark:block"
             />
           </Link>
           <p className="max-w-xs text-sm text-muted-foreground">
