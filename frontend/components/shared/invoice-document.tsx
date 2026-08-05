@@ -19,7 +19,7 @@ const watermarkLabels: Partial<Record<InvoiceStatus, string>> = {
 
 export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const subtotal = invoice.computed.subtotalBdt
-  const discountAmount = subtotal * (invoice.discountPercent / 100)
+  const discountAmount = invoice.computed.discountAmountBdt
   const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
   const total = invoice.computed.grandTotalBdt
   const paid = invoice.computed.paidBdt
@@ -148,9 +148,11 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <span className="text-foreground">Sub total</span>
           <span className="font-medium tabular-nums text-foreground">{formatBDT(subtotal)}</span>
         </div>
-        {invoice.discountPercent > 0 && (
+        {discountAmount > 0 && (
           <div className="flex w-full max-w-56 items-center justify-between text-sm">
-            <span className="text-foreground">Discount ({invoice.discountPercent}%)</span>
+            <span className="text-foreground">
+              Discount {invoice.discountType === "PERCENT" ? `(${invoice.discountPercent}%)` : ""}
+            </span>
             <span className="font-medium tabular-nums text-foreground">
               -{formatBDT(discountAmount)}
             </span>

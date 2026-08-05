@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { InvoiceStatus } from '../../generated/prisma/client';
+import { DiscountType, InvoiceStatus } from '../../generated/prisma/client';
 import { computeInvoiceTotals } from './invoice-calculations';
 import { nextInvoiceNumber } from './invoice-number';
 import {
@@ -46,7 +46,9 @@ export class InvoicesService {
       lineItems: { unitPriceBdt: unknown }[];
       payments: { amountBdt: unknown }[];
       taxPercent: number;
+      discountType: DiscountType;
       discountPercent: number;
+      discountFlatBdt: unknown;
       status: InvoiceStatus;
       dueAt: Date;
     },
@@ -94,7 +96,9 @@ export class InvoicesService {
           proposalId: dto.proposalId,
           status: dto.status ?? 'DRAFT',
           taxPercent: dto.taxPercent ?? 0,
+          discountType: dto.discountType ?? 'PERCENT',
           discountPercent: dto.discountPercent ?? 0,
+          discountFlatBdt: dto.discountFlatBdt ?? 0,
           notes: dto.notes,
           dueAt: new Date(dto.dueAt),
           lineItems: {
@@ -153,7 +157,9 @@ export class InvoicesService {
         data: {
           dueAt: dto.dueAt ? new Date(dto.dueAt) : undefined,
           taxPercent: dto.taxPercent,
+          discountType: dto.discountType,
           discountPercent: dto.discountPercent,
+          discountFlatBdt: dto.discountFlatBdt,
           notes: dto.notes,
           lineItems: dto.lineItems
             ? {

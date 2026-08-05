@@ -273,7 +273,7 @@ export function ProposalForm({
                     <Input
                       type="number"
                       min={0}
-                      value={item.unitPriceBdt}
+                      value={item.unitPriceBdt || ""}
                       onChange={(e) =>
                         updateLineItem(item.id, "unitPriceBdt", Number(e.target.value) || 0)
                       }
@@ -321,7 +321,7 @@ export function ProposalForm({
                       type="number"
                       min={0}
                       max={100}
-                      value={taxPercent}
+                      value={taxPercent || ""}
                       onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
                     />
                   </Field>
@@ -332,7 +332,7 @@ export function ProposalForm({
                       type="number"
                       min={0}
                       max={100}
-                      value={discountPercent}
+                      value={discountPercent || ""}
                       onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
                     />
                   </Field>

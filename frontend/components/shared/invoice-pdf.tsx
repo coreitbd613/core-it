@@ -119,7 +119,7 @@ function InvoiceDocument({
   logoDataUrl: string | null
 }) {
   const subtotal = invoice.computed.subtotalBdt
-  const discountAmount = subtotal * (invoice.discountPercent / 100)
+  const discountAmount = invoice.computed.discountAmountBdt
   const taxAmount = (subtotal - discountAmount) * (invoice.taxPercent / 100)
   const total = invoice.computed.grandTotalBdt
   const paid = invoice.computed.paidBdt
@@ -198,9 +198,11 @@ function InvoiceDocument({
               <Text style={styles.totalsLabel}>Sub total</Text>
               <Text>{formatBDT(subtotal)}</Text>
             </View>
-            {invoice.discountPercent > 0 && (
+            {discountAmount > 0 && (
               <View style={styles.totalsRow}>
-                <Text style={styles.totalsLabel}>Discount ({invoice.discountPercent}%)</Text>
+                <Text style={styles.totalsLabel}>
+                  Discount {invoice.discountType === "PERCENT" ? `(${invoice.discountPercent}%)` : ""}
+                </Text>
                 <Text>-{formatBDT(discountAmount)}</Text>
               </View>
             )}

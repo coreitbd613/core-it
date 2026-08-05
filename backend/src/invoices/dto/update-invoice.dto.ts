@@ -3,6 +3,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
+  IsIn,
   IsOptional,
   IsString,
   Max,
@@ -29,9 +30,17 @@ export class UpdateInvoiceDto {
   taxPercent?: number;
 
   @IsOptional()
+  @IsIn(['PERCENT', 'FLAT'])
+  discountType?: 'PERCENT' | 'FLAT';
+
+  @IsOptional()
   @Min(0)
   @Max(100)
   discountPercent?: number;
+
+  @IsOptional()
+  @Min(0)
+  discountFlatBdt?: number;
 
   @IsOptional()
   @IsString()

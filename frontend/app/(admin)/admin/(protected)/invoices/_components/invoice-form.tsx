@@ -24,6 +24,7 @@ import { DatePickerField } from "@/components/shared/date-picker-field"
 import { useAdminOrganizations } from "@/hooks/use-organization"
 import { useCreateInvoice } from "@/hooks/use-invoices"
 import { formatBDT } from "@/lib/format"
+import type { DiscountType } from "@/lib/invoices"
 import { mockProposals } from "@/lib/mock/proposals"
 
 type FormLineItem = {
@@ -42,9 +43,27 @@ function subtotalOf(lineItems: FormLineItem[]): number {
   return lineItems.reduce((sum, item) => sum + item.unitPriceBdt, 0)
 }
 
-function grandTotalOf(lineItems: FormLineItem[], taxPercent: number, discountPercent: number): number {
+/** Clamped to the subtotal — a discount can never make the pre-tax amount negative. */
+function discountAmountOf(
+  lineItems: FormLineItem[],
+  discountType: DiscountType,
+  discountPercent: number,
+  discountFlatBdt: number
+): number {
   const subtotal = subtotalOf(lineItems)
-  const afterDiscount = subtotal - subtotal * (discountPercent / 100)
+  const raw = discountType === "FLAT" ? discountFlatBdt : subtotal * (discountPercent / 100)
+  return Math.min(Math.max(raw, 0), subtotal)
+}
+
+function grandTotalOf(
+  lineItems: FormLineItem[],
+  taxPercent: number,
+  discountType: DiscountType,
+  discountPercent: number,
+  discountFlatBdt: number
+): number {
+  const subtotal = subtotalOf(lineItems)
+  const afterDiscount = subtotal - discountAmountOf(lineItems, discountType, discountPercent, discountFlatBdt)
   return afterDiscount + afterDiscount * (taxPercent / 100)
 }
 
@@ -85,9 +104,11 @@ export function InvoiceForm() {
       : [newLineItem()]
   )
   const [taxPercent, setTaxPercent] = React.useState(sourceProposal?.taxPercent ?? 0)
+  const [discountType, setDiscountType] = React.useState<DiscountType>("PERCENT")
   const [discountPercent, setDiscountPercent] = React.useState(
     sourceProposal?.discountPercent ?? 0
   )
+  const [discountFlatBdt, setDiscountFlatBdt] = React.useState(0)
   const [notes, setNotes] = React.useState("")
 
   // Falls back to the first loaded org until the admin picks one explicitly —
@@ -95,9 +116,9 @@ export function InvoiceForm() {
   const effectiveOrganizationId = organizationId || organizations[0]?.id || ""
 
   const subtotal = subtotalOf(lineItems)
-  const discountAmount = subtotal * (discountPercent / 100)
+  const discountAmount = discountAmountOf(lineItems, discountType, discountPercent, discountFlatBdt)
   const taxAmount = (subtotal - discountAmount) * (taxPercent / 100)
-  const total = grandTotalOf(lineItems, taxPercent, discountPercent)
+  const total = grandTotalOf(lineItems, taxPercent, discountType, discountPercent, discountFlatBdt)
 
   function updateLineItem<K extends keyof FormLineItem>(
     id: string,
@@ -134,7 +155,9 @@ export function InvoiceForm() {
           unitPriceBdt,
         })),
         taxPercent,
+        discountType,
         discountPercent,
+        discountFlatBdt,
         notes: notes.trim() || undefined,
         status,
       })
@@ -257,7 +280,7 @@ export function InvoiceForm() {
                     <Input
                       type="number"
                       min={0}
-                      value={item.unitPriceBdt}
+                      value={item.unitPriceBdt || ""}
                       onChange={(e) =>
                         updateLineItem(item.id, "unitPriceBdt", Number(e.target.value) || 0)
                       }
@@ -305,31 +328,56 @@ export function InvoiceForm() {
                       type="number"
                       min={0}
                       max={100}
-                      value={taxPercent}
+                      value={taxPercent || ""}
                       onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="invoice-discount">Discount (%)</FieldLabel>
-                    <Input
-                      id="invoice-discount"
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={discountPercent}
-                      onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
-                    />
+                    <FieldLabel htmlFor="invoice-discount">
+                      Discount {discountType === "PERCENT" ? "(%)" : "(BDT)"}
+                    </FieldLabel>
+                    {discountType === "PERCENT" ? (
+                      <Input
+                        id="invoice-discount"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={discountPercent || ""}
+                        onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                      />
+                    ) : (
+                      <Input
+                        id="invoice-discount"
+                        type="number"
+                        min={0}
+                        value={discountFlatBdt || ""}
+                        onChange={(e) => setDiscountFlatBdt(Number(e.target.value) || 0)}
+                      />
+                    )}
                   </Field>
                 </div>
+
+                <Field>
+                  <FieldLabel>Discount type</FieldLabel>
+                  <Tabs
+                    value={discountType}
+                    onValueChange={(value) => setDiscountType(value as DiscountType)}
+                  >
+                    <TabsList>
+                      <TabsTrigger value="PERCENT">Percentage</TabsTrigger>
+                      <TabsTrigger value="FLAT">Flat amount</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </Field>
 
                 <div className="flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-4">
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>Subtotal</span>
                     <span className="tabular-nums">{formatBDT(subtotal)}</span>
                   </div>
-                  {discountPercent > 0 && (
+                  {discountAmount > 0 && (
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Discount ({discountPercent}%)</span>
+                      <span>Discount {discountType === "PERCENT" ? `(${discountPercent}%)` : ""}</span>
                       <span className="tabular-nums">-{formatBDT(discountAmount)}</span>
                     </div>
                   )}

@@ -44,10 +44,19 @@ export class CreateInvoiceDto {
   @Max(100)
   taxPercent?: number = 0;
 
+  // Exactly one of discountPercent / discountFlatBdt applies, per discountType.
+  @IsOptional()
+  @IsIn(['PERCENT', 'FLAT'])
+  discountType?: 'PERCENT' | 'FLAT' = 'PERCENT';
+
   @IsOptional()
   @Min(0)
   @Max(100)
   discountPercent?: number = 0;
+
+  @IsOptional()
+  @Min(0)
+  discountFlatBdt?: number = 0;
 
   @IsOptional()
   @IsString()

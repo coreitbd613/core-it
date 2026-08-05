@@ -196,6 +196,11 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+enum DiscountType {
+  PERCENT
+  FLAT
+}
+
 enum PaymentMethod {
   BKASH
   NAGAD
@@ -221,9 +226,14 @@ model Invoice {
   status     InvoiceStatus @default(DRAFT)
   voidReason String?
 
-  taxPercent      Float   @default(0)
-  discountPercent Float   @default(0)
-  notes           String?
+  taxPercent Float @default(0)
+
+  // Exactly one applies, chosen by discountType — the other stays at its default.
+  discountType    DiscountType @default(PERCENT)
+  discountPercent Float        @default(0)
+  discountFlatBdt Decimal      @default(0)
+
+  notes String?
 
   issuedAt DateTime @default(now())
   dueAt    DateTime

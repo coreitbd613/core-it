@@ -4,6 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 
 export type InvoiceStatus = "DRAFT" | "SENT" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED"
 export type PaymentMethod = "BKASH" | "NAGAD" | "ROCKET" | "BANK_TRANSFER" | "CASH" | "OTHER"
+export type DiscountType = "PERCENT" | "FLAT"
 
 export const invoiceStatusLabels: Record<InvoiceStatus, string> = {
   DRAFT: "Draft",
@@ -60,6 +61,7 @@ export type Payment = {
 
 export type InvoiceComputed = {
   subtotalBdt: number
+  discountAmountBdt: number
   grandTotalBdt: number
   paidBdt: number
   balanceBdt: number
@@ -77,7 +79,10 @@ export type Invoice = {
   status: InvoiceStatus
   voidReason: string | null
   taxPercent: number
+  // Exactly one applies, chosen by discountType — the other stays at its default.
+  discountType: DiscountType
   discountPercent: number
+  discountFlatBdt: string
   notes: string | null
   issuedAt: string
   dueAt: string
@@ -102,7 +107,9 @@ export type CreateInvoiceInput = {
   dueAt: string
   lineItems: InvoiceLineItemInput[]
   taxPercent?: number
+  discountType?: DiscountType
   discountPercent?: number
+  discountFlatBdt?: number
   notes?: string
   status?: "DRAFT" | "SENT"
 }
@@ -111,7 +118,9 @@ export type UpdateInvoiceInput = {
   dueAt?: string
   lineItems?: InvoiceLineItemInput[]
   taxPercent?: number
+  discountType?: DiscountType
   discountPercent?: number
+  discountFlatBdt?: number
   notes?: string
 }
 
