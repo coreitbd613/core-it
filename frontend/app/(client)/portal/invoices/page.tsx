@@ -3,15 +3,13 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { AlertTriangleIcon, ReceiptIcon, WalletIcon } from "lucide-react"
-import type { ColumnDef } from "@tanstack/react-table"
 
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
-import { DataTable } from "@/components/shared/data-table/data-table"
-import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
-import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import {
   Select,
   SelectContent,
@@ -24,12 +22,10 @@ import { formatBDT } from "@/lib/format"
 import {
   invoiceStatusLabels,
   invoiceStatusVariant,
-  type Invoice,
   type InvoiceStatus,
 } from "@/lib/invoices"
 
 export default function InvoicesPage() {
-  const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
   const { data: orgInvoices = [] } = useMyInvoices()
   const invoices = useMemo(
@@ -52,55 +48,6 @@ export default function InvoicesPage() {
     ]
   }, [orgInvoices])
 
-  const columns = useMemo<ColumnDef<Invoice>[]>(
-    () => [
-      {
-        accessorKey: "number",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Invoice" />,
-        cell: ({ row }) => (
-          <Link href={`/portal/invoices/${row.original.id}`} className="font-medium text-foreground hover:underline">
-            {row.original.number}
-          </Link>
-        ),
-      },
-      {
-        id: "total",
-        accessorFn: (row) => row.computed.grandTotalBdt,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
-        cell: ({ row }) => (
-          <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(row.original.computed.grandTotalBdt)}
-          </span>
-        ),
-      },
-      {
-        id: "balance",
-        accessorFn: (row) => row.computed.balanceBdt,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Balance" />,
-        cell: ({ row }) => (
-          <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatBDT(row.original.computed.balanceBdt)}
-          </span>
-        ),
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => {
-          const status = row.original.computed.status
-          return <Badge variant={invoiceStatusVariant[status]}>{invoiceStatusLabels[status]}</Badge>
-        },
-      },
-      {
-        id: "dueAt",
-        accessorFn: (row) => row.dueAt,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Due" />,
-        cell: ({ row }) => new Date(row.original.dueAt).toLocaleDateString(),
-      },
-    ],
-    []
-  )
-
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -110,42 +57,68 @@ export default function InvoicesPage() {
 
       <DashboardStatsGrid items={stats} />
 
-      <DataTableToolbar
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search invoices..."
-        showReset={statusFilter !== "ALL"}
-        onReset={() => {
-          setStatusFilter("ALL")
-        }}
-        filters={
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All statuses</SelectItem>
-              {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {invoiceStatusLabels[key]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        }
-      />
+      <div className="flex justify-end">
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All statuses</SelectItem>
+            {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((key) => (
+              <SelectItem key={key} value={key}>
+                {invoiceStatusLabels[key]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <DataTable
-        columns={columns}
-        data={invoices}
-        getRowId={(row) => row.id}
-        emptyMessage="No invoices yet."
-        globalFilter={search}
-        enableRowSelection={false}
-      />
+      {invoices.length === 0 ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ReceiptIcon />
+            </EmptyMedia>
+            <EmptyTitle>No invoices yet</EmptyTitle>
+            <EmptyDescription>Invoices from Core IT will show up here.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {invoices.map((invoice) => (
+            <Link key={invoice.id} href={`/portal/invoices/${invoice.id}`}>
+              <Card className="transition-colors hover:bg-muted/40">
+                <CardContent className="flex items-center justify-between gap-4 py-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium text-foreground">{invoice.number}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Due {new Date(invoice.dueAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-sm font-medium tabular-nums text-foreground">
+                        {formatBDT(invoice.computed.grandTotalBdt)}
+                      </span>
+                      {invoice.computed.balanceBdt > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatBDT(invoice.computed.balanceBdt)} due
+                        </span>
+                      )}
+                    </div>
+                    <Badge variant={invoiceStatusVariant[invoice.computed.status]}>
+                      {invoiceStatusLabels[invoice.computed.status]}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -28,6 +28,11 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const watermark = watermarkLabels[status]
   const qrCodeUrl = useQrCodeDataUrl(`${SITE_URL}/invoices/view/${invoice.id}`)
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
+  const attnName = invoice.organization
+    ? invoice.organization.ownerName
+    : invoice.customerCompanyName
+      ? invoice.customerName
+      : null
 
   return (
     <div
@@ -83,9 +88,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <p className="mt-1 font-medium text-foreground">
             {invoice.organization?.name ?? invoice.customerCompanyName ?? invoice.customerName}
           </p>
-          {!invoice.organization && invoice.customerCompanyName && invoice.customerName && (
-            <p className="text-sm text-foreground">Attn: {invoice.customerName}</p>
-          )}
+          {attnName && <p className="text-sm text-foreground">Attn: {attnName}</p>}
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">

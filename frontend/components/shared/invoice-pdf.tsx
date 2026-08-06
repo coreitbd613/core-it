@@ -127,6 +127,11 @@ function InvoiceDocument({
   const balance = invoice.computed.balanceBdt
   const status = invoice.computed.status
   const canPay = balance > 0 && status !== "CANCELLED" && status !== "DRAFT"
+  const attnName = invoice.organization
+    ? invoice.organization.ownerName
+    : invoice.customerCompanyName
+      ? invoice.customerName
+      : null
 
   return (
     <Document>
@@ -150,9 +155,7 @@ function InvoiceDocument({
             <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>
               {invoice.organization?.name ?? invoice.customerCompanyName ?? invoice.customerName}
             </Text>
-            {!invoice.organization && invoice.customerCompanyName && invoice.customerName && (
-              <Text style={styles.metaLabel}>Attn: {invoice.customerName}</Text>
-            )}
+            {attnName && <Text style={styles.metaLabel}>Attn: {attnName}</Text>}
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Invoice date:</Text>
               <Text>{formatDate(invoice.issuedAt)}</Text>

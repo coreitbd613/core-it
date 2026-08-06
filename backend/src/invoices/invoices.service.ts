@@ -17,8 +17,21 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { VoidInvoiceDto } from './dto/void-invoice.dto';
 
+// The org's OWNER membership (earliest one, in case of a data anomaly with
+// more than one) — surfaced on invoices as the bill-to contact name.
+const organizationSelect = {
+  id: true,
+  name: true,
+  memberships: {
+    where: { role: 'OWNER' as const },
+    orderBy: { createdAt: 'asc' as const },
+    take: 1,
+    select: { user: { select: { name: true, email: true } } },
+  },
+};
+
 const detailInclude = {
-  organization: { select: { id: true, name: true } },
+  organization: { select: organizationSelect },
   lineItems: true,
   payments: {
     include: {
@@ -29,7 +42,7 @@ const detailInclude = {
 };
 
 const publicInclude = {
-  organization: { select: { id: true, name: true } },
+  organization: { select: organizationSelect },
   lineItems: true,
   // recordedByUser is deliberately excluded here — staff identity isn't
   // client-facing (mirrors the frontend's public Transactions table).
@@ -40,7 +53,11 @@ const publicInclude = {
 export class InvoicesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Attaches derived totals/status without ever overwriting the stored `status`. */
+  /**
+   * Attaches derived totals/status (without ever overwriting the stored
+   * `status`) and flattens organization.memberships[0].user into a plain
+   * ownerName, so the frontend gets `organization: { id, name, ownerName }`.
+   */
   private attachComputed<
     T extends {
       lineItems: { unitPriceBdt: unknown }[];
@@ -51,9 +68,22 @@ export class InvoicesService {
       discountFlatBdt: unknown;
       status: InvoiceStatus;
       dueAt: Date;
+      organization: {
+        id: string;
+        name: string;
+        memberships: { user: { name: string | null; email: string } }[];
+      } | null;
     },
   >(invoice: T) {
-    return { ...invoice, computed: computeInvoiceTotals(invoice as never) };
+    const { organization, ...rest } = invoice;
+    const owner = organization?.memberships[0]?.user;
+    return {
+      ...rest,
+      organization: organization
+        ? { id: organization.id, name: organization.name, ownerName: owner?.name ?? owner?.email ?? null }
+        : null,
+      computed: computeInvoiceTotals(invoice as never),
+    };
   }
 
   private async getRawOrThrow(id: string) {
