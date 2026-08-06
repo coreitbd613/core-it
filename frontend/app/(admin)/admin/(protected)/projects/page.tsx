@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertCircleIcon, FolderKanbanIcon, Loader2Icon } from "lucide-react"
+import { AlertCircleIcon, FolderKanbanIcon, Loader2Icon, PlusIcon } from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import DashboardStatsGrid, {
@@ -12,6 +12,7 @@ import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   mockProjects,
   mockRevisionRequests,
@@ -79,9 +80,17 @@ export default function AdminProjectsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold">Projects</h1>
-        <p className="text-muted-foreground">Delivery status across every company.</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Projects</h1>
+          <p className="text-muted-foreground">Delivery status across every company.</p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/projects/new">
+            <PlusIcon />
+            New project
+          </Link>
+        </Button>
       </div>
 
       <DashboardStatsGrid items={stats} />

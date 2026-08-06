@@ -7,11 +7,14 @@ import { startOfWeek } from "date-fns"
 import {
   AlertTriangleIcon,
   Building2Icon,
+  CalendarOffIcon,
   FileTextIcon,
+  HourglassIcon,
   ShieldCheck,
   TargetIcon,
   UserPlus,
   Users,
+  UsersRoundIcon,
   WalletIcon,
 } from "lucide-react"
 
@@ -20,6 +23,7 @@ import { useAdminInvoices } from "@/hooks/use-invoices"
 import { useAdminOrganizations } from "@/hooks/use-organization"
 import type { AdminCustomer } from "@/lib/customers"
 import { formatBDT } from "@/lib/format"
+import { activeEmployees, mockEmployees } from "@/lib/mock/employees"
 import {
   isLeadClosed,
   isLeadOverdue,
@@ -29,6 +33,8 @@ import {
   pipelineValueBdt,
   type Lead,
 } from "@/lib/mock/leads"
+import { isOnLeaveToday, mockLeaveRequests, pendingLeaveCount } from "@/lib/mock/leave"
+import { mockPayslips, totalPayrollForMonth } from "@/lib/mock/payroll"
 import { mockProposals } from "@/lib/mock/proposals"
 import DashboardStatsGrid, {
   type DashboardStatItem,
@@ -134,6 +140,24 @@ export default function AdminDashboardPage() {
     ]
   }, [])
 
+  const employeeStats = useMemo<DashboardStatItem[]>(() => {
+    const headcount = activeEmployees(mockEmployees).length
+    const onLeaveToday = mockEmployees.filter((e) => isOnLeaveToday(e.id, mockLeaveRequests)).length
+    const pendingLeave = pendingLeaveCount(mockLeaveRequests)
+    const currentMonth = new Date().toISOString().slice(0, 7)
+    return [
+      { label: "Headcount", value: headcount, icon: UsersRoundIcon, tone: "primary" },
+      { label: "On Leave Today", value: onLeaveToday, icon: CalendarOffIcon, tone: "chart2" },
+      { label: "Pending Leave Requests", value: pendingLeave, icon: HourglassIcon, tone: "chart3" },
+      {
+        label: "Payroll This Month",
+        value: formatBDT(totalPayrollForMonth(mockPayslips, currentMonth)),
+        icon: WalletIcon,
+        tone: "chart4",
+      },
+    ]
+  }, [])
+
   const followUpsDue = mockLeads
     .filter((lead) => !isLeadClosed(lead) && lead.nextFollowUpAt)
     .sort(
@@ -160,6 +184,11 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Leads</h2>
         <DashboardStatsGrid items={leadStats} />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Employees</h2>
+        <DashboardStatsGrid items={employeeStats} />
       </div>
 
       <div className="flex flex-col gap-3">

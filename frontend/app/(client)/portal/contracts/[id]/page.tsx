@@ -18,7 +18,7 @@ import {
   contractStatusVariant,
   mockContracts,
 } from "@/lib/mock/contracts"
-import { mockProjects } from "@/lib/mock/projects"
+import { mockProjects, nextProjectCode } from "@/lib/mock/projects"
 
 export default function ContractDetailPage() {
   const params = useParams<{ id: string }>()
@@ -62,11 +62,45 @@ export default function ContractDetailPage() {
       organizationId: contract!.organizationId,
       organizationName: contract!.organizationName,
       name: contract!.title,
+      description: null,
       proposalId: null,
       contractId: contract!.id,
       status: "PLANNING",
       startedAt: signedAt,
+      targetEndAt: null,
+      completedAt: null,
+      includedRevisions: 2,
+      supportMonths: 3,
       updatedAt: signedAt,
+      projectCode: nextProjectCode(),
+      clientContact: null,
+      projectType: null,
+      department: null,
+      projectManagerName: null,
+      billingType: "FIXED_PRICE",
+      paymentTerms: null,
+      paymentSchedule: null,
+      taxPercent: 0,
+      discountPercent: 0,
+      estimatedEffortHours: null,
+      goLiveAt: null,
+      revisionWindowDays: null,
+      maxDaysPerRevision: null,
+      extraRevisionPriceBdt: null,
+      revisionNotes: null,
+      supportSla: "STANDARD",
+      supportWorkingHours: null,
+      includedSupportTickets: null,
+      supportContactName: null,
+      sendRenewalReminder: false,
+      domain: null,
+      hostingProvider: null,
+      serverDetails: null,
+      repositoryUrl: null,
+      stagingUrl: null,
+      productionUrl: null,
+      techStack: null,
+      deploymentMethod: null,
     })
 
     toast.success("Contract signed — your project has started.")

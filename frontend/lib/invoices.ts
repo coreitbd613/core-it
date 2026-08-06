@@ -75,6 +75,8 @@ export type Invoice = {
   organization: { id: string; name: string } | null
   // Set instead of organization for one-off billing to a customer with no Organization record.
   customerName: string | null
+  // Optional company name shown alongside customerName (adhoc mode only).
+  customerCompanyName: string | null
   proposalId: string | null
   status: InvoiceStatus
   voidReason: string | null
@@ -103,6 +105,7 @@ export type CreateInvoiceInput = {
   // Provide exactly one of the two.
   organizationId?: string
   customerName?: string
+  customerCompanyName?: string
   proposalId?: string
   dueAt: string
   lineItems: InvoiceLineItemInput[]

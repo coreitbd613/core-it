@@ -108,7 +108,7 @@ export function getAdminNotifications(invoices: Invoice[] = []): NotificationIte
     if (inv.computed.status === "OVERDUE") {
       items.push({
         id: `invoice-overdue-admin-${inv.id}`,
-        title: `Invoice overdue — ${inv.organization?.name ?? inv.customerName}`,
+        title: `Invoice overdue — ${inv.organization?.name ?? inv.customerCompanyName ?? inv.customerName}`,
         description: `${inv.number} was due ${new Date(inv.dueAt).toLocaleDateString()}`,
         href: `/admin/invoices/${inv.id}`,
         createdAt: inv.dueAt,

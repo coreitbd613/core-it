@@ -26,6 +26,12 @@ export class CreateInvoiceDto {
   @MaxLength(200)
   customerName?: string;
 
+  // Optional company name to display alongside customerName (adhoc mode only).
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  customerCompanyName?: string;
+
   @IsOptional()
   @IsString()
   proposalId?: string;

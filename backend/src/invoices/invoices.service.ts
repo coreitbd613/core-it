@@ -66,6 +66,7 @@ export class InvoicesService {
 
   async createInvoice(dto: CreateInvoiceDto) {
     const customerName = dto.customerName?.trim() || undefined;
+    const customerCompanyName = dto.customerCompanyName?.trim() || undefined;
     if (!dto.organizationId && !customerName) {
       throw new BadRequestException(
         'Provide either an organizationId or a customerName.',
@@ -93,6 +94,7 @@ export class InvoicesService {
           number,
           organizationId: dto.organizationId,
           customerName,
+          customerCompanyName: dto.organizationId ? undefined : customerCompanyName,
           proposalId: dto.proposalId,
           status: dto.status ?? 'DRAFT',
           taxPercent: dto.taxPercent ?? 0,

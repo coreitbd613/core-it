@@ -81,8 +81,11 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         <div>
           <p className="text-xs font-semibold tracking-wider text-foreground uppercase">Bill to</p>
           <p className="mt-1 font-medium text-foreground">
-            {invoice.organization?.name ?? invoice.customerName}
+            {invoice.organization?.name ?? invoice.customerCompanyName ?? invoice.customerName}
           </p>
+          {!invoice.organization && invoice.customerCompanyName && invoice.customerName && (
+            <p className="text-sm text-foreground">Attn: {invoice.customerName}</p>
+          )}
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">

@@ -19,3 +19,10 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 export function formatDate(date: string | Date): string {
   return dateFormatter.format(typeof date === "string" ? new Date(date) : date).replace(/\//g, "-")
 }
+
+/** "2h 15m" from a minute count — drops the minutes segment when it's a whole number of hours. */
+export function formatDuration(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`
+}

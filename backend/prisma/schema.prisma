@@ -219,7 +219,10 @@ model Invoice {
   // Set instead of organizationId for one-off billing to a customer who
   // isn't a registered Organization. Exactly one of the two must be set —
   // enforced in the service, not the DB.
-  customerName String?
+  customerName        String?
+  // Optional company name for a one-off customer, shown alongside
+  // customerName as the contact (e.g. company "Acme Corp", contact "Jane Doe").
+  customerCompanyName String?
 
   proposalId String? // no real Proposal backend exists yet — freeform, not a FK
 

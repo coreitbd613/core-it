@@ -79,7 +79,7 @@ export default function AdminInvoiceDetailPage() {
 
   const balance = invoice.computed.balanceBdt
   const status = invoice.computed.status
-  const billToName = invoice.organization?.name ?? invoice.customerName
+  const billToName = invoice.organization?.name ?? invoice.customerCompanyName ?? invoice.customerName
   const relatedProposal = invoice.proposalId
     ? mockProposals.find((p) => p.id === invoice.proposalId)
     : null

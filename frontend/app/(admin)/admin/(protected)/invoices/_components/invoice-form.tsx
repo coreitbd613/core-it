@@ -90,6 +90,7 @@ export function InvoiceForm() {
     sourceProposal?.organizationId ?? ""
   )
   const [customerName, setCustomerName] = React.useState("")
+  const [customerCompanyName, setCustomerCompanyName] = React.useState("")
   const [dueAt, setDueAt] = React.useState(defaultDueDate())
   const [lineItems, setLineItems] = React.useState<FormLineItem[]>(
     sourceProposal
@@ -147,6 +148,7 @@ export function InvoiceForm() {
       const invoice = await createInvoice.mutateAsync({
         organizationId: customerMode === "organization" ? effectiveOrganizationId : undefined,
         customerName: customerMode === "adhoc" ? trimmedCustomerName : undefined,
+        customerCompanyName: customerMode === "adhoc" ? customerCompanyName.trim() || undefined : undefined,
         proposalId: sourceProposal?.id,
         dueAt,
         lineItems: lineItems.map(({ description, quantity, unitPriceBdt }) => ({
@@ -230,15 +232,26 @@ export function InvoiceForm() {
                       </Select>
                     </Field>
                   ) : (
-                    <Field>
-                      <FieldLabel htmlFor="invoice-customer-name">Customer name</FieldLabel>
-                      <Input
-                        id="invoice-customer-name"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="e.g. Jane Doe"
-                      />
-                    </Field>
+                    <>
+                      <Field>
+                        <FieldLabel htmlFor="invoice-customer-name">Customer name</FieldLabel>
+                        <Input
+                          id="invoice-customer-name"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="e.g. Jane Doe"
+                        />
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="invoice-customer-company">Company name (optional)</FieldLabel>
+                        <Input
+                          id="invoice-customer-company"
+                          value={customerCompanyName}
+                          onChange={(e) => setCustomerCompanyName(e.target.value)}
+                          placeholder="e.g. Acme Corp"
+                        />
+                      </Field>
+                    </>
                   )}
                   <Field>
                     <FieldLabel htmlFor="invoice-due">Due date</FieldLabel>

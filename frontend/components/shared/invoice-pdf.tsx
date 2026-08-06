@@ -147,8 +147,11 @@ function InvoiceDocument({
           <View style={styles.metaColumn}>
             <Text style={styles.sectionLabel}>Bill to</Text>
             <Text style={{ fontWeight: 700, color: "#1a1a1a" }}>
-              {invoice.organization?.name ?? invoice.customerName}
+              {invoice.organization?.name ?? invoice.customerCompanyName ?? invoice.customerName}
             </Text>
+            {!invoice.organization && invoice.customerCompanyName && invoice.customerName && (
+              <Text style={styles.metaLabel}>Attn: {invoice.customerName}</Text>
+            )}
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Invoice date:</Text>
               <Text>{formatDate(invoice.issuedAt)}</Text>
