@@ -233,6 +233,8 @@ export class InvoicesService {
         amountBdt: dto.amountBdt,
         method: dto.method,
         note: dto.note,
+        transactionId: dto.transactionId?.trim() || undefined,
+        paidAt: dto.paidAt ? new Date(dto.paidAt) : undefined,
         recordedByUserId: adminUserId,
       },
     });

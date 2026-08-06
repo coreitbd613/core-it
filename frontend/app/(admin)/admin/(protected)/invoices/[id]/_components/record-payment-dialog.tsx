@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { DatePickerField } from "@/components/shared/date-picker-field"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -28,27 +29,43 @@ import { paymentMethodLabels, type PaymentMethod } from "@/lib/invoices"
 
 const methods: PaymentMethod[] = ["BKASH", "NAGAD", "ROCKET", "BANK_TRANSFER", "CASH", "OTHER"]
 
+function today(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export function RecordPaymentDialog({
   maxAmount,
   onRecord,
 }: {
   maxAmount: number
-  onRecord: (amount: number, method: PaymentMethod, note: string) => void
+  onRecord: (
+    amount: number,
+    method: PaymentMethod,
+    note: string,
+    paidAt: string,
+    transactionId: string
+  ) => void
 }) {
   const [open, setOpen] = React.useState(false)
   const [amount, setAmount] = React.useState(maxAmount)
   const [method, setMethod] = React.useState<PaymentMethod>("BKASH")
   const [note, setNote] = React.useState("")
+  const [paidAt, setPaidAt] = React.useState(today)
+  const [transactionId, setTransactionId] = React.useState("")
 
   React.useEffect(() => {
-    if (open) setAmount(maxAmount)
+    if (open) {
+      setAmount(maxAmount)
+      setPaidAt(today())
+    }
   }, [open, maxAmount])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (amount <= 0) return
-    onRecord(amount, method, note.trim())
+    onRecord(amount, method, note.trim(), paidAt, transactionId.trim())
     setNote("")
+    setTransactionId("")
     setOpen(false)
   }
 
@@ -78,20 +95,35 @@ export function RecordPaymentDialog({
                 onChange={(e) => setAmount(Number(e.target.value) || 0)}
               />
             </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="payment-method">Method</FieldLabel>
+                <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod)}>
+                  <SelectTrigger id="payment-method" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {methods.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {paymentMethodLabels[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="payment-date">Pay date</FieldLabel>
+                <DatePickerField id="payment-date" value={paidAt} onChange={setPaidAt} />
+              </Field>
+            </div>
             <Field>
-              <FieldLabel htmlFor="payment-method">Method</FieldLabel>
-              <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod)}>
-                <SelectTrigger id="payment-method" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {methods.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {paymentMethodLabels[m]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FieldLabel htmlFor="payment-transaction-id">Transaction ID (optional)</FieldLabel>
+              <Input
+                id="payment-transaction-id"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                placeholder="e.g. TXN123456"
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="payment-note">Note</FieldLabel>
@@ -99,7 +131,7 @@ export function RecordPaymentDialog({
                 id="payment-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional reference, e.g. transaction ID"
+                placeholder="Optional internal note"
                 rows={2}
               />
             </Field>

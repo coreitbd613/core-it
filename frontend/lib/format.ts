@@ -11,13 +11,13 @@ export function formatBDT(amount: number): string {
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
-  month: "2-digit",
+  month: "short",
   year: "numeric",
 })
 
-/** DD-MM-YYYY — dash-separated, not the locale-default "/". */
+/** "12 Jun 2026" — unambiguous, no MM/DD vs DD/MM guessing. */
 export function formatDate(date: string | Date): string {
-  return dateFormatter.format(typeof date === "string" ? new Date(date) : date).replace(/\//g, "-")
+  return dateFormatter.format(typeof date === "string" ? new Date(date) : date)
 }
 
 /** "2h 15m" from a minute count — drops the minutes segment when it's a whole number of hours. */

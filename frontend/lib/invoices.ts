@@ -53,6 +53,7 @@ export type Payment = {
   amountBdt: string
   method: PaymentMethod
   note: string | null
+  transactionId: string | null
   recordedByUserId: string | null
   recordedByUser?: { id: string; name: string | null; email: string } | null
   paidAt: string
@@ -131,6 +132,8 @@ export type RecordPaymentInput = {
   amountBdt: number
   method: PaymentMethod
   note?: string
+  paidAt?: string
+  transactionId?: string
 }
 
 async function parseErrorMessage(res: Response, fallback: string) {

@@ -195,6 +195,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
                   <th className="px-4 py-2.5 text-left font-semibold">Payment</th>
                   <th className="px-4 py-2.5 text-left font-semibold">Method</th>
                   <th className="px-4 py-2.5 text-left font-semibold">Date</th>
+                  <th className="px-4 py-2.5 text-left font-semibold">Reference</th>
                   <th className="px-4 py-2.5 text-right font-semibold">Amount</th>
                 </tr>
               </thead>
@@ -209,6 +210,9 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
                     </td>
                     <td className="px-4 py-3 text-foreground tabular-nums">
                       {formatDate(payment.paidAt)}
+                    </td>
+                    <td className="px-4 py-3 text-foreground">
+                      {payment.transactionId}
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
                       {formatBDT(Number(payment.amountBdt))}

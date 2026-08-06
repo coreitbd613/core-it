@@ -229,7 +229,7 @@ export default function TeamSettingsPage() {
           selectedCount > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
+                <Button variant="destructive">
                   <Trash2Icon />
                   Remove ({selectedCount})
                 </Button>

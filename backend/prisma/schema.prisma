@@ -269,9 +269,10 @@ model Payment {
   invoiceId String
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  amountBdt Decimal
-  method    PaymentMethod
-  note      String?
+  amountBdt     Decimal
+  method        PaymentMethod
+  note          String?
+  transactionId String?
 
   recordedByUserId String?
   recordedByUser   User?   @relation(fields: [recordedByUserId], references: [id], onDelete: SetNull)

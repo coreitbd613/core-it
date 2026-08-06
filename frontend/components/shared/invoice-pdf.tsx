@@ -106,6 +106,7 @@ const styles = StyleSheet.create({
   txCellNumber: { width: 50, color: "#1a1a1a" },
   txCellMethod: { flex: 1 },
   txCellDate: { flex: 1, color: "#1a1a1a" },
+  txCellReference: { flex: 1, color: "#1a1a1a" },
   txCellAmount: { flex: 1, textAlign: "right", fontWeight: 700 },
 })
 
@@ -240,6 +241,7 @@ function InvoiceDocument({
                 <Text style={[styles.tableHeaderText, styles.txCellNumber]}>Payment</Text>
                 <Text style={[styles.tableHeaderText, styles.txCellMethod]}>Method</Text>
                 <Text style={[styles.tableHeaderText, styles.txCellDate]}>Date</Text>
+                <Text style={[styles.tableHeaderText, styles.txCellReference]}>Reference</Text>
                 <Text style={[styles.tableHeaderText, styles.txCellAmount]}>Amount</Text>
               </View>
               {invoice.payments.map((payment, index) => (
@@ -250,6 +252,7 @@ function InvoiceDocument({
                   <Text style={styles.txCellNumber}>#{index + 1}</Text>
                   <Text style={styles.txCellMethod}>{paymentMethodLabels[payment.method]}</Text>
                   <Text style={styles.txCellDate}>{formatDate(payment.paidAt)}</Text>
+                  <Text style={styles.txCellReference}>{payment.transactionId}</Text>
                   <Text style={styles.txCellAmount}>{formatBDT(Number(payment.amountBdt))}</Text>
                 </View>
               ))}

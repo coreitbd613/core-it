@@ -104,9 +104,21 @@ export default function AdminInvoiceDetailPage() {
     }
   }
 
-  async function handleRecordPayment(amount: number, method: PaymentMethod, note: string) {
+  async function handleRecordPayment(
+    amount: number,
+    method: PaymentMethod,
+    note: string,
+    paidAt: string,
+    transactionId: string
+  ) {
     try {
-      await recordPayment.mutateAsync({ amountBdt: amount, method, note })
+      await recordPayment.mutateAsync({
+        amountBdt: amount,
+        method,
+        note,
+        paidAt: paidAt || undefined,
+        transactionId: transactionId || undefined,
+      })
       toast.success("Payment recorded.")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't record this payment.")

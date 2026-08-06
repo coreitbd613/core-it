@@ -7,19 +7,12 @@ import { ArrowLeftIcon, PrinterIcon, XIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Spinner } from "@/components/ui/spinner"
 import { InvoiceDocument } from "@/components/shared/invoice-document"
 import { InvoiceDownloadButton } from "@/components/shared/invoice-pdf"
 import { useMyInvoice } from "@/hooks/use-invoices"
-import { formatBDT } from "@/lib/format"
-import { invoiceStatusLabels, invoiceStatusVariant, paymentMethodLabels } from "@/lib/invoices"
+import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/invoices"
 import { mockProposals } from "@/lib/mock/proposals"
 
 export default function InvoiceDetailPage() {
@@ -99,36 +92,6 @@ export default function InvoiceDetailPage() {
           <span className="font-medium text-foreground">Void reason:</span> {invoice.voidReason}
         </p>
       )}
-
-      <Card className="max-w-3xl print:hidden">
-        <CardHeader>
-          <CardTitle>Payment history</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invoice.payments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
-          ) : (
-            <div className="flex flex-col divide-y rounded-lg border">
-              {invoice.payments.map((payment) => (
-                <div key={payment.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {paymentMethodLabels[payment.method]}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(payment.paidAt).toLocaleDateString()}
-                      {payment.note ? ` · ${payment.note}` : ""}
-                    </p>
-                  </div>
-                  <span className="text-sm font-medium tabular-nums text-foreground">
-                    {formatBDT(Number(payment.amountBdt))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
