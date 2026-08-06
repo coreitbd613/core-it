@@ -33,6 +33,7 @@ model User {
   avatarUrl       String?
   contactNumber   String?
   whatsappNumber  String?
+  jobTitle        String?
   role            Role           @default(USER)
   emailVerified   Boolean        @default(false)
   emailVerifiedAt DateTime?

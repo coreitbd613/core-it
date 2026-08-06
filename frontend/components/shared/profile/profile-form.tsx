@@ -74,13 +74,12 @@ function LoadedProfileForm({
   const uploadAvatar = useUploadAvatar(scope)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(user.name ?? "")
-  const [jobTitle, setJobTitle] = useState("")
-  const [savedJobTitle, setSavedJobTitle] = useState("")
+  const [jobTitle, setJobTitle] = useState(user.jobTitle ?? "")
   const [contactNumber, setContactNumber] = useState(user.contactNumber ?? "")
 
   const isDirty =
     name !== (user.name ?? "") ||
-    jobTitle !== savedJobTitle ||
+    jobTitle !== (user.jobTitle ?? "") ||
     contactNumber !== (user.contactNumber ?? "")
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -89,12 +88,10 @@ function LoadedProfileForm({
       {
         name: name.trim() || undefined,
         contactNumber: contactNumber.trim() || undefined,
+        jobTitle: jobTitle.trim() || undefined,
       },
       {
-        onSuccess: () => {
-          setSavedJobTitle(jobTitle)
-          toast.success("Profile updated.")
-        },
+        onSuccess: () => toast.success("Profile updated."),
         onError: (error) => toast.error(error.message),
       },
     )

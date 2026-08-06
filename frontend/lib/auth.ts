@@ -9,6 +9,7 @@ export type CurrentUser = {
   avatarUrl: string | null
   contactNumber: string | null
   whatsappNumber: string | null
+  jobTitle: string | null
   role: "USER" | "ADMIN"
 }
 
@@ -16,6 +17,7 @@ export type UpdateProfileInput = {
   name?: string
   contactNumber?: string
   whatsappNumber?: string
+  jobTitle?: string
 }
 
 export type ChangePasswordInput = {

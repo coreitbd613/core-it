@@ -17,4 +17,9 @@ export class UpdateProfileDto {
   @IsString()
   @Matches(PHONE_REGEX, { message: 'Enter a valid phone number' })
   whatsappNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  jobTitle?: string;
 }

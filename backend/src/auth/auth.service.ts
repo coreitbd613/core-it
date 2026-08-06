@@ -31,6 +31,7 @@ export type SanitizedUser = {
   avatarUrl: string | null;
   contactNumber: string | null;
   whatsappNumber: string | null;
+  jobTitle: string | null;
   role: Role;
 };
 
@@ -60,6 +61,7 @@ function sanitize(user: {
   avatarUrl: string | null;
   contactNumber: string | null;
   whatsappNumber: string | null;
+  jobTitle: string | null;
   role: Role;
 }): SanitizedUser {
   return {
@@ -69,6 +71,7 @@ function sanitize(user: {
     avatarUrl: user.avatarUrl,
     contactNumber: user.contactNumber,
     whatsappNumber: user.whatsappNumber,
+    jobTitle: user.jobTitle,
     role: user.role,
   };
 }

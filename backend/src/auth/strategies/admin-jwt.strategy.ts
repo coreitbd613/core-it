@@ -44,6 +44,7 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
       avatarUrl: user.avatarUrl,
       contactNumber: user.contactNumber,
       whatsappNumber: user.whatsappNumber,
+      jobTitle: user.jobTitle,
       role: user.role,
     };
   }

@@ -50,6 +50,7 @@ export class UsersService {
       name?: string;
       contactNumber?: string;
       whatsappNumber?: string;
+      jobTitle?: string;
       avatarUrl?: string;
     },
   ) {
