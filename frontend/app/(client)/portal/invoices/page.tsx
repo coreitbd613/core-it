@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AlertTriangleIcon, DownloadIcon, ReceiptIcon, WalletIcon } from "lucide-react"
@@ -15,34 +15,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { downloadInvoicePdf } from "@/components/shared/invoice-pdf"
 import { useMyInvoices } from "@/hooks/use-invoices"
 import { formatBDT, formatDate } from "@/lib/format"
-import {
-  invoiceStatusLabels,
-  invoiceStatusVariant,
-  type Invoice,
-  type InvoiceStatus,
-} from "@/lib/invoices"
+import { invoiceStatusLabels, invoiceStatusVariant, type Invoice } from "@/lib/invoices"
 
 export default function InvoicesPage() {
   const router = useRouter()
-  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL")
   const { data: orgInvoices = [] } = useMyInvoices()
-  const invoices = useMemo(
-    () =>
-      statusFilter === "ALL"
-        ? orgInvoices
-        : orgInvoices.filter((inv) => inv.computed.status === statusFilter),
-    [orgInvoices, statusFilter]
-  )
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const activeInvoices = orgInvoices.filter((inv) => inv.computed.status !== "CANCELLED")
@@ -147,31 +127,9 @@ export default function InvoicesPage() {
 
       <DashboardStatsGrid items={stats} />
 
-      <div className="flex justify-end">
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value as InvoiceStatus | "ALL")}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All statuses</SelectItem>
-            {(Object.keys(invoiceStatusLabels) as InvoiceStatus[])
-              // DRAFT invoices never reach the client — omit the dead filter option.
-              .filter((key) => key !== "DRAFT")
-              .map((key) => (
-                <SelectItem key={key} value={key}>
-                  {invoiceStatusLabels[key]}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <DataTable
         columns={columns}
-        data={invoices}
+        data={orgInvoices}
         getRowId={(row) => row.id}
         hidePagination
         onRowClick={(row) => router.push(`/portal/invoices/${row.id}`)}

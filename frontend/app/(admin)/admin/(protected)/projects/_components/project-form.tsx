@@ -314,7 +314,7 @@ export function ProjectForm() {
       <WizardStepper stepIndex={stepIndex} onStepClick={setStepIndex} />
 
       {stepIndex === 0 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>Basic Info</CardTitle>
           </CardHeader>
@@ -322,7 +322,9 @@ export function ProjectForm() {
             <FieldGroup>
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel htmlFor="project-org">Company</FieldLabel>
+                  <FieldLabel htmlFor="project-org">
+                    Company <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Select value={effectiveOrganizationId} onValueChange={setOrganizationId}>
                     <SelectTrigger id="project-org" className="w-full">
                       <SelectValue placeholder="Select a company" />
@@ -337,19 +339,21 @@ export function ProjectForm() {
                   </Select>
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="project-code">Project code</FieldLabel>
-                  <Input id="project-code" value={projectCode} disabled />
-                </Field>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field>
-                  <FieldLabel htmlFor="project-name">Project name</FieldLabel>
+                  <FieldLabel htmlFor="project-name">
+                    Project name <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Input
                     id="project-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Website redesign"
                   />
+                </Field>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="project-code">Project code</FieldLabel>
+                  <Input id="project-code" value={projectCode} disabled />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="project-contact">Client contact</FieldLabel>
@@ -361,7 +365,7 @@ export function ProjectForm() {
                   />
                 </Field>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-3">
                 <Field>
                   <FieldLabel htmlFor="project-type">Project type</FieldLabel>
                   <Select value={projectType} onValueChange={setProjectType}>
@@ -392,22 +396,22 @@ export function ProjectForm() {
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field>
+                  <FieldLabel htmlFor="project-manager">Project manager</FieldLabel>
+                  <Select value={projectManagerName} onValueChange={setProjectManagerName}>
+                    <SelectTrigger id="project-manager" className="w-full">
+                      <SelectValue placeholder="Select manager" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_OWNERS.map((owner) => (
+                        <SelectItem key={owner} value={owner}>
+                          {owner}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
-              <Field>
-                <FieldLabel htmlFor="project-manager">Project manager</FieldLabel>
-                <Select value={projectManagerName} onValueChange={setProjectManagerName}>
-                  <SelectTrigger id="project-manager" className="w-full sm:w-1/2">
-                    <SelectValue placeholder="Select manager" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAD_OWNERS.map((owner) => (
-                      <SelectItem key={owner} value={owner}>
-                        {owner}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
               <Field>
                 <FieldLabel htmlFor="project-description">Description</FieldLabel>
                 <Textarea
@@ -424,7 +428,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 1 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>Commercial</CardTitle>
           </CardHeader>
@@ -541,7 +545,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 2 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>Timeline</CardTitle>
           </CardHeader>
@@ -644,7 +648,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 3 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>Revision Policy</CardTitle>
           </CardHeader>
@@ -719,7 +723,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 4 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Delivery Config</CardTitle>
             <div className="flex gap-2">
@@ -794,7 +798,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 5 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>After-Sales Support</CardTitle>
           </CardHeader>
@@ -884,7 +888,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 6 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Team & Permissions</CardTitle>
             <Button
@@ -975,13 +979,13 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 7 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>Credentials</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             <FieldGroup>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-3">
                 <Field>
                   <FieldLabel htmlFor="project-domain">Domain</FieldLabel>
                   <Input
@@ -1000,8 +1004,6 @@ export function ProjectForm() {
                     placeholder="Hosting provider"
                   />
                 </Field>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="project-server">Server</FieldLabel>
                   <Input
@@ -1011,6 +1013,8 @@ export function ProjectForm() {
                     placeholder="Server details"
                   />
                 </Field>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-3">
                 <Field>
                   <FieldLabel htmlFor="project-repo">Repository</FieldLabel>
                   <Input
@@ -1020,8 +1024,6 @@ export function ProjectForm() {
                     placeholder="https://github.com/..."
                   />
                 </Field>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="project-staging">Staging URL</FieldLabel>
                   <Input
@@ -1150,7 +1152,7 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 8 && (
-        <div className="flex max-w-3xl flex-col gap-6">
+        <div className="flex max-w-5xl flex-col gap-6">
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>Risks</CardTitle>
@@ -1302,56 +1304,58 @@ export function ProjectForm() {
       )}
 
       {stepIndex === 9 && (
-        <Card className="max-w-3xl">
+        <Card className="max-w-5xl">
           <CardHeader>
             <CardTitle>Review & Create</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5 text-sm">
-            <ReviewRow label="Company" value={organization?.name ?? "—"} />
-            <ReviewRow label="Project" value={name || "—"} />
-            <ReviewRow label="Code" value={projectCode} />
-            <ReviewRow
-              label="Type / Department / Manager"
-              value={[projectType, department, projectManagerName].filter(Boolean).join(" · ") || "—"}
-            />
-            <ReviewRow
-              label="Commercial"
-              value={`${billingTypeLabels[billingType]}${paymentTerms ? ` · ${paymentTerms}` : ""}${
-                estimatedEffortHours ? ` · ${estimatedEffortHours}h estimated` : ""
-              }`}
-            />
-            <ReviewRow
-              label="Timeline"
-              value={`Starts ${startedAt || "—"}${targetEndAt ? `, ends ${targetEndAt}` : ""}${
-                milestoneDrafts.length ? ` · ${milestoneDrafts.length} milestones` : ""
-              }`}
-            />
-            <ReviewRow
-              label="Revision policy"
-              value={`${includedRevisions || 0} included${
-                revisionWindowDays ? `, ${revisionWindowDays}-day window` : ""
-              }`}
-            />
-            <ReviewRow
-              label="Delivery config"
-              value={deliveryDrafts.length ? `${deliveryDrafts.length} items` : "None"}
-            />
-            <ReviewRow
-              label="Support"
-              value={`${supportMonths} months · ${supportSlaLabels[supportSla]}`}
-            />
-            <ReviewRow
-              label="Team"
-              value={teamDrafts.length ? `${teamDrafts.length} members` : "None"}
-            />
-            <ReviewRow
-              label="Credentials"
-              value={credentialDrafts.length ? `${credentialDrafts.length} saved` : "None"}
-            />
-            <ReviewRow
-              label="Risks / Dependencies"
-              value={`${riskDrafts.length} risks · ${dependencyDrafts.length} dependencies`}
-            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ReviewRow label="Company" value={organization?.name ?? "—"} />
+              <ReviewRow label="Project" value={name || "—"} />
+              <ReviewRow label="Code" value={projectCode} />
+              <ReviewRow
+                label="Type / Department / Manager"
+                value={[projectType, department, projectManagerName].filter(Boolean).join(" · ") || "—"}
+              />
+              <ReviewRow
+                label="Commercial"
+                value={`${billingTypeLabels[billingType]}${paymentTerms ? ` · ${paymentTerms}` : ""}${
+                  estimatedEffortHours ? ` · ${estimatedEffortHours}h estimated` : ""
+                }`}
+              />
+              <ReviewRow
+                label="Timeline"
+                value={`Starts ${startedAt || "—"}${targetEndAt ? `, ends ${targetEndAt}` : ""}${
+                  milestoneDrafts.length ? ` · ${milestoneDrafts.length} milestones` : ""
+                }`}
+              />
+              <ReviewRow
+                label="Revision policy"
+                value={`${includedRevisions || 0} included${
+                  revisionWindowDays ? `, ${revisionWindowDays}-day window` : ""
+                }`}
+              />
+              <ReviewRow
+                label="Delivery config"
+                value={deliveryDrafts.length ? `${deliveryDrafts.length} items` : "None"}
+              />
+              <ReviewRow
+                label="Support"
+                value={`${supportMonths} months · ${supportSlaLabels[supportSla]}`}
+              />
+              <ReviewRow
+                label="Team"
+                value={teamDrafts.length ? `${teamDrafts.length} members` : "None"}
+              />
+              <ReviewRow
+                label="Credentials"
+                value={credentialDrafts.length ? `${credentialDrafts.length} saved` : "None"}
+              />
+              <ReviewRow
+                label="Risks / Dependencies"
+                value={`${riskDrafts.length} risks · ${dependencyDrafts.length} dependencies`}
+              />
+            </div>
 
             <Button className="mt-2 w-full" onClick={handleCreate}>
               <CheckIcon />
@@ -1361,17 +1365,21 @@ export function ProjectForm() {
         </Card>
       )}
 
-      <div className="flex max-w-3xl items-center justify-between">
+      <div className="sticky bottom-0 z-10 flex max-w-5xl items-center justify-between border-t bg-background/95 py-4 backdrop-blur">
         <Button type="button" variant="outline" onClick={goBack} disabled={stepIndex === 0}>
           <ArrowLeftIcon />
           Back
         </Button>
+        <span className="text-sm text-muted-foreground">
+          Step {stepIndex + 1} of {STEPS.length} — {STEPS[stepIndex].label}
+        </span>
         {!isLastStep && (
           <Button type="button" onClick={goNext}>
             Next
             <ArrowRightIcon />
           </Button>
         )}
+        {isLastStep && <div />}
       </div>
     </div>
   )
@@ -1379,9 +1387,9 @@ export function ProjectForm() {
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b pb-3 last:border-b-0 last:pb-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium text-foreground">{value}</span>
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-0.5 font-medium text-foreground">{value}</p>
     </div>
   )
 }
@@ -1438,7 +1446,7 @@ function WizardStepper({
           )
         })}
       </div>
-      <div className="h-1.5 w-full max-w-3xl overflow-hidden rounded-full bg-muted">
+      <div className="h-1.5 w-full max-w-5xl overflow-hidden rounded-full bg-muted">
         <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
       </div>
       <Badge variant="outline" className="w-fit">
