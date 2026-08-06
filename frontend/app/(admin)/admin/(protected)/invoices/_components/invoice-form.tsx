@@ -158,8 +158,8 @@ export function InvoiceForm() {
         })),
         taxPercent,
         discountType,
-        discountPercent,
-        discountFlatBdt,
+        discountPercent: discountType === "PERCENT" ? discountPercent : undefined,
+        discountFlatBdt: discountType === "FLAT" ? discountFlatBdt : undefined,
         notes: notes.trim() || undefined,
         status,
       })
