@@ -49,7 +49,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       )}
 
       {/* Header: logo left, invoice title/number/status right */}
-      <div className="relative flex items-start justify-between gap-6">
+      <div className="relative flex flex-wrap items-start justify-between gap-4">
         <Image
           src="/logo-light.png"
           alt="Core IT"
@@ -88,7 +88,10 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <p className="mt-1 font-medium text-foreground">
             {invoice.organization?.name ?? invoice.customerCompanyName ?? invoice.customerName}
           </p>
-          {attnName && <p className="text-sm text-foreground">Attn: {attnName}</p>}
+          {attnName && <p className="text-sm text-foreground">Contact: {attnName}</p>}
+          {invoice.organization?.contactPhone && (
+            <p className="text-sm text-foreground">Phone: {invoice.organization.contactPhone}</p>
+          )}
 
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <div className="flex gap-1.5">
@@ -123,8 +126,8 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       </div>
 
       {/* Line items */}
-      <div className="relative mt-8 overflow-hidden rounded-lg border">
-        <table className="w-full text-sm">
+      <div className="relative mt-8 overflow-x-auto rounded-lg border">
+        <table className="w-full min-w-[420px] text-sm">
           <thead>
             <tr className="bg-muted/40 text-xs tracking-wider text-foreground uppercase">
               <th className="w-10 px-4 py-2.5 text-left font-semibold">#</th>
@@ -191,8 +194,8 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
           <p className="mb-3 text-xs font-semibold tracking-wider text-foreground uppercase">
             Transactions
           </p>
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="bg-muted/40 text-xs tracking-wider text-foreground uppercase">
                   <th className="px-4 py-2.5 text-left font-semibold">Payment</th>

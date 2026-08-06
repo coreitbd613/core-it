@@ -18,15 +18,16 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 import { VoidInvoiceDto } from './dto/void-invoice.dto';
 
 // The org's OWNER membership (earliest one, in case of a data anomaly with
-// more than one) — surfaced on invoices as the bill-to contact name.
+// more than one) — surfaced on invoices as the bill-to contact name/phone.
 const organizationSelect = {
   id: true,
   name: true,
+  phone: true,
   memberships: {
     where: { role: 'OWNER' as const },
     orderBy: { createdAt: 'asc' as const },
     take: 1,
-    select: { user: { select: { name: true, email: true } } },
+    select: { user: { select: { name: true, email: true, contactNumber: true } } },
   },
 };
 
@@ -55,8 +56,10 @@ export class InvoicesService {
 
   /**
    * Attaches derived totals/status (without ever overwriting the stored
-   * `status`) and flattens organization.memberships[0].user into a plain
-   * ownerName, so the frontend gets `organization: { id, name, ownerName }`.
+   * `status`) and flattens organization.memberships[0].user into plain
+   * ownerName/contactPhone, so the frontend gets a flat organization shape.
+   * contactPhone prioritizes the org's own phone, falling back to the
+   * owner's contact number when the org hasn't set one.
    */
   private attachComputed<
     T extends {
@@ -71,7 +74,10 @@ export class InvoicesService {
       organization: {
         id: string;
         name: string;
-        memberships: { user: { name: string | null; email: string } }[];
+        phone: string | null;
+        memberships: {
+          user: { name: string | null; email: string; contactNumber: string | null };
+        }[];
       } | null;
     },
   >(invoice: T) {
@@ -80,7 +86,12 @@ export class InvoicesService {
     return {
       ...rest,
       organization: organization
-        ? { id: organization.id, name: organization.name, ownerName: owner?.name ?? owner?.email ?? null }
+        ? {
+            id: organization.id,
+            name: organization.name,
+            ownerName: owner?.name ?? owner?.email ?? null,
+            contactPhone: organization.phone || owner?.contactNumber || null,
+          }
         : null,
       computed: computeInvoiceTotals(invoice as never),
     };
@@ -276,11 +287,8 @@ export class InvoicesService {
     return this.attachComputed(updated);
   }
 
-  async deleteDraft(id: string): Promise<void> {
-    const invoice = await this.getRawOrThrow(id);
-    if (invoice.status !== 'DRAFT') {
-      throw new ConflictException('Only draft invoices can be deleted.');
-    }
+  async deleteInvoice(id: string): Promise<void> {
+    await this.getRawOrThrow(id);
     await this.prisma.invoice.delete({ where: { id } });
   }
 
@@ -294,6 +302,8 @@ export class InvoicesService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         organizationId: organizationId ?? { in: orgIds },
+        // DRAFT invoices aren't sent yet — they stay admin-only.
+        status: { not: 'DRAFT' },
       },
       include: detailInclude,
       orderBy: { createdAt: 'desc' },
@@ -306,7 +316,8 @@ export class InvoicesService {
       where: { id },
       include: detailInclude,
     });
-    if (!invoice) {
+    if (!invoice || invoice.status === 'DRAFT') {
+      // Also 404s on DRAFT — unsent invoices are admin-only.
       throw new NotFoundException('Invoice not found.');
     }
 
@@ -326,7 +337,9 @@ export class InvoicesService {
       where: { id },
       include: publicInclude,
     });
-    if (!invoice) {
+    if (!invoice || invoice.status === 'DRAFT') {
+      // Also 404s on DRAFT — an unsent invoice's public link shouldn't work
+      // even if someone has (or guesses) the URL.
       throw new NotFoundException('Invoice not found.');
     }
     return this.attachComputed(invoice);

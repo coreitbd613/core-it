@@ -57,6 +57,7 @@ type DataTableProps<TData> = {
   className?: string
   density?: "default" | "compact"
   stickyLastColumn?: boolean
+  hidePagination?: boolean
 }
 
 export function DataTable<TData>({
@@ -79,6 +80,7 @@ export function DataTable<TData>({
   className,
   density = "default",
   stickyLastColumn = false,
+  hidePagination = false,
 }: DataTableProps<TData>) {
   const [internalRowSelection, setInternalRowSelection] =
     React.useState<RowSelectionState>({})
@@ -96,7 +98,7 @@ export function DataTable<TData>({
     columns,
     getRowId,
     state: { rowSelection: activeRowSelection, sorting: activeSorting, globalFilter },
-    initialState: { pagination: { pageSize } },
+    initialState: { pagination: { pageSize: hidePagination ? Number.MAX_SAFE_INTEGER : pageSize } },
     onRowSelectionChange: handleRowSelectionChange,
     onSortingChange: handleSortingChange,
     enableRowSelection:
@@ -206,7 +208,7 @@ export function DataTable<TData>({
         </div>
       </div>
 
-      <DataTablePagination table={table} selectedLabel={selectedLabel} />
+      {!hidePagination && <DataTablePagination table={table} selectedLabel={selectedLabel} />}
     </div>
   )
 }

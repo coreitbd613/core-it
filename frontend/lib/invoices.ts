@@ -73,7 +73,13 @@ export type Invoice = {
   id: string
   number: string
   organizationId: string | null
-  organization: { id: string; name: string; ownerName: string | null } | null
+  organization: {
+    id: string
+    name: string
+    ownerName: string | null
+    // Prioritizes the org's own phone, falling back to the owner's contact number.
+    contactPhone: string | null
+  } | null
   // Set instead of organization for one-off billing to a customer with no Organization record.
   customerName: string | null
   // Optional company name shown alongside customerName (adhoc mode only).

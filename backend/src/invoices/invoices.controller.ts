@@ -98,7 +98,7 @@ export class InvoicesController {
 
   @UseGuards(AdminJwtAuthGuard)
   @Delete('admin/:id')
-  deleteDraft(@Param('id') id: string) {
-    return this.invoicesService.deleteDraft(id);
+  deleteInvoice(@Param('id') id: string) {
+    return this.invoicesService.deleteInvoice(id);
   }
 }

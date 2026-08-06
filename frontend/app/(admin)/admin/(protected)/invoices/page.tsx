@@ -79,7 +79,7 @@ export default function AdminInvoicesPage() {
     try {
       await Promise.all(selectedIds.map((id) => deleteInvoice.mutateAsync(id)))
       setRowSelection({})
-      toast.success(`Deleted ${selectedIds.length} draft invoice${selectedIds.length > 1 ? "s" : ""}.`)
+      toast.success(`Deleted ${selectedIds.length} invoice${selectedIds.length > 1 ? "s" : ""}.`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't delete those invoices.")
     }
@@ -227,20 +227,21 @@ export default function AdminInvoicesPage() {
             },
           ]
 
-          if (invoice.computed.status === "DRAFT") {
-            actions.push({
-              label: "Delete",
-              icon: <Trash2Icon />,
-              destructive: true,
-              separatorBefore: true,
-              confirm: {
-                title: `Delete ${invoice.number}?`,
-                description: "This can't be undone.",
-                confirmLabel: "Delete",
-              },
-              onClick: () => handleDeleteOne(invoice),
-            })
-          }
+          actions.push({
+            label: "Delete",
+            icon: <Trash2Icon />,
+            destructive: true,
+            separatorBefore: true,
+            confirm: {
+              title: `Delete ${invoice.number}?`,
+              description:
+                invoice.computed.status === "DRAFT"
+                  ? "This can't be undone."
+                  : "This invoice has been sent and may have payments recorded against it — deleting it removes those payment records too. This can't be undone.",
+              confirmLabel: "Delete",
+            },
+            onClick: () => handleDeleteOne(invoice),
+          })
 
           return <DataTableRowActions actions={actions} />
         },
@@ -305,10 +306,11 @@ export default function AdminInvoicesPage() {
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    Delete {selectedCount} draft invoice{selectedCount > 1 ? "s" : ""}?
+                    Delete {selectedCount} invoice{selectedCount > 1 ? "s" : ""}?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This can&apos;t be undone.
+                    Any payment records on sent invoices in this selection will be deleted too. This
+                    can&apos;t be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
