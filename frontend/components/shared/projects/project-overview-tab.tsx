@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { formatBDT } from "@/lib/format"
+import { useUpdateProject } from "@/hooks/use-projects"
+import { formatBDT, formatDate } from "@/lib/format"
 import { LEAD_OWNERS } from "@/lib/mock/leads"
 import { mockContracts } from "@/lib/mock/contracts"
 import { proposalTotalBdt, mockProposals } from "@/lib/mock/proposals"
@@ -21,20 +22,19 @@ import {
   PAYMENT_TERMS_OPTIONS,
   PROJECT_DEPARTMENTS,
   PROJECT_TYPES,
-  billingTypeLabels,
-  type BillingType,
   type Project,
-} from "@/lib/mock/projects"
+  type UpdateProjectInput,
+} from "@/lib/projects"
 
 export function ProjectOverviewTab({
   project,
   variant,
-  onChange,
 }: {
   project: Project
   variant: "admin" | "portal"
-  onChange?: () => void
 }) {
+  const updateProject = useUpdateProject(project.id)
+
   const linkedProposal = project.proposalId
     ? mockProposals.find((p) => p.id === project.proposalId)
     : null
@@ -45,13 +45,23 @@ export function ProjectOverviewTab({
     ? mockProposals.find((p) => p.id === linkedContract.proposalId)
     : null
   const valueProposal = linkedProposal ?? contractProposal
-  const value = valueProposal ? proposalTotalBdt(valueProposal) : null
+  const linkedValue = valueProposal ? proposalTotalBdt(valueProposal) : null
+  const value = linkedValue ?? (project.contractValueBdt ? Number(project.contractValueBdt) : null)
   const basePath = variant === "admin" ? "/admin" : "/portal"
 
-  function saveField<K extends keyof Project>(key: K, next: Project[K]) {
-    project[key] = next
-    project.updatedAt = new Date().toISOString().slice(0, 10)
-    onChange?.()
+  function saveField<K extends keyof UpdateProjectInput>(
+    key: K,
+    value: UpdateProjectInput[K],
+    successMessage: string
+  ) {
+    updateProject.mutate(
+      { [key]: value } as UpdateProjectInput,
+      {
+        onSuccess: () => toast.success(successMessage),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't save this project."),
+      }
+    )
   }
 
   return (
@@ -70,8 +80,7 @@ export function ProjectOverviewTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.description) return
-                  saveField("description", next)
-                  toast.success("Description updated.")
+                  saveField("description", next, "Description updated.")
                 }}
               />
             ) : (
@@ -89,7 +98,7 @@ export function ProjectOverviewTab({
           <CardContent className="flex flex-col gap-4">
             <div>
               <p className="text-xs text-muted-foreground">Company</p>
-              <p className="text-sm text-foreground">{project.organizationName}</p>
+              <p className="text-sm text-foreground">{project.organization?.name ?? "—"}</p>
             </div>
 
             {linkedProposal && (
@@ -126,29 +135,24 @@ export function ProjectOverviewTab({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground">Started</p>
-                <p className="text-sm text-foreground">
-                  {new Date(project.startedAt).toLocaleDateString()}
-                </p>
+                <p className="text-sm text-foreground">{formatDate(project.startedAt)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Target end</p>
                 {variant === "admin" ? (
                   <Input
                     type="date"
-                    defaultValue={project.targetEndAt ?? ""}
+                    defaultValue={project.targetEndAt?.slice(0, 10) ?? ""}
                     className="h-8"
                     onBlur={(e) => {
                       const next = e.target.value || null
-                      if (next === project.targetEndAt) return
-                      saveField("targetEndAt", next)
-                      toast.success("Target end date updated.")
+                      if (next === project.targetEndAt?.slice(0, 10)) return
+                      saveField("targetEndAt", next, "Target end date updated.")
                     }}
                   />
                 ) : (
                   <p className="text-sm text-foreground">
-                    {project.targetEndAt
-                      ? new Date(project.targetEndAt).toLocaleDateString()
-                      : "—"}
+                    {project.targetEndAt ? formatDate(project.targetEndAt) : "—"}
                   </p>
                 )}
               </div>
@@ -157,9 +161,7 @@ export function ProjectOverviewTab({
             {project.completedAt && (
               <div>
                 <p className="text-xs text-muted-foreground">Completed</p>
-                <p className="text-sm text-foreground">
-                  {new Date(project.completedAt).toLocaleDateString()}
-                </p>
+                <p className="text-sm text-foreground">{formatDate(project.completedAt)}</p>
               </div>
             )}
           </CardContent>
@@ -174,31 +176,10 @@ export function ProjectOverviewTab({
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <p className="text-xs text-muted-foreground">Project code</p>
-                <p className="text-sm text-foreground">{project.projectCode}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Client contact</p>
-                <Input
-                  defaultValue={project.clientContact ?? ""}
-                  className="h-8"
-                  placeholder="Contact person"
-                  onBlur={(e) => {
-                    const next = e.target.value.trim() || null
-                    if (next === project.clientContact) return
-                    saveField("clientContact", next)
-                    toast.success("Client contact updated.")
-                  }}
-                />
-              </div>
-              <div>
                 <p className="mb-1 text-xs text-muted-foreground">Project type</p>
                 <Select
                   value={project.projectType ?? ""}
-                  onValueChange={(v) => {
-                    saveField("projectType", v || null)
-                    toast.success("Project type updated.")
-                  }}
+                  onValueChange={(v) => saveField("projectType", v || null, "Project type updated.")}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="Select type" />
@@ -216,10 +197,7 @@ export function ProjectOverviewTab({
                 <p className="mb-1 text-xs text-muted-foreground">Department</p>
                 <Select
                   value={project.department ?? ""}
-                  onValueChange={(v) => {
-                    saveField("department", v || null)
-                    toast.success("Department updated.")
-                  }}
+                  onValueChange={(v) => saveField("department", v || null, "Department updated.")}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="Select department" />
@@ -237,10 +215,9 @@ export function ProjectOverviewTab({
                 <p className="mb-1 text-xs text-muted-foreground">Project manager</p>
                 <Select
                   value={project.projectManagerName ?? ""}
-                  onValueChange={(v) => {
-                    saveField("projectManagerName", v || null)
-                    toast.success("Project manager updated.")
-                  }}
+                  onValueChange={(v) =>
+                    saveField("projectManagerName", v || null, "Project manager updated.")
+                  }
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="Select manager" />
@@ -255,34 +232,10 @@ export function ProjectOverviewTab({
                 </Select>
               </div>
               <div>
-                <p className="mb-1 text-xs text-muted-foreground">Billing type</p>
-                <Select
-                  value={project.billingType}
-                  onValueChange={(v) => {
-                    saveField("billingType", v as BillingType)
-                    toast.success("Billing type updated.")
-                  }}
-                >
-                  <SelectTrigger className="h-8 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(billingTypeLabels).map(([v, label]) => (
-                      <SelectItem key={v} value={v}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
                 <p className="mb-1 text-xs text-muted-foreground">Payment terms</p>
                 <Select
                   value={project.paymentTerms ?? ""}
-                  onValueChange={(v) => {
-                    saveField("paymentTerms", v || null)
-                    toast.success("Payment terms updated.")
-                  }}
+                  onValueChange={(v) => saveField("paymentTerms", v || null, "Payment terms updated.")}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="Select terms" />
@@ -305,53 +258,21 @@ export function ProjectOverviewTab({
                   onBlur={(e) => {
                     const next = e.target.value.trim() || null
                     if (next === project.paymentSchedule) return
-                    saveField("paymentSchedule", next)
-                    toast.success("Payment schedule updated.")
+                    saveField("paymentSchedule", next, "Payment schedule updated.")
                   }}
                 />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Estimated effort (hours)</p>
+                <p className="text-xs text-muted-foreground">Contract value (BDT)</p>
                 <Input
                   type="number"
                   min={0}
-                  defaultValue={project.estimatedEffortHours ?? ""}
+                  defaultValue={project.contractValueBdt ?? ""}
                   className="h-8"
                   onBlur={(e) => {
                     const next = e.target.value ? Number(e.target.value) : null
-                    if (next === project.estimatedEffortHours) return
-                    saveField("estimatedEffortHours", next)
-                    toast.success("Estimated effort updated.")
-                  }}
-                />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Tax %</p>
-                <Input
-                  type="number"
-                  min={0}
-                  defaultValue={project.taxPercent}
-                  className="h-8"
-                  onBlur={(e) => {
-                    const next = Number(e.target.value) || 0
-                    if (next === project.taxPercent) return
-                    saveField("taxPercent", next)
-                    toast.success("Tax updated.")
-                  }}
-                />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Discount %</p>
-                <Input
-                  type="number"
-                  min={0}
-                  defaultValue={project.discountPercent}
-                  className="h-8"
-                  onBlur={(e) => {
-                    const next = Number(e.target.value) || 0
-                    if (next === project.discountPercent) return
-                    saveField("discountPercent", next)
-                    toast.success("Discount updated.")
+                    if (next === (project.contractValueBdt ? Number(project.contractValueBdt) : null)) return
+                    saveField("contractValueBdt", next, "Contract value updated.")
                   }}
                 />
               </div>

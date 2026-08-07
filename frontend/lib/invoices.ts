@@ -109,6 +109,8 @@ export type InvoiceLineItemInput = {
 }
 
 export type CreateInvoiceInput = {
+  // Custom invoice number. Auto-generated (INV-{year}-{seq}) when omitted.
+  number?: string
   // Provide exactly one of the two.
   organizationId?: string
   customerName?: string

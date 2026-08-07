@@ -11,6 +11,7 @@ import { NamecheapModule } from './namecheap/namecheap.module';
 import { DomainModule } from './domains/domain.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
     DomainModule,
     InvoicesModule,
     OrganizationsModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

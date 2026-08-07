@@ -3,9 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { AlertTriangleIcon } from "lucide-react"
+import { AlertTriangleIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -17,24 +18,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { DatePickerField } from "@/components/shared/date-picker-field"
+import { PhoneNumberInput } from "@/components/shared/phone-number-input"
 import {
+  COMPANY_SIZES,
+  INDUSTRIES,
   LEAD_OWNERS,
   findLeadByEmail,
   leadSourceLabels,
+  leadTemperatureLabels,
+  logLeadActivity,
   mockLeads,
   type Lead,
   type LeadSource,
+  type LeadTemperature,
 } from "@/lib/mock/leads"
+
+const temperatureOptions: LeadTemperature[] = ["HOT", "WARM", "COOL"]
 
 export function LeadForm({
   mode,
   lead,
+  authorName = "Core IT",
 }: {
   mode: "create"
   lead?: undefined
+  authorName?: string
 } | {
   mode: "edit"
   lead: Lead
+  authorName?: string
 }) {
   const router = useRouter()
   const [contactName, setContactName] = React.useState(lead?.contactName ?? "")
@@ -42,12 +56,33 @@ export function LeadForm({
   const [email, setEmail] = React.useState(lead?.email ?? "")
   const [duplicateLead, setDuplicateLead] = React.useState<Lead | undefined>(undefined)
   const [phone, setPhone] = React.useState(lead?.phone ?? "")
-  const [source, setSource] = React.useState<LeadSource>(lead?.source ?? "WEBSITE")
+  const [industry, setIndustry] = React.useState(lead?.industry ?? "")
+  const [companySize, setCompanySize] = React.useState(lead?.companySize ?? "")
+  const [source, setSource] = React.useState<LeadSource>(lead?.source ?? "FACEBOOK_ADS")
+  const [sourceDetail, setSourceDetail] = React.useState(lead?.sourceDetail ?? "")
   const [ownerName, setOwnerName] = React.useState(lead?.ownerName ?? "unassigned")
   const [estimatedValueBdt, setEstimatedValueBdt] = React.useState(
     lead?.estimatedValueBdt?.toString() ?? ""
   )
   const [nextFollowUpAt, setNextFollowUpAt] = React.useState(lead?.nextFollowUpAt ?? "")
+  const [temperatureOverride, setTemperatureOverride] = React.useState(
+    lead?.temperatureOverride ?? ""
+  )
+  const [tags, setTags] = React.useState<string[]>(lead?.tags ?? [])
+  const [tagInput, setTagInput] = React.useState("")
+  const [initialNote, setInitialNote] = React.useState("")
+
+  function addTag() {
+    const tag = tagInput.trim()
+    if (tag && !tags.includes(tag)) {
+      setTags((prev) => [...prev, tag])
+    }
+    setTagInput("")
+  }
+
+  function removeTag(tag: string) {
+    setTags((prev) => prev.filter((t) => t !== tag))
+  }
 
   function handleSubmit() {
     if (!contactName.trim()) {
@@ -60,10 +95,15 @@ export function LeadForm({
       companyName: companyName.trim() || null,
       email: email.trim() || null,
       phone: phone.trim() || null,
+      industry: industry || null,
+      companySize: companySize || null,
       source,
+      sourceDetail: sourceDetail.trim() || null,
       ownerName: ownerName === "unassigned" ? null : ownerName,
       estimatedValueBdt: estimatedValueBdt ? Number(estimatedValueBdt) : null,
       nextFollowUpAt: nextFollowUpAt || null,
+      temperatureOverride: (temperatureOverride || null) as LeadTemperature | null,
+      tags,
     }
 
     if (mode === "edit") {
@@ -74,7 +114,7 @@ export function LeadForm({
     }
 
     const id = crypto.randomUUID()
-    mockLeads.unshift({
+    const newLead: Lead = {
       id,
       stage: "NEW",
       convertedAt: null,
@@ -83,7 +123,12 @@ export function LeadForm({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...fields,
-    })
+    }
+    mockLeads.unshift(newLead)
+
+    if (initialNote.trim()) {
+      logLeadActivity(newLead, "NOTE", initialNote.trim(), authorName)
+    }
 
     toast.success("Lead created.")
     router.push(`/admin/leads/${id}`)
@@ -98,14 +143,14 @@ export function LeadForm({
         </p>
       </div>
 
-      <div className="max-w-2xl">
+      <div className="flex max-w-5xl flex-col gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Lead details</CardTitle>
+            <CardTitle>Contact</CardTitle>
           </CardHeader>
           <CardContent>
             <FieldGroup>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <Field>
                   <FieldLabel htmlFor="lead-contact-name">Contact name</FieldLabel>
                   <Input
@@ -124,8 +169,6 @@ export function LeadForm({
                     placeholder="Acme Corp"
                   />
                 </Field>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="lead-email">Email</FieldLabel>
                   <Input
@@ -146,7 +189,7 @@ export function LeadForm({
                   {mode === "create" && duplicateLead && (
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <AlertTriangleIcon className="size-3.5 shrink-0" />
-                      A lead with this email already exists:{" "}
+                      Exists:{" "}
                       <Link href={`/admin/leads/${duplicateLead.id}`} className="underline">
                         {duplicateLead.contactName}
                       </Link>
@@ -155,15 +198,50 @@ export function LeadForm({
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="lead-phone">Phone</FieldLabel>
-                  <Input
-                    id="lead-phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+880 1XXX-XXXXXX"
-                  />
+                  <PhoneNumberInput id="lead-phone" value={phone} onChange={setPhone} autoComplete="tel" />
                 </Field>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2">
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Qualification</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <div className="grid gap-5 sm:grid-cols-3">
+                <Field>
+                  <FieldLabel htmlFor="lead-industry">Industry</FieldLabel>
+                  <Select value={industry} onValueChange={setIndustry}>
+                    <SelectTrigger id="lead-industry" className="w-full">
+                      <SelectValue placeholder="Select industry" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRIES.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="lead-company-size">Company size</FieldLabel>
+                  <Select value={companySize} onValueChange={setCompanySize}>
+                    <SelectTrigger id="lead-company-size" className="w-full">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPANY_SIZES.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size} employees
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
                 <Field>
                   <FieldLabel htmlFor="lead-source">Source</FieldLabel>
                   <Select value={source} onValueChange={(value) => setSource(value as LeadSource)}>
@@ -178,6 +256,17 @@ export function LeadForm({
                       ))}
                     </SelectContent>
                   </Select>
+                </Field>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="lead-source-detail">Source detail</FieldLabel>
+                  <Input
+                    id="lead-source-detail"
+                    value={sourceDetail}
+                    onChange={(e) => setSourceDetail(e.target.value)}
+                    placeholder="e.g. campaign name, referrer, event name"
+                  />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="lead-owner">Owner</FieldLabel>
@@ -196,7 +285,7 @@ export function LeadForm({
                   </Select>
                 </Field>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-3">
                 <Field>
                   <FieldLabel htmlFor="lead-value">Estimated value (BDT)</FieldLabel>
                   <Input
@@ -210,14 +299,76 @@ export function LeadForm({
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="lead-follow-up">Next follow-up</FieldLabel>
-                  <Input
-                    id="lead-follow-up"
-                    type="date"
-                    value={nextFollowUpAt}
-                    onChange={(e) => setNextFollowUpAt(e.target.value)}
-                  />
+                  <DatePickerField id="lead-follow-up" value={nextFollowUpAt} onChange={setNextFollowUpAt} />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="lead-temperature">Temperature</FieldLabel>
+                  <Select value={temperatureOverride} onValueChange={setTemperatureOverride}>
+                    <SelectTrigger id="lead-temperature" className="w-full">
+                      <SelectValue placeholder="Auto (based on value)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {temperatureOptions.map((temp) => (
+                        <SelectItem key={temp} value={temp}>
+                          {leadTemperatureLabels[temp]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
               </div>
+              <Field>
+                <FieldLabel htmlFor="lead-tags">Tags</FieldLabel>
+                <div
+                  className="flex flex-wrap items-center gap-1.5 rounded-md border px-2.5 py-1.5"
+                  onClick={() => document.getElementById("lead-tags")?.focus()}
+                >
+                  {tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeTag(tag)
+                        }}
+                        aria-label={`Remove ${tag}`}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <XIcon className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  <input
+                    id="lead-tags"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault()
+                        addTag()
+                      } else if (e.key === "Backspace" && !tagInput && tags.length) {
+                        removeTag(tags[tags.length - 1])
+                      }
+                    }}
+                    onBlur={addTag}
+                    placeholder={tags.length ? "" : "Add tags and press Enter..."}
+                    className="min-w-32 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                </div>
+              </Field>
+              {mode === "create" && (
+                <Field>
+                  <FieldLabel htmlFor="lead-initial-note">Initial note</FieldLabel>
+                  <Textarea
+                    id="lead-initial-note"
+                    value={initialNote}
+                    onChange={(e) => setInitialNote(e.target.value)}
+                    placeholder="Any context from the first conversation..."
+                    rows={3}
+                  />
+                </Field>
+              )}
             </FieldGroup>
           </CardContent>
           <CardFooter className="border-t">

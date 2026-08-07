@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/shared/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { DatePickerField } from "@/components/shared/date-picker-field"
 import { useAdminOrganizations } from "@/hooks/use-organization"
@@ -85,6 +85,7 @@ export function InvoiceForm() {
   const { data: organizations = [], isLoading: organizationsLoading } = useAdminOrganizations()
   const createInvoice = useCreateInvoice()
 
+  const [number, setNumber] = React.useState("")
   const [customerMode, setCustomerMode] = React.useState<"organization" | "adhoc">("organization")
   const [organizationId, setOrganizationId] = React.useState(
     sourceProposal?.organizationId ?? ""
@@ -146,6 +147,7 @@ export function InvoiceForm() {
 
     try {
       const invoice = await createInvoice.mutateAsync({
+        number: number.trim() || undefined,
         organizationId: customerMode === "organization" ? effectiveOrganizationId : undefined,
         customerName: customerMode === "adhoc" ? trimmedCustomerName : undefined,
         customerCompanyName: customerMode === "adhoc" ? customerCompanyName.trim() || undefined : undefined,
@@ -256,6 +258,15 @@ export function InvoiceForm() {
                   <Field>
                     <FieldLabel htmlFor="invoice-due">Due date</FieldLabel>
                     <DatePickerField id="invoice-due" value={dueAt} onChange={setDueAt} />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="invoice-number">Invoice number (optional)</FieldLabel>
+                    <Input
+                      id="invoice-number"
+                      value={number}
+                      onChange={(e) => setNumber(e.target.value)}
+                      placeholder="Auto-generated if left blank"
+                    />
                   </Field>
                 </div>
               </FieldGroup>

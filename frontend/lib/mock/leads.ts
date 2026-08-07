@@ -1,6 +1,8 @@
 export type LeadStage = "NEW" | "CONTACTED" | "QUALIFIED" | "WON" | "LOST"
 
 export type LeadSource =
+  | "FACEBOOK_ADS"
+  | "WHATSAPP"
   | "WEBSITE"
   | "REFERRAL"
   | "COLD_OUTREACH"
@@ -25,12 +27,17 @@ export type Lead = {
   email: string | null
   phone: string | null
   source: LeadSource
+  sourceDetail: string | null
   stage: LeadStage
   estimatedValueBdt: number | null
   ownerName: string | null
   nextFollowUpAt: string | null
   convertedAt: string | null
   lostReason: string | null
+  industry: string | null
+  companySize: string | null
+  tags: string[]
+  temperatureOverride: LeadTemperature | null
   activities: LeadActivity[]
   createdAt: string
   updatedAt: string
@@ -39,6 +46,20 @@ export type Lead = {
 export const LEAD_STAGE_ORDER: LeadStage[] = ["NEW", "CONTACTED", "QUALIFIED", "WON"]
 
 export const LEAD_OWNERS = ["Rafiq Islam", "Nusrat Jahan"]
+
+export const INDUSTRIES = [
+  "Retail & E-commerce",
+  "Food & Beverage",
+  "Manufacturing",
+  "Logistics & Transport",
+  "Healthcare & Pharma",
+  "Textiles & Garments",
+  "Real Estate",
+  "Professional Services",
+  "Other",
+]
+
+export const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"]
 
 export const leadStageLabels: Record<LeadStage, string> = {
   NEW: "New",
@@ -60,6 +81,8 @@ export const leadStageVariant: Record<
 }
 
 export const leadSourceLabels: Record<LeadSource, string> = {
+  FACEBOOK_ADS: "Facebook Ads",
+  WHATSAPP: "WhatsApp",
   WEBSITE: "Website",
   REFERRAL: "Referral",
   COLD_OUTREACH: "Cold outreach",
@@ -100,7 +123,10 @@ export const leadTemperatureVariant: Record<
   COOL: "outline",
 }
 
-export function leadTemperature(lead: Pick<Lead, "estimatedValueBdt">): LeadTemperature {
+export function leadTemperature(
+  lead: Pick<Lead, "estimatedValueBdt" | "temperatureOverride">
+): LeadTemperature {
+  if (lead.temperatureOverride) return lead.temperatureOverride
   const value = lead.estimatedValueBdt ?? 0
   if (value >= 200000) return "HOT"
   if (value >= 80000) return "WARM"
@@ -145,12 +171,17 @@ export const mockLeads: Lead[] = [
     email: "tanvir@greenvalleyfoods.com",
     phone: "+880 1711-223344",
     source: "WEBSITE",
+    sourceDetail: null,
     stage: "QUALIFIED",
     estimatedValueBdt: 180000,
     ownerName: "Rafiq Islam",
     nextFollowUpAt: "2026-07-28",
     convertedAt: null,
     lostReason: null,
+    industry: "Food & Beverage",
+    companySize: "11-50",
+    tags: ["priority", "delivery-app"],
+    temperatureOverride: null,
     activities: [
       {
         id: "act-1-3",
@@ -184,12 +215,17 @@ export const mockLeads: Lead[] = [
     email: "nusrat@baytraders.com",
     phone: "+880 1812-556677",
     source: "REFERRAL",
+    sourceDetail: null,
     stage: "CONTACTED",
     estimatedValueBdt: 260000,
     ownerName: "Nusrat Jahan",
     nextFollowUpAt: "2026-08-05",
     convertedAt: null,
     lostReason: null,
+    industry: null,
+    companySize: null,
+    tags: [],
+    temperatureOverride: null,
     activities: [
       {
         id: "act-2-1",
@@ -208,13 +244,18 @@ export const mockLeads: Lead[] = [
     companyName: "Karim Textiles",
     email: "shafiqul@karimtextiles.com",
     phone: "+880 1913-778899",
-    source: "COLD_OUTREACH",
+    source: "FACEBOOK_ADS",
+    sourceDetail: "Summer promo campaign",
     stage: "NEW",
     estimatedValueBdt: 90000,
     ownerName: null,
     nextFollowUpAt: "2026-08-06",
     convertedAt: null,
     lostReason: null,
+    industry: null,
+    companySize: null,
+    tags: [],
+    temperatureOverride: null,
     activities: [],
     createdAt: "2026-08-01T09:00:00",
     updatedAt: "2026-08-01T09:00:00",
@@ -226,12 +267,17 @@ export const mockLeads: Lead[] = [
     email: "farhana@coastallogistics.com",
     phone: "+880 1714-990011",
     source: "EVENT",
+    sourceDetail: "Dhaka Logistics Expo 2026",
     stage: "QUALIFIED",
     estimatedValueBdt: 340000,
     ownerName: "Rafiq Islam",
     nextFollowUpAt: "2026-07-30",
     convertedAt: null,
     lostReason: null,
+    industry: "Logistics & Transport",
+    companySize: "51-200",
+    tags: [],
+    temperatureOverride: null,
     activities: [
       {
         id: "act-4-2",
@@ -257,13 +303,18 @@ export const mockLeads: Lead[] = [
     companyName: "Dhaka Pharma Supplies",
     email: "imran@dhakapharma.com",
     phone: "+880 1615-334455",
-    source: "SOCIAL_MEDIA",
+    source: "FACEBOOK_ADS",
+    sourceDetail: "Lead-gen ad — Eid campaign",
     stage: "WON",
     estimatedValueBdt: 210000,
     ownerName: "Nusrat Jahan",
     nextFollowUpAt: null,
     convertedAt: "2026-07-10T09:00:00",
     lostReason: null,
+    industry: null,
+    companySize: null,
+    tags: [],
+    temperatureOverride: null,
     activities: [
       {
         id: "act-5-2",
@@ -290,12 +341,17 @@ export const mockLeads: Lead[] = [
     email: "sabrina@yasmininteriors.com",
     phone: "+880 1516-112233",
     source: "REFERRAL",
+    sourceDetail: null,
     stage: "LOST",
     estimatedValueBdt: 60000,
     ownerName: "Rafiq Islam",
     nextFollowUpAt: null,
     convertedAt: null,
     lostReason: "Went with an in-house solution instead.",
+    industry: null,
+    companySize: null,
+    tags: [],
+    temperatureOverride: null,
     activities: [
       {
         id: "act-6-1",
@@ -314,13 +370,18 @@ export const mockLeads: Lead[] = [
     companyName: null,
     email: "mahmudul.hasan@gmail.com",
     phone: "+880 1317-667788",
-    source: "WEBSITE",
+    source: "WHATSAPP",
+    sourceDetail: "Messaged directly after seeing a Facebook post",
     stage: "NEW",
     estimatedValueBdt: null,
     ownerName: null,
     nextFollowUpAt: "2026-08-04",
     convertedAt: null,
     lostReason: null,
+    industry: null,
+    companySize: null,
+    tags: [],
+    temperatureOverride: null,
     activities: [],
     createdAt: "2026-08-02T15:20:00",
     updatedAt: "2026-08-02T15:20:00",
@@ -332,12 +393,17 @@ export const mockLeads: Lead[] = [
     email: "ruma@akterbeauty.com",
     phone: "+880 1418-889900",
     source: "OTHER",
+    sourceDetail: null,
     stage: "CONTACTED",
     estimatedValueBdt: 45000,
     ownerName: "Nusrat Jahan",
     nextFollowUpAt: "2026-07-29",
     convertedAt: null,
     lostReason: null,
+    industry: null,
+    companySize: null,
+    tags: [],
+    temperatureOverride: null,
     activities: [
       {
         id: "act-8-1",

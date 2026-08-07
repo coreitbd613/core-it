@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeftIcon, XIcon } from "lucide-react"
@@ -8,18 +7,26 @@ import { ArrowLeftIcon, XIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/tabs"
 import { ProjectOverviewTab } from "@/components/shared/projects/project-overview-tab"
 import { ProjectRevisionsTab } from "@/components/shared/projects/project-revisions-tab"
 import { ProjectSupportTab } from "@/components/shared/projects/project-support-tab"
 import { ProjectTimelineTab } from "@/components/shared/projects/project-timeline-tab"
-import { mockProjects, projectStatusLabels, projectStatusVariant } from "@/lib/mock/projects"
+import { useMyProject } from "@/hooks/use-projects"
+import { projectStatusLabels, projectStatusVariant } from "@/lib/projects"
 
 export default function ProjectDetailPage() {
   const params = useParams<{ id: string }>()
-  const [, forceRerender] = React.useState(0)
+  const { data: project, isLoading } = useMyProject(params.id)
 
-  const project = mockProjects.find((p) => p.id === params.id)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!project) {
     return (
@@ -35,10 +42,6 @@ export default function ProjectDetailPage() {
         </EmptyHeader>
       </Empty>
     )
-  }
-
-  function refresh() {
-    forceRerender((n) => n + 1)
   }
 
   return (
@@ -63,16 +66,16 @@ export default function ProjectDetailPage() {
           <TabsTrigger value="support">Support</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
-          <ProjectOverviewTab project={project} variant="portal" onChange={refresh} />
+          <ProjectOverviewTab project={project} variant="portal" />
         </TabsContent>
         <TabsContent value="timeline">
-          <ProjectTimelineTab project={project} variant="portal" onChange={refresh} />
+          <ProjectTimelineTab project={project} variant="portal" />
         </TabsContent>
         <TabsContent value="revisions">
-          <ProjectRevisionsTab project={project} variant="portal" onChange={refresh} />
+          <ProjectRevisionsTab project={project} variant="portal" />
         </TabsContent>
         <TabsContent value="support">
-          <ProjectSupportTab project={project} variant="portal" onChange={refresh} />
+          <ProjectSupportTab project={project} variant="portal" />
         </TabsContent>
       </Tabs>
     </div>

@@ -13,12 +13,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useMyOrganization } from "@/hooks/use-organization"
+import { useCreateMyProject } from "@/hooks/use-projects"
 import {
   contractStatusLabels,
   contractStatusVariant,
   mockContracts,
 } from "@/lib/mock/contracts"
-import { mockProjects, nextProjectCode } from "@/lib/mock/projects"
 
 export default function ContractDetailPage() {
   const params = useParams<{ id: string }>()
@@ -26,6 +27,8 @@ export default function ContractDetailPage() {
   const [fullName, setFullName] = React.useState("")
   const [agreed, setAgreed] = React.useState(false)
   const [isSigning, setIsSigning] = React.useState(false)
+  const { data: organization } = useMyOrganization()
+  const createProject = useCreateMyProject()
 
   const contract = mockContracts.find((c) => c.id === params.id)
 
@@ -45,9 +48,13 @@ export default function ContractDetailPage() {
     )
   }
 
-  function handleSign(e: React.FormEvent) {
+  async function handleSign(e: React.FormEvent) {
     e.preventDefault()
     if (!fullName.trim() || !agreed) return
+    if (!organization) {
+      toast.error("Couldn't find your company profile — try reloading the page.")
+      return
+    }
 
     setIsSigning(true)
 
@@ -56,55 +63,24 @@ export default function ContractDetailPage() {
     contract!.signedByName = fullName.trim()
     contract!.signedAt = signedAt
 
-    const projectId = crypto.randomUUID()
-    mockProjects.unshift({
-      id: projectId,
-      organizationId: contract!.organizationId,
-      organizationName: contract!.organizationName,
-      name: contract!.title,
-      description: null,
-      proposalId: null,
-      contractId: contract!.id,
-      status: "PLANNING",
-      startedAt: signedAt,
-      targetEndAt: null,
-      completedAt: null,
-      includedRevisions: 2,
-      supportMonths: 3,
-      updatedAt: signedAt,
-      projectCode: nextProjectCode(),
-      clientContact: null,
-      projectType: null,
-      department: null,
-      projectManagerName: null,
-      billingType: "FIXED_PRICE",
-      paymentTerms: null,
-      paymentSchedule: null,
-      taxPercent: 0,
-      discountPercent: 0,
-      estimatedEffortHours: null,
-      goLiveAt: null,
-      revisionWindowDays: null,
-      maxDaysPerRevision: null,
-      extraRevisionPriceBdt: null,
-      revisionNotes: null,
-      supportSla: "STANDARD",
-      supportWorkingHours: null,
-      includedSupportTickets: null,
-      supportContactName: null,
-      sendRenewalReminder: false,
-      domain: null,
-      hostingProvider: null,
-      serverDetails: null,
-      repositoryUrl: null,
-      stagingUrl: null,
-      productionUrl: null,
-      techStack: null,
-      deploymentMethod: null,
-    })
-
-    toast.success("Contract signed — your project has started.")
-    router.push(`/portal/projects/${projectId}`)
+    try {
+      // contract.organizationId is a mock-phase id and won't match a real
+      // Organization row — use the signer's own (real) org instead, since
+      // that's what "start a project for my company" actually means here.
+      const project = await createProject.mutateAsync({
+        organizationId: organization.id,
+        name: contract!.title,
+        contractId: contract!.id,
+        startedAt: signedAt,
+        includedRevisions: 2,
+        supportMonths: 3,
+      })
+      toast.success("Contract signed — your project has started.")
+      router.push(`/portal/projects/${project.id}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't start this project.")
+      setIsSigning(false)
+    }
   }
 
   return (

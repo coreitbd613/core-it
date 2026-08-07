@@ -15,6 +15,13 @@ import {
 import { CreateInvoiceLineItemDto } from './create-invoice-line-item.dto';
 
 export class CreateInvoiceDto {
+  // Custom invoice number. When omitted, the service auto-generates one
+  // (INV-{year}-{seq}) via nextInvoiceNumber.
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  number?: string;
+
   // Exactly one of organizationId / customerName must be set — checked in
   // the service, since it's a cross-field rule class-validator can't express cleanly.
   @IsOptional()

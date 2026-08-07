@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
+  Building2Icon,
   FileSignatureIcon,
   FileTextIcon,
   FolderKanbanIcon,
@@ -17,7 +18,11 @@ import {
 
 import { AdminAuthProvider, useAdminAuth } from "@/contexts/admin-auth-context"
 import { useAdminInvoices } from "@/hooks/use-invoices"
+import { useAdminOrganizations } from "@/hooks/use-organization"
+import { useAdminProjects } from "@/hooks/use-projects"
 import type { Invoice } from "@/lib/invoices"
+import type { Organization } from "@/lib/organizations"
+import type { Project } from "@/lib/projects"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -28,11 +33,11 @@ import { mockContracts } from "@/lib/mock/contracts"
 import { mockEmployees } from "@/lib/mock/employees"
 import { mockLeads } from "@/lib/mock/leads"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
-import { mockProjects } from "@/lib/mock/projects"
 
 const adminNavItems: PanelNavItem[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard /> },
   { name: "Leads", href: "/admin/leads", icon: <TargetIcon /> },
+  { name: "Clients", href: "/admin/clients", icon: <Building2Icon /> },
   {
     name: "Employees",
     href: "/admin/employees",
@@ -53,10 +58,15 @@ const adminNavItems: PanelNavItem[] = [
   { name: "Settings", href: "/admin/settings", icon: <Settings /> },
 ]
 
-function buildAdminSearchItems(invoices: Invoice[]): SearchItem[] {
+function buildAdminSearchItems(
+  invoices: Invoice[],
+  organizations: Organization[],
+  projects: Project[]
+): SearchItem[] {
   const navEntries: SearchItem[] = [
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="size-4" /> },
     { id: "nav-leads", group: "Go to", label: "Leads", href: "/admin/leads", icon: <TargetIcon className="size-4" /> },
+    { id: "nav-clients", group: "Go to", label: "Clients", href: "/admin/clients", icon: <Building2Icon className="size-4" /> },
     { id: "nav-employees", group: "Go to", label: "Employee Directory", href: "/admin/employees", icon: <UsersRoundIcon className="size-4" /> },
     { id: "nav-attendance", group: "Go to", label: "Attendance", href: "/admin/employees/attendance", icon: <UsersRoundIcon className="size-4" /> },
     { id: "nav-leave", group: "Go to", label: "Leave Requests", href: "/admin/employees/leave", icon: <UsersRoundIcon className="size-4" /> },
@@ -69,6 +79,14 @@ function buildAdminSearchItems(invoices: Invoice[]): SearchItem[] {
     { id: "nav-customers", group: "Go to", label: "Customers", href: "/admin/customers", icon: <Users className="size-4" /> },
     { id: "nav-settings", group: "Go to", label: "Settings", href: "/admin/settings", icon: <Settings className="size-4" /> },
   ]
+
+  const clientEntries: SearchItem[] = organizations.map((org) => ({
+    id: `client-${org.id}`,
+    group: "Clients",
+    label: org.name,
+    description: org.industry ?? undefined,
+    href: `/admin/clients/${org.id}`,
+  }))
 
   const leadEntries: SearchItem[] = mockLeads.map((lead) => ({
     id: `lead-${lead.id}`,
@@ -86,11 +104,11 @@ function buildAdminSearchItems(invoices: Invoice[]): SearchItem[] {
     href: `/admin/proposals/${p.id}`,
   }))
 
-  const projectEntries: SearchItem[] = mockProjects.map((p) => ({
+  const projectEntries: SearchItem[] = projects.map((p) => ({
     id: `project-${p.id}`,
     group: "Projects",
     label: p.name,
-    description: p.organizationName,
+    description: p.organization?.name,
     href: `/admin/projects/${p.id}`,
   }))
 
@@ -120,6 +138,7 @@ function buildAdminSearchItems(invoices: Invoice[]): SearchItem[] {
 
   return [
     ...navEntries,
+    ...clientEntries,
     ...leadEntries,
     ...proposalEntries,
     ...projectEntries,
@@ -133,6 +152,8 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, isPending, logout } = useAdminAuth()
   const { data: invoices = [] } = useAdminInvoices()
+  const { data: organizations = [] } = useAdminOrganizations()
+  const { data: projects = [] } = useAdminProjects()
 
   async function handleLogout() {
     await logout()
@@ -152,8 +173,8 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
       profileHref="/admin/profile"
       onLogout={handleLogout}
       loading={isPending}
-      search={<GlobalSearch items={buildAdminSearchItems(invoices)} />}
-      notifications={<NotificationsBell items={getAdminNotifications(invoices)} />}
+      search={<GlobalSearch items={buildAdminSearchItems(invoices, organizations, projects)} />}
+      notifications={<NotificationsBell items={getAdminNotifications(invoices, projects)} />}
     >
       {children}
     </PanelDashboardShell>

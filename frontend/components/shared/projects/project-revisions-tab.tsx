@@ -28,64 +28,71 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  mockRevisionRequests,
+  useFileMyRevisionRequest,
+  useRespondToRevisionRequest,
+  useUpdateProject,
+} from "@/hooks/use-projects"
+import { formatDate } from "@/lib/format"
+import {
   revisionStats,
-  revisionsForProject,
   revisionStatusLabels,
   revisionStatusVariant,
   type Project,
   type RevisionStatus,
-} from "@/lib/mock/projects"
+  type UpdateProjectInput,
+} from "@/lib/projects"
 
 const revisionStatuses: RevisionStatus[] = ["OPEN", "IN_PROGRESS", "DONE"]
 
 export function ProjectRevisionsTab({
   project,
   variant,
-  onChange,
 }: {
   project: Project
   variant: "admin" | "portal"
-  onChange?: () => void
 }) {
-  const revisions = revisionsForProject(project.id)
+  const updateProject = useUpdateProject(project.id)
+  const respondToRevision = useRespondToRevisionRequest(project.id)
+  const fileRevisionRequest = useFileMyRevisionRequest(project.id)
+
+  const revisions = project.revisionRequests
   const stats = revisionStats(project)
 
   function handleStatusChange(revisionId: string, status: RevisionStatus) {
-    const revision = mockRevisionRequests.find((r) => r.id === revisionId)
-    if (!revision) return
-    revision.status = status
-    revision.respondedAt =
-      status === "DONE" ? new Date().toISOString().slice(0, 10) : revision.respondedAt
-    onChange?.()
-    toast.success("Revision status updated.")
+    respondToRevision.mutate(
+      { revisionId, input: { status } },
+      {
+        onSuccess: () => toast.success("Revision status updated."),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update this revision."),
+      }
+    )
   }
 
   function handleRequest(description: string) {
-    mockRevisionRequests.unshift({
-      id: crypto.randomUUID(),
-      projectId: project.id,
-      description,
-      status: "OPEN",
-      requestedBy: "You",
-      requestedAt: new Date().toISOString().slice(0, 10),
-      respondedAt: null,
-    })
-    onChange?.()
-    toast.success("Revision request sent to Core IT.")
+    fileRevisionRequest.mutate(
+      { description },
+      {
+        onSuccess: () => toast.success("Revision request sent to Core IT."),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't send this request."),
+      }
+    )
   }
 
-  function handleIncludedChange(value: number) {
-    project.includedRevisions = value
-    project.updatedAt = new Date().toISOString().slice(0, 10)
-    onChange?.()
-    toast.success("Revision policy updated.")
-  }
-
-  function saveField<K extends keyof Project>(key: K, value: Project[K]) {
-    project[key] = value
-    project.updatedAt = new Date().toISOString().slice(0, 10)
-    onChange?.()
+  function saveField<K extends keyof UpdateProjectInput>(
+    key: K,
+    value: UpdateProjectInput[K],
+    successMessage: string
+  ) {
+    updateProject.mutate(
+      { [key]: value } as UpdateProjectInput,
+      {
+        onSuccess: () => toast.success(successMessage),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't save this project."),
+      }
+    )
   }
 
   return (
@@ -107,7 +114,7 @@ export function ProjectRevisionsTab({
                 onBlur={(e) => {
                   const next = Number(e.target.value)
                   if (Number.isNaN(next) || next === stats.included) return
-                  handleIncludedChange(next)
+                  saveField("includedRevisions", next, "Revision policy updated.")
                 }}
               />
             </div>
@@ -135,8 +142,7 @@ export function ProjectRevisionsTab({
                 onBlur={(e) => {
                   const next = e.target.value ? Number(e.target.value) : null
                   if (next === project.revisionWindowDays) return
-                  saveField("revisionWindowDays", next)
-                  toast.success("Revision window updated.")
+                  saveField("revisionWindowDays", next, "Revision window updated.")
                 }}
               />
             </div>
@@ -150,8 +156,7 @@ export function ProjectRevisionsTab({
                 onBlur={(e) => {
                   const next = e.target.value ? Number(e.target.value) : null
                   if (next === project.maxDaysPerRevision) return
-                  saveField("maxDaysPerRevision", next)
-                  toast.success("Max turnaround updated.")
+                  saveField("maxDaysPerRevision", next, "Max turnaround updated.")
                 }}
               />
             </div>
@@ -164,9 +169,9 @@ export function ProjectRevisionsTab({
                 className="h-8"
                 onBlur={(e) => {
                   const next = e.target.value ? Number(e.target.value) : null
-                  if (next === project.extraRevisionPriceBdt) return
-                  saveField("extraRevisionPriceBdt", next)
-                  toast.success("Extra revision price updated.")
+                  if (next === (project.extraRevisionPriceBdt ? Number(project.extraRevisionPriceBdt) : null))
+                    return
+                  saveField("extraRevisionPriceBdt", next, "Extra revision price updated.")
                 }}
               />
             </div>
@@ -179,8 +184,7 @@ export function ProjectRevisionsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.revisionNotes) return
-                  saveField("revisionNotes", next)
-                  toast.success("Revision notes updated.")
+                  saveField("revisionNotes", next, "Revision notes updated.")
                 }}
               />
             </div>
@@ -202,7 +206,7 @@ export function ProjectRevisionsTab({
               <div key={revision.id} className="flex flex-col gap-2 px-4 py-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-muted-foreground">
-                    {revision.requestedBy} · {new Date(revision.requestedAt).toLocaleDateString()}
+                    {revision.requestedBy} · {formatDate(revision.requestedAt)}
                   </span>
                   {variant === "admin" ? (
                     <Select

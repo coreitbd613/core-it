@@ -12,49 +12,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAddTeamMember, useDeleteTeamMember, useUpdateTeamMember } from "@/hooks/use-projects"
 import { LEAD_OWNERS } from "@/lib/mock/leads"
 import {
   TEAM_ROLES,
   teamAccessLevelLabels,
-  teamForProject,
-  mockProjectTeam,
   type Project,
   type TeamAccessLevel,
-} from "@/lib/mock/projects"
+  type UpdateTeamMemberInput,
+} from "@/lib/projects"
 
-export function ProjectTeamTab({
-  project,
-  onChange,
-}: {
-  project: Project
-  onChange?: () => void
-}) {
-  const team = teamForProject(project.id)
+export function ProjectTeamTab({ project }: { project: Project }) {
+  const addTeamMember = useAddTeamMember(project.id)
+  const updateTeamMember = useUpdateTeamMember(project.id)
+  const deleteTeamMember = useDeleteTeamMember(project.id)
+
+  const team = project.teamMembers
 
   function handleAdd() {
-    mockProjectTeam.push({
-      id: crypto.randomUUID(),
-      projectId: project.id,
-      name: LEAD_OWNERS[0] ?? "",
-      role: TEAM_ROLES[0],
-      accessLevel: "EDIT",
-    })
-    onChange?.()
+    addTeamMember.mutate(
+      { name: LEAD_OWNERS[0] ?? "", role: TEAM_ROLES[0], accessLevel: "EDIT" },
+      {
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't add this team member."),
+      }
+    )
   }
 
-  function handleUpdate(id: string, fields: Partial<Pick<(typeof team)[number], "name" | "role" | "accessLevel">>) {
-    const member = mockProjectTeam.find((m) => m.id === id)
-    if (!member) return
-    Object.assign(member, fields)
-    onChange?.()
+  function handleUpdate(id: string, input: UpdateTeamMemberInput) {
+    updateTeamMember.mutate(
+      { teamMemberId: id, input },
+      {
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update this team member."),
+      }
+    )
   }
 
   function handleRemove(id: string) {
-    const index = mockProjectTeam.findIndex((m) => m.id === id)
-    if (index === -1) return
-    mockProjectTeam.splice(index, 1)
-    onChange?.()
-    toast.success("Team member removed.")
+    deleteTeamMember.mutate(id, {
+      onSuccess: () => toast.success("Team member removed."),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : "Couldn't remove this team member."),
+    })
   }
 
   return (

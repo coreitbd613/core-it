@@ -96,6 +96,7 @@ model Organization {
 
   memberships Membership[]
   invoices    Invoice[]
+  projects    Project[]
 }
 
 model Membership {
@@ -227,6 +228,9 @@ model Invoice {
 
   proposalId String? // no real Proposal backend exists yet — freeform, not a FK
 
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   status     InvoiceStatus @default(DRAFT)
   voidReason String?
 
@@ -250,6 +254,7 @@ model Invoice {
 
   @@index([organizationId])
   @@index([status])
+  @@index([projectId])
 }
 
 model InvoiceLineItem {
@@ -287,4 +292,163 @@ model Payment {
 model InvoiceSequence {
   year       Int @id
   lastNumber Int @default(0)
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum RevisionStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
+
+enum TeamAccessLevel {
+  FULL
+  EDIT
+  VIEW
+}
+
+enum SupportSla {
+  STANDARD
+  PRIORITY
+  PREMIUM
+}
+
+enum DeploymentMethod {
+  MANUAL
+  CI_CD
+  FTP
+  GIT_PUSH
+}
+
+model Project {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  proposalId String? // no real Proposal backend exists yet — freeform, not a FK
+  contractId String? // no real Contract backend exists yet — freeform, not a FK
+
+  status            ProjectStatus @default(PLANNING)
+  startedAt         DateTime
+  targetEndAt       DateTime?
+  completedAt       DateTime?
+  includedRevisions Int           @default(0)
+  supportMonths     Int           @default(0)
+
+  // Basic info
+  projectType        String?
+  department         String?
+  projectManagerName String?
+
+  // Commercial
+  paymentTerms     String?
+  paymentSchedule  String?
+  contractValueBdt Decimal?
+
+  // Timeline
+  goLiveAt DateTime?
+
+  // Revision policy
+  revisionWindowDays    Int?
+  maxDaysPerRevision    Int?
+  extraRevisionPriceBdt Decimal?
+  revisionNotes         String?
+
+  // After-sales support
+  supportSla             SupportSla @default(STANDARD)
+  supportWorkingHours    String?
+  includedSupportTickets Int?
+  supportContactName     String?
+  sendRenewalReminder    Boolean    @default(false)
+
+  // Technical / credentials
+  domain           String?
+  hostingProvider  String?
+  serverDetails    String?
+  repositoryUrl    String?
+  stagingUrl       String?
+  productionUrl    String?
+  techStack        String?
+  deploymentMethod DeploymentMethod?
+  credentialsNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  milestones       ProjectMilestone[]
+  revisionRequests ProjectRevisionRequest[]
+  credentials      ProjectCredential[]
+  teamMembers      ProjectTeamMember[]
+  invoices         Invoice[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model ProjectMilestone {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title       String
+  dueAt       DateTime?
+  status      MilestoneStatus @default(PENDING)
+  completedAt DateTime?
+
+  @@index([projectId])
+}
+
+model ProjectRevisionRequest {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  description String
+  status      RevisionStatus @default(OPEN)
+  requestedBy String
+  requestedAt DateTime       @default(now())
+  respondedAt DateTime?
+
+  @@index([projectId])
+}
+
+model ProjectCredential {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  label    String
+  username String?
+  password String?
+  url      String?
+  notes    String?
+
+  @@index([projectId])
+}
+
+model ProjectTeamMember {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name        String
+  role        String
+  accessLevel TeamAccessLevel @default(VIEW)
+
+  @@index([projectId])
 }

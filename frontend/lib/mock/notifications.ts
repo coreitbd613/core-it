@@ -2,11 +2,12 @@ import type { NotificationItem } from "@/components/shared/dashboard/notificatio
 import type { Invoice } from "@/lib/invoices"
 import { mockContracts } from "@/lib/mock/contracts"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
-import { mockRevisionRequests, mockProjects } from "@/lib/mock/projects"
+import type { Project } from "@/lib/projects"
 
 export function getClientNotifications(
   organizationId: string,
-  invoices: Invoice[] = []
+  invoices: Invoice[] = [],
+  projects: Project[] = []
 ): NotificationItem[] {
   const items: NotificationItem[] = []
 
@@ -48,36 +49,40 @@ export function getClientNotifications(
     }
   }
 
-  const orgProjectIds = new Set(
-    mockProjects.filter((p) => p.organizationId === organizationId).map((p) => p.id)
-  )
-  for (const r of mockRevisionRequests.filter((r) => orgProjectIds.has(r.projectId))) {
-    if (r.status === "DONE" && r.respondedAt) {
-      items.push({
-        id: `revision-done-${r.id}`,
-        title: "Your revision request was completed",
-        description: r.description,
-        href: `/portal/projects/${r.projectId}`,
-        createdAt: r.respondedAt,
-      })
+  for (const project of projects) {
+    for (const r of project.revisionRequests) {
+      if (r.status === "DONE" && r.respondedAt) {
+        items.push({
+          id: `revision-done-${r.id}`,
+          title: "Your revision request was completed",
+          description: r.description,
+          href: `/portal/projects/${project.id}`,
+          createdAt: r.respondedAt,
+        })
+      }
     }
   }
 
   return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 }
 
-export function getAdminNotifications(invoices: Invoice[] = []): NotificationItem[] {
+export function getAdminNotifications(
+  invoices: Invoice[] = [],
+  projects: Project[] = []
+): NotificationItem[] {
   const items: NotificationItem[] = []
 
-  for (const r of mockRevisionRequests.filter((r) => r.status === "OPEN")) {
-    const project = mockProjects.find((p) => p.id === r.projectId)
-    items.push({
-      id: `revision-open-${r.id}`,
-      title: `New revision request${project ? ` — ${project.organizationName}` : ""}`,
-      description: r.description,
-      href: `/admin/projects/${r.projectId}`,
-      createdAt: r.requestedAt,
-    })
+  for (const project of projects) {
+    for (const r of project.revisionRequests) {
+      if (r.status !== "OPEN") continue
+      items.push({
+        id: `revision-open-${r.id}`,
+        title: `New revision request${project.organization ? ` — ${project.organization.name}` : ""}`,
+        description: r.description,
+        href: `/admin/projects/${project.id}`,
+        createdAt: r.requestedAt,
+      })
+    }
   }
 
   for (const p of latestProposalVersions(mockProposals).filter(

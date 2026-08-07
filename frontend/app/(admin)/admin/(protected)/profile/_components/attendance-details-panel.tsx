@@ -1,11 +1,12 @@
 "use client"
 
-import { CoffeeIcon, LogInIcon, LogOutIcon } from "lucide-react"
+import { CoffeeIcon, LogInIcon, LogOutIcon, TimerIcon, type LucideIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { formatDate, formatDuration } from "@/lib/format"
 import {
   attendanceStatusLabels,
@@ -28,20 +29,26 @@ function toDateKey(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  icon: Icon,
+  iconClassName,
+  label,
+  value,
+}: {
+  icon: LucideIcon
+  iconClassName: string
+  label: string
+  value: string
+}) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-lg border p-3 text-center">
-      <span className="text-xs text-muted-foreground uppercase">{label}</span>
-      <span className="text-sm font-semibold text-foreground">{value}</span>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-foreground">{value}</span>
+    <div className="flex flex-col items-center gap-2 rounded-lg border bg-muted/30 p-3 text-center">
+      <span className={cn("flex size-8 items-center justify-center rounded-full", iconClassName)}>
+        <Icon className="size-4" />
+      </span>
+      <div>
+        <p className="text-[11px] text-muted-foreground uppercase">{label}</p>
+        <p className="mt-0.5 text-sm font-semibold text-foreground">{value}</p>
+      </div>
     </div>
   )
 }
@@ -93,10 +100,31 @@ export function AttendanceDetailsPanel({
         <CardTitle>Attendance details</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="grid grid-cols-3 gap-2">
-          <Stat label="Check in" value={record?.checkIn ?? "—"} />
-          <Stat label="Check out" value={record?.checkOut ?? "—"} />
-          <Stat label="Duration" value={duration > 0 ? formatDuration(duration) : "—"} />
+        <div className="grid grid-cols-2 gap-2">
+          <Stat
+            icon={LogInIcon}
+            iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            label="Check in"
+            value={record?.checkIn ?? "—"}
+          />
+          <Stat
+            icon={LogOutIcon}
+            iconClassName="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+            label="Check out"
+            value={record?.checkOut ?? "—"}
+          />
+          <Stat
+            icon={TimerIcon}
+            iconClassName="bg-primary/10 text-primary"
+            label="Duration"
+            value={duration > 0 ? formatDuration(duration) : "—"}
+          />
+          <Stat
+            icon={CoffeeIcon}
+            iconClassName="bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            label="Break"
+            value={record && record.breakMinutes > 0 ? formatDuration(record.breakMinutes) : "—"}
+          />
         </div>
 
         {isToday && (
@@ -128,13 +156,6 @@ export function AttendanceDetailsPanel({
               {attendanceStatusLabels[record.status]}
             </Badge>
           )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Row label="Check-in" value={record?.checkIn ?? "—"} />
-          <Row label="Check-out" value={record?.checkOut ?? "—"} />
-          <Row label="Working hours" value={duration > 0 ? formatDuration(duration) : "—"} />
-          <Row label="Break duration" value={record && record.breakMinutes > 0 ? formatDuration(record.breakMinutes) : "—"} />
         </div>
       </CardContent>
     </Card>

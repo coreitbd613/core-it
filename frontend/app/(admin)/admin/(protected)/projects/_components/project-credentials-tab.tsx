@@ -38,48 +38,68 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  useAddCredential,
+  useDeleteCredential,
+  useUpdateCredential,
+  useUpdateProject,
+} from "@/hooks/use-projects"
+import {
   deploymentMethodLabels,
-  mockProjectCredentials,
-  type CredentialEntry,
+  type CreateCredentialInput,
   type DeploymentMethod,
   type Project,
-} from "@/lib/mock/projects"
+  type ProjectCredential,
+  type UpdateProjectInput,
+} from "@/lib/projects"
 
-export function ProjectCredentialsTab({
-  project,
-  onChange,
-}: {
-  project: Project
-  onChange?: () => void
-}) {
-  const credentials = mockProjectCredentials.filter((c) => c.projectId === project.id)
+export function ProjectCredentialsTab({ project }: { project: Project }) {
+  const updateProject = useUpdateProject(project.id)
+  const addCredential = useAddCredential(project.id)
+  const updateCredential = useUpdateCredential(project.id)
+  const deleteCredential = useDeleteCredential(project.id)
 
-  function saveField<K extends keyof Project>(key: K, value: Project[K]) {
-    project[key] = value
-    project.updatedAt = new Date().toISOString().slice(0, 10)
-    onChange?.()
+  const credentials = project.credentials
+
+  function saveField<K extends keyof UpdateProjectInput>(
+    key: K,
+    value: UpdateProjectInput[K],
+    successMessage: string
+  ) {
+    updateProject.mutate(
+      { [key]: value } as UpdateProjectInput,
+      {
+        onSuccess: () => toast.success(successMessage),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't save this project."),
+      }
+    )
   }
 
-  function handleAdd(fields: Omit<CredentialEntry, "id" | "projectId">) {
-    mockProjectCredentials.push({ id: crypto.randomUUID(), projectId: project.id, ...fields })
-    onChange?.()
-    toast.success("Credential added.")
+  function handleAdd(fields: CreateCredentialInput) {
+    addCredential.mutate(fields, {
+      onSuccess: () => toast.success("Credential added."),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : "Couldn't add this credential."),
+    })
   }
 
-  function handleEdit(id: string, fields: Omit<CredentialEntry, "id" | "projectId">) {
-    const entry = mockProjectCredentials.find((c) => c.id === id)
-    if (!entry) return
-    Object.assign(entry, fields)
-    onChange?.()
-    toast.success("Credential updated.")
+  function handleEdit(id: string, fields: CreateCredentialInput) {
+    updateCredential.mutate(
+      { credentialId: id, input: fields },
+      {
+        onSuccess: () => toast.success("Credential updated."),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update this credential."),
+      }
+    )
   }
 
   function handleDelete(id: string) {
-    const index = mockProjectCredentials.findIndex((c) => c.id === id)
-    if (index === -1) return
-    mockProjectCredentials.splice(index, 1)
-    onChange?.()
-    toast.success("Credential deleted.")
+    deleteCredential.mutate(id, {
+      onSuccess: () => toast.success("Credential deleted."),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : "Couldn't delete this credential."),
+    })
   }
 
   return (
@@ -99,8 +119,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.domain) return
-                  saveField("domain", next)
-                  toast.success("Domain updated.")
+                  saveField("domain", next, "Domain updated.")
                 }}
               />
             </div>
@@ -113,8 +132,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.hostingProvider) return
-                  saveField("hostingProvider", next)
-                  toast.success("Hosting updated.")
+                  saveField("hostingProvider", next, "Hosting updated.")
                 }}
               />
             </div>
@@ -127,8 +145,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.serverDetails) return
-                  saveField("serverDetails", next)
-                  toast.success("Server details updated.")
+                  saveField("serverDetails", next, "Server details updated.")
                 }}
               />
             </div>
@@ -141,8 +158,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.repositoryUrl) return
-                  saveField("repositoryUrl", next)
-                  toast.success("Repository updated.")
+                  saveField("repositoryUrl", next, "Repository updated.")
                 }}
               />
             </div>
@@ -155,8 +171,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.stagingUrl) return
-                  saveField("stagingUrl", next)
-                  toast.success("Staging URL updated.")
+                  saveField("stagingUrl", next, "Staging URL updated.")
                 }}
               />
             </div>
@@ -169,8 +184,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.productionUrl) return
-                  saveField("productionUrl", next)
-                  toast.success("Production URL updated.")
+                  saveField("productionUrl", next, "Production URL updated.")
                 }}
               />
             </div>
@@ -183,8 +197,7 @@ export function ProjectCredentialsTab({
                 onBlur={(e) => {
                   const next = e.target.value.trim() || null
                   if (next === project.techStack) return
-                  saveField("techStack", next)
-                  toast.success("Tech stack updated.")
+                  saveField("techStack", next, "Tech stack updated.")
                 }}
               />
             </div>
@@ -192,10 +205,13 @@ export function ProjectCredentialsTab({
               <p className="mb-1 text-xs text-muted-foreground">Deployment method</p>
               <Select
                 value={project.deploymentMethod ?? ""}
-                onValueChange={(v) => {
-                  saveField("deploymentMethod", (v || null) as DeploymentMethod | null)
-                  toast.success("Deployment method updated.")
-                }}
+                onValueChange={(v) =>
+                  saveField(
+                    "deploymentMethod",
+                    (v || null) as DeploymentMethod | null,
+                    "Deployment method updated."
+                  )
+                }
               >
                 <SelectTrigger className="h-8 w-full">
                   <SelectValue placeholder="Select method" />
@@ -209,6 +225,20 @@ export function ProjectCredentialsTab({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <p className="mb-1 text-xs text-muted-foreground">Notes</p>
+            <Textarea
+              defaultValue={project.credentialsNotes ?? ""}
+              rows={3}
+              placeholder="Anything else about access/credentials that doesn't fit above..."
+              onBlur={(e) => {
+                const next = e.target.value.trim() || null
+                if (next === project.credentialsNotes) return
+                saveField("credentialsNotes", next, "Notes updated.")
+              }}
+            />
           </div>
         </CardContent>
       </Card>
@@ -262,8 +292,8 @@ function CredentialRow({
   onEdit,
   onDelete,
 }: {
-  credential: CredentialEntry
-  onEdit: (fields: Omit<CredentialEntry, "id" | "projectId">) => void
+  credential: ProjectCredential
+  onEdit: (fields: CreateCredentialInput) => void
   onDelete: () => void
 }) {
   const [visible, setVisible] = React.useState(false)
@@ -372,8 +402,8 @@ function CredentialFormDialog({
   onSubmit,
   trigger,
 }: {
-  credential?: CredentialEntry
-  onSubmit: (fields: Omit<CredentialEntry, "id" | "projectId">) => void
+  credential?: ProjectCredential
+  onSubmit: (fields: CreateCredentialInput) => void
   trigger: React.ReactNode
 }) {
   const [open, setOpen] = React.useState(false)

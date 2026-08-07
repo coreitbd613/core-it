@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeftIcon, XIcon } from "lucide-react"
@@ -15,25 +14,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/tabs"
 import { ProjectOverviewTab } from "@/components/shared/projects/project-overview-tab"
 import { ProjectRevisionsTab } from "@/components/shared/projects/project-revisions-tab"
 import { ProjectSupportTab } from "@/components/shared/projects/project-support-tab"
 import { ProjectTimelineTab } from "@/components/shared/projects/project-timeline-tab"
-import { mockProjects, projectStatusLabels, type ProjectStatus } from "@/lib/mock/projects"
+import { useAdminProject, useUpdateProjectStatus } from "@/hooks/use-projects"
+import { projectStatusLabels, type ProjectStatus } from "@/lib/projects"
 
 import { ProjectCredentialsTab } from "../_components/project-credentials-tab"
-import { ProjectDeliveryConfigTab } from "../_components/project-delivery-config-tab"
-import { ProjectRisksTab } from "../_components/project-risks-tab"
 import { ProjectTeamTab } from "../_components/project-team-tab"
 
 const projectStatuses: ProjectStatus[] = ["PLANNING", "IN_PROGRESS", "REVIEW", "COMPLETED"]
 
 export default function AdminProjectDetailPage() {
   const params = useParams<{ id: string }>()
-  const [, forceRerender] = React.useState(0)
+  const { data: project, isLoading } = useAdminProject(params.id)
+  const updateStatus = useUpdateProjectStatus(params.id)
 
-  const project = mockProjects.find((p) => p.id === params.id)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!project) {
     return (
@@ -51,18 +57,13 @@ export default function AdminProjectDetailPage() {
     )
   }
 
-  function refresh() {
-    forceRerender((n) => n + 1)
-  }
-
-  function handleStatusChange(status: ProjectStatus) {
-    project!.status = status
-    project!.updatedAt = new Date().toISOString().slice(0, 10)
-    if (status === "COMPLETED" && !project!.completedAt) {
-      project!.completedAt = new Date().toISOString().slice(0, 10)
+  async function handleStatusChange(status: ProjectStatus) {
+    try {
+      await updateStatus.mutateAsync(status)
+      toast.success("Project status updated.")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't update this project's status.")
     }
-    refresh()
-    toast.success("Project status updated.")
   }
 
   return (
@@ -75,7 +76,7 @@ export default function AdminProjectDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{project.name}</h1>
-          <p className="text-muted-foreground">{project.organizationName}</p>
+          <p className="text-muted-foreground">{project.organization?.name ?? "—"}</p>
         </div>
         <div className="ml-auto">
           <Select
@@ -101,35 +102,27 @@ export default function AdminProjectDetailPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="revisions">Revisions</TabsTrigger>
-          <TabsTrigger value="delivery">Delivery Config</TabsTrigger>
           <TabsTrigger value="support">Support</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="credentials">Credentials</TabsTrigger>
-          <TabsTrigger value="risks">Risks & Dependencies</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
-          <ProjectOverviewTab project={project} variant="admin" onChange={refresh} />
+          <ProjectOverviewTab project={project} variant="admin" />
         </TabsContent>
         <TabsContent value="timeline">
-          <ProjectTimelineTab project={project} variant="admin" onChange={refresh} />
+          <ProjectTimelineTab project={project} variant="admin" />
         </TabsContent>
         <TabsContent value="revisions">
-          <ProjectRevisionsTab project={project} variant="admin" onChange={refresh} />
-        </TabsContent>
-        <TabsContent value="delivery">
-          <ProjectDeliveryConfigTab project={project} onChange={refresh} />
+          <ProjectRevisionsTab project={project} variant="admin" />
         </TabsContent>
         <TabsContent value="support">
-          <ProjectSupportTab project={project} variant="admin" onChange={refresh} />
+          <ProjectSupportTab project={project} variant="admin" />
         </TabsContent>
         <TabsContent value="team">
-          <ProjectTeamTab project={project} onChange={refresh} />
+          <ProjectTeamTab project={project} />
         </TabsContent>
         <TabsContent value="credentials">
-          <ProjectCredentialsTab project={project} onChange={refresh} />
-        </TabsContent>
-        <TabsContent value="risks">
-          <ProjectRisksTab project={project} onChange={refresh} />
+          <ProjectCredentialsTab project={project} />
         </TabsContent>
       </Tabs>
     </div>

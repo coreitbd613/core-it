@@ -13,33 +13,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useUpdateProject } from "@/hooks/use-projects"
+import { formatDate } from "@/lib/format"
 import { LEAD_OWNERS } from "@/lib/mock/leads"
-import { supportSlaLabels, supportStatus, type Project, type SupportSla } from "@/lib/mock/projects"
+import {
+  supportSlaLabels,
+  supportStatus,
+  type Project,
+  type SupportSla,
+  type UpdateProjectInput,
+} from "@/lib/projects"
 
 const supportMonthOptions = [1, 3, 6, 12]
 
 export function ProjectSupportTab({
   project,
   variant,
-  onChange,
 }: {
   project: Project
   variant: "admin" | "portal"
-  onChange?: () => void
 }) {
+  const updateProject = useUpdateProject(project.id)
   const status = supportStatus(project)
 
-  function handleMonthsChange(months: number) {
-    project.supportMonths = months
-    project.updatedAt = new Date().toISOString().slice(0, 10)
-    onChange?.()
-    toast.success("Support policy updated.")
-  }
-
-  function saveField<K extends keyof Project>(key: K, value: Project[K]) {
-    project[key] = value
-    project.updatedAt = new Date().toISOString().slice(0, 10)
-    onChange?.()
+  function saveField<K extends keyof UpdateProjectInput>(
+    key: K,
+    value: UpdateProjectInput[K],
+    successMessage: string
+  ) {
+    updateProject.mutate(
+      { [key]: value } as UpdateProjectInput,
+      {
+        onSuccess: () => toast.success(successMessage),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't save this project."),
+      }
+    )
   }
 
   const badgeVariant =
@@ -68,7 +77,7 @@ export function ProjectSupportTab({
             {variant === "admin" ? (
               <Select
                 value={String(project.supportMonths)}
-                onValueChange={(v) => handleMonthsChange(Number(v))}
+                onValueChange={(v) => saveField("supportMonths", Number(v), "Support policy updated.")}
               >
                 <SelectTrigger size="sm" className="w-32">
                   <SelectValue />
@@ -90,9 +99,7 @@ export function ProjectSupportTab({
           <div>
             <p className="text-xs text-muted-foreground">Support ends</p>
             <p className="text-sm text-foreground">
-              {status.endsAt
-                ? new Date(status.endsAt).toLocaleDateString()
-                : "Starts once delivered"}
+              {status.endsAt ? formatDate(status.endsAt) : "Starts once delivered"}
             </p>
           </div>
         </div>
@@ -110,10 +117,7 @@ export function ProjectSupportTab({
                 <p className="mb-1 text-xs text-muted-foreground">SLA</p>
                 <Select
                   value={project.supportSla}
-                  onValueChange={(v) => {
-                    saveField("supportSla", v as SupportSla)
-                    toast.success("SLA updated.")
-                  }}
+                  onValueChange={(v) => saveField("supportSla", v as SupportSla, "SLA updated.")}
                 >
                   <SelectTrigger size="sm" className="w-full">
                     <SelectValue />
@@ -136,8 +140,7 @@ export function ProjectSupportTab({
                   onBlur={(e) => {
                     const next = e.target.value.trim() || null
                     if (next === project.supportWorkingHours) return
-                    saveField("supportWorkingHours", next)
-                    toast.success("Working hours updated.")
+                    saveField("supportWorkingHours", next, "Working hours updated.")
                   }}
                 />
               </div>
@@ -153,8 +156,7 @@ export function ProjectSupportTab({
                   onBlur={(e) => {
                     const next = e.target.value ? Number(e.target.value) : null
                     if (next === project.includedSupportTickets) return
-                    saveField("includedSupportTickets", next)
-                    toast.success("Included tickets updated.")
+                    saveField("includedSupportTickets", next, "Included tickets updated.")
                   }}
                 />
               </div>
@@ -162,10 +164,9 @@ export function ProjectSupportTab({
                 <p className="mb-1 text-xs text-muted-foreground">Support contact</p>
                 <Select
                   value={project.supportContactName ?? ""}
-                  onValueChange={(v) => {
-                    saveField("supportContactName", v || null)
-                    toast.success("Support contact updated.")
-                  }}
+                  onValueChange={(v) =>
+                    saveField("supportContactName", v || null, "Support contact updated.")
+                  }
                 >
                   <SelectTrigger size="sm" className="w-full">
                     <SelectValue placeholder="Select contact" />
@@ -184,9 +185,9 @@ export function ProjectSupportTab({
               <Checkbox
                 id="support-renewal-reminder"
                 checked={project.sendRenewalReminder}
-                onCheckedChange={(checked) => {
-                  saveField("sendRenewalReminder", checked === true)
-                }}
+                onCheckedChange={(checked) =>
+                  saveField("sendRenewalReminder", checked === true, "Renewal reminder updated.")
+                }
               />
               <label htmlFor="support-renewal-reminder" className="text-sm text-foreground">
                 Send renewal reminder

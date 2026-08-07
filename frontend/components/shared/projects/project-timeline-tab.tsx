@@ -26,51 +26,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAddMilestone, useUpdateMilestone } from "@/hooks/use-projects"
+import { formatDate } from "@/lib/format"
 import {
   isMilestoneOverdue,
   milestoneProgress,
   milestoneStatusLabels,
   milestoneStatusVariant,
-  milestonesForProject,
-  mockMilestones,
   type MilestoneStatus,
   type Project,
-} from "@/lib/mock/projects"
+} from "@/lib/projects"
 
 const milestoneStatuses: MilestoneStatus[] = ["PENDING", "IN_PROGRESS", "DONE"]
 
 export function ProjectTimelineTab({
   project,
   variant,
-  onChange,
 }: {
   project: Project
   variant: "admin" | "portal"
-  onChange?: () => void
 }) {
-  const milestones = milestonesForProject(project.id)
-  const progress = milestoneProgress(project.id)
+  const addMilestone = useAddMilestone(project.id)
+  const updateMilestone = useUpdateMilestone(project.id)
+
+  const milestones = project.milestones
+  const progress = milestoneProgress(milestones)
 
   function handleAdd(title: string, dueAt: string) {
-    mockMilestones.push({
-      id: crypto.randomUUID(),
-      projectId: project.id,
-      title,
-      dueAt: dueAt || null,
-      status: "PENDING",
-      completedAt: null,
-    })
-    onChange?.()
-    toast.success("Milestone added.")
+    addMilestone.mutate(
+      { title, dueAt: dueAt || undefined },
+      {
+        onSuccess: () => toast.success("Milestone added."),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't add this milestone."),
+      }
+    )
   }
 
   function handleStatusChange(milestoneId: string, status: MilestoneStatus) {
-    const milestone = mockMilestones.find((m) => m.id === milestoneId)
-    if (!milestone) return
-    milestone.status = status
-    milestone.completedAt = status === "DONE" ? new Date().toISOString().slice(0, 10) : null
-    onChange?.()
-    toast.success("Milestone updated.")
+    updateMilestone.mutate(
+      { milestoneId, input: { status } },
+      {
+        onSuccess: () => toast.success("Milestone updated."),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update this milestone."),
+      }
+    )
   }
 
   return (
@@ -107,9 +108,7 @@ export function ProjectTimelineTab({
                       className={`text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}
                     >
                       {milestone.dueAt
-                        ? `${overdue ? "Overdue — " : "Due "}${new Date(
-                            milestone.dueAt
-                          ).toLocaleDateString()}`
+                        ? `${overdue ? "Overdue — " : "Due "}${formatDate(milestone.dueAt)}`
                         : "No due date"}
                     </span>
                   </div>

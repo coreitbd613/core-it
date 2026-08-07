@@ -128,8 +128,20 @@ export class InvoicesService {
       }
     }
 
+    const customNumber = dto.number?.trim() || undefined;
+    if (customNumber) {
+      const existing = await this.prisma.invoice.findUnique({
+        where: { number: customNumber },
+      });
+      if (existing) {
+        throw new ConflictException(
+          `Invoice number "${customNumber}" is already in use.`,
+        );
+      }
+    }
+
     const created = await this.prisma.$transaction(async (tx) => {
-      const number = await nextInvoiceNumber(tx);
+      const number = customNumber ?? (await nextInvoiceNumber(tx));
       return tx.invoice.create({
         data: {
           number,

@@ -7,7 +7,7 @@ import { ArrowLeftIcon, PencilIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/tabs"
 import { mockEmployees, type EmployeeStatus } from "@/lib/mock/employees"
 
 import { EmployeeAttendanceTab } from "../_components/employee-attendance-tab"

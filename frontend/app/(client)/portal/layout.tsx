@@ -21,7 +21,9 @@ import { useClientAuth } from "@/contexts/client-auth-context"
 import { MockRoleProvider } from "@/contexts/mock-role-context"
 import { useMyOrganization } from "@/hooks/use-organization"
 import { useMyInvoices } from "@/hooks/use-invoices"
+import { useMyProjects } from "@/hooks/use-projects"
 import type { Invoice } from "@/lib/invoices"
+import type { Project } from "@/lib/projects"
 import { Button } from "@/components/ui/button"
 import PanelDashboardShell, {
   type PanelNavItem,
@@ -31,11 +33,10 @@ import { NotificationsBell } from "@/components/shared/dashboard/notifications-b
 import { getClientNotifications } from "@/lib/mock/notifications"
 import { mockContracts } from "@/lib/mock/contracts"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
-import { mockProjects } from "@/lib/mock/projects"
 
 const CURRENT_ORG_ID = "org-1"
 
-function buildSearchItems(invoices: Invoice[]): SearchItem[] {
+function buildSearchItems(invoices: Invoice[], projects: Project[]): SearchItem[] {
   const navEntries: SearchItem[] = [
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/portal/dashboard", icon: <LayoutDashboard className="size-4" /> },
     { id: "nav-proposals", group: "Go to", label: "Proposals", href: "/portal/proposals", icon: <FileTextIcon className="size-4" /> },
@@ -59,14 +60,12 @@ function buildSearchItems(invoices: Invoice[]): SearchItem[] {
       href: `/portal/proposals/${p.id}`,
     }))
 
-  const projectEntries: SearchItem[] = mockProjects
-    .filter((p) => p.organizationId === CURRENT_ORG_ID)
-    .map((p) => ({
-      id: `project-${p.id}`,
-      group: "Projects",
-      label: p.name,
-      href: `/portal/projects/${p.id}`,
-    }))
+  const projectEntries: SearchItem[] = projects.map((p) => ({
+    id: `project-${p.id}`,
+    group: "Projects",
+    label: p.name,
+    href: `/portal/projects/${p.id}`,
+  }))
 
   const invoiceEntries: SearchItem[] = invoices.map((inv) => ({
     id: `invoice-${inv.id}`,
@@ -127,6 +126,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const isOnboarding = pathname === "/portal/onboarding"
   const { isError: hasNoOrganization, isLoading: organizationLoading } = useMyOrganization()
   const { data: invoices = [] } = useMyInvoices()
+  const { data: projects = [] } = useMyProjects()
 
   React.useEffect(() => {
     if (hasNoOrganization && !isOnboarding) {
@@ -152,8 +152,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       profileHref="/portal/profile"
       onLogout={handleLogout}
       loading={isPending || (organizationLoading && !isOnboarding)}
-      search={<GlobalSearch items={buildSearchItems(invoices)} />}
-      notifications={<NotificationsBell items={getClientNotifications(CURRENT_ORG_ID, invoices)} />}
+      search={<GlobalSearch items={buildSearchItems(invoices, projects)} />}
+      notifications={
+        <NotificationsBell items={getClientNotifications(CURRENT_ORG_ID, invoices, projects)} />
+      }
       sidebarFooterExtra={
         user?.role === "ADMIN" ? (
           <Button variant="outline" size="sm" className="w-full justify-start gap-2" asChild>

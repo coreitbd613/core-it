@@ -12,21 +12,13 @@ import { DataTable } from "@/components/shared/data-table/data-table"
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
-import {
-  mockProjects,
-  projectStatusLabels,
-  projectStatusVariant,
-  type Project,
-} from "@/lib/mock/projects"
-
-const CURRENT_ORG_ID = "org-1"
+import { useMyProjects } from "@/hooks/use-projects"
+import { formatDate } from "@/lib/format"
+import { projectStatusLabels, projectStatusVariant, type Project } from "@/lib/projects"
 
 export default function ProjectsPage() {
   const [search, setSearch] = useState("")
-  const projects = useMemo(
-    () => mockProjects.filter((p) => p.organizationId === CURRENT_ORG_ID),
-    []
-  )
+  const { data: projects = [], isPending } = useMyProjects()
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const inProgress = projects.filter((p) => p.status === "IN_PROGRESS").length
@@ -64,13 +56,13 @@ export default function ProjectsPage() {
         id: "startedAt",
         accessorFn: (row) => row.startedAt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Started" />,
-        cell: ({ row }) => new Date(row.original.startedAt).toLocaleDateString(),
+        cell: ({ row }) => formatDate(row.original.startedAt),
       },
       {
         id: "updatedAt",
         accessorFn: (row) => row.updatedAt,
         header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
-        cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString(),
+        cell: ({ row }) => formatDate(row.original.updatedAt),
       },
     ],
     []
@@ -85,7 +77,7 @@ export default function ProjectsPage() {
         </p>
       </div>
 
-      <DashboardStatsGrid items={stats} />
+      <DashboardStatsGrid items={stats} loading={isPending} />
 
       <DataTableToolbar
         searchValue={search}
@@ -97,6 +89,7 @@ export default function ProjectsPage() {
         columns={columns}
         data={projects}
         getRowId={(row) => row.id}
+        isLoading={isPending}
         emptyMessage="No projects yet."
         globalFilter={search}
         enableRowSelection={false}

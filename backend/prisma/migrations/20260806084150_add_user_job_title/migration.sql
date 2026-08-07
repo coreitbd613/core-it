@@ -1,0 +1,6 @@
+-- Placeholder: the database's _prisma_migrations history recorded this
+-- migration name as applied, but the actual folder was missing from the
+-- repo (superseded on disk by 20260806084722_add_user_job_title, which
+-- added the same User.jobTitle column and is already applied). This is a
+-- no-op backfill so `prisma migrate resolve --applied` can reconcile the
+-- ledger without re-running or duplicating any schema change.

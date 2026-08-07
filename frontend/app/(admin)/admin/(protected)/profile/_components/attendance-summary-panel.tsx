@@ -1,16 +1,40 @@
 "use client"
 
+import {
+  CalendarOffIcon,
+  CheckCircle2Icon,
+  CircleHelpIcon,
+  ClockIcon,
+  TriangleAlertIcon,
+  XCircleIcon,
+  type LucideIcon,
+} from "lucide-react"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { cn } from "@/lib/utils"
 import { attendanceMonthlySummary, type AttendanceRecord } from "@/lib/mock/attendance"
 
-function Tile({ label, value, tone }: { label: string; value: number; tone: "default" | "destructive" | "muted" }) {
-  const valueClass =
-    tone === "destructive" ? "text-destructive" : tone === "muted" ? "text-muted-foreground" : "text-primary"
+function Tile({
+  icon: Icon,
+  iconClassName,
+  label,
+  value,
+}: {
+  icon: LucideIcon
+  iconClassName: string
+  label: string
+  value: number | string
+}) {
   return (
-    <div className="rounded-lg border p-3">
-      <p className="text-xs text-muted-foreground uppercase">{label}</p>
-      <p className={`mt-1 text-xl font-bold ${valueClass}`}>{value}</p>
+    <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+      <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-md", iconClassName)}>
+        <Icon className="size-4" />
+      </span>
+      <div>
+        <p className="text-[11px] text-muted-foreground uppercase">{label}</p>
+        <p className="mt-0.5 text-lg font-bold text-foreground">{value}</p>
+      </div>
     </div>
   )
 }
@@ -34,12 +58,42 @@ export function AttendanceSummaryPanel({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-2">
-          <Tile label="Present" value={summary.present} tone="default" />
-          <Tile label="Late" value={summary.late} tone="destructive" />
-          <Tile label="Absent" value={summary.absent} tone="destructive" />
-          <Tile label="Leave" value={summary.onLeave} tone="muted" />
-          <Tile label="No record" value={summary.noRecord} tone="muted" />
-          <Tile label="Avg hours" value={summary.avgHours} tone="default" />
+          <Tile
+            icon={CheckCircle2Icon}
+            iconClassName="bg-primary/10 text-primary"
+            label="Present"
+            value={summary.present}
+          />
+          <Tile
+            icon={TriangleAlertIcon}
+            iconClassName="bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            label="Late"
+            value={summary.late}
+          />
+          <Tile
+            icon={XCircleIcon}
+            iconClassName="bg-destructive/10 text-destructive"
+            label="Absent"
+            value={summary.absent}
+          />
+          <Tile
+            icon={CalendarOffIcon}
+            iconClassName="bg-violet-500/10 text-violet-600 dark:text-violet-400"
+            label="Leave"
+            value={summary.onLeave}
+          />
+          <Tile
+            icon={CircleHelpIcon}
+            iconClassName="bg-muted text-muted-foreground"
+            label="No record"
+            value={summary.noRecord}
+          />
+          <Tile
+            icon={ClockIcon}
+            iconClassName="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+            label="Avg hours"
+            value={summary.avgHours}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">
