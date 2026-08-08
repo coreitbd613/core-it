@@ -190,9 +190,6 @@ function CompanyProfileForm({ organization }: { organization: Organization }) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Company profile</h1>
-          <p className="text-muted-foreground">
-            This information appears on proposals, invoices, and statements.
-          </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {!canManageCompany ? (

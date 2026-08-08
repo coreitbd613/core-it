@@ -165,9 +165,6 @@ export default function AdminClientsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Clients</h1>
-        <p className="text-muted-foreground">
-          Every company you do business with — proposals, contracts, projects, and invoices in one place.
-        </p>
       </div>
 
       <DashboardStatsGrid items={stats} loading={isPending} />

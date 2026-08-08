@@ -41,7 +41,7 @@ export default function AdminProjectsPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Project" />,
         cell: ({ row }) => (
           <Link
-            href={`/admin/projects/${row.original.id}`}
+            href={`/admin/projects/${row.original.projectCode}`}
             className="font-medium text-foreground hover:underline"
           >
             {row.original.name}
@@ -82,7 +82,6 @@ export default function AdminProjectsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Projects</h1>
-          <p className="text-muted-foreground">Delivery status across every company.</p>
         </div>
         <Button asChild>
           <Link href="/admin/projects/new">

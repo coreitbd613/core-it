@@ -1,24 +1,31 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { CheckCircle2Icon, ClockIcon, FolderKanbanIcon, Loader2Icon } from "lucide-react"
-import type { ColumnDef } from "@tanstack/react-table"
+import { CheckCircle2Icon, ClockIcon, FolderKanbanIcon, Loader2Icon, XIcon } from "lucide-react"
 
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
-import { DataTable } from "@/components/shared/data-table/data-table"
-import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar"
-import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Progress } from "@/components/ui/progress"
+import { Spinner } from "@/components/ui/spinner"
 import { useMyProjects } from "@/hooks/use-projects"
 import { formatDate } from "@/lib/format"
-import { projectStatusLabels, projectStatusVariant, type Project } from "@/lib/projects"
+import { milestoneProgress, projectStatusLabels, projectStatusVariant } from "@/lib/projects"
 
 export default function ProjectsPage() {
-  const [search, setSearch] = useState("")
+  const router = useRouter()
   const { data: projects = [], isPending } = useMyProjects()
+
+  useEffect(() => {
+    if (!isPending && projects.length === 1) {
+      router.replace(`/portal/projects/${projects[0].projectCode}`)
+    }
+  }, [isPending, projects, router])
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const inProgress = projects.filter((p) => p.status === "IN_PROGRESS").length
@@ -32,68 +39,72 @@ export default function ProjectsPage() {
     ]
   }, [projects])
 
-  const columns = useMemo<ColumnDef<Project>[]>(
-    () => [
-      {
-        accessorKey: "name",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Project" />,
-        cell: ({ row }) => (
-          <Link href={`/portal/projects/${row.original.id}`} className="font-medium text-foreground hover:underline">
-            {row.original.name}
-          </Link>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-          <Badge variant={projectStatusVariant[row.original.status]}>
-            {projectStatusLabels[row.original.status]}
-          </Badge>
-        ),
-      },
-      {
-        id: "startedAt",
-        accessorFn: (row) => row.startedAt,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Started" />,
-        cell: ({ row }) => formatDate(row.original.startedAt),
-      },
-      {
-        id: "updatedAt",
-        accessorFn: (row) => row.updatedAt,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
-        cell: ({ row }) => formatDate(row.original.updatedAt),
-      },
-    ],
-    []
-  )
+  if (isPending || projects.length === 1) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
+
+  if (projects.length === 0) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <XIcon />
+          </EmptyMedia>
+          <EmptyTitle>No projects yet</EmptyTitle>
+          <EmptyDescription>
+            Once Core IT kicks off a project for you, it&apos;ll show up here.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Projects</h1>
-        <p className="text-muted-foreground">
-          Track delivery progress and request revisions on active work.
-        </p>
       </div>
 
-      <DashboardStatsGrid items={stats} loading={isPending} />
+      <DashboardStatsGrid items={stats} />
 
-      <DataTableToolbar
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search projects..."
-      />
-
-      <DataTable
-        columns={columns}
-        data={projects}
-        getRowId={(row) => row.id}
-        isLoading={isPending}
-        emptyMessage="No projects yet."
-        globalFilter={search}
-        enableRowSelection={false}
-      />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {projects.map((project) => {
+          const progress = milestoneProgress(project.milestones)
+          return (
+            <Link key={project.id} href={`/portal/projects/${project.projectCode}`}>
+              <Card className="h-full transition-colors hover:border-primary/40">
+                <CardHeader className="flex-row items-start justify-between gap-2 space-y-0">
+                  <CardTitle className="text-base leading-snug">{project.name}</CardTitle>
+                  <Badge variant={projectStatusVariant[project.status]} className="shrink-0">
+                    {projectStatusLabels[project.status]}
+                  </Badge>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  {progress.total > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Milestones</span>
+                        <span>
+                          {progress.done}/{progress.total}
+                        </span>
+                      </div>
+                      <Progress value={progress.percent} />
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Started {formatDate(project.startedAt)}</span>
+                    <span>Updated {formatDate(project.updatedAt)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          )
+        })}
+      </div>
     </div>
   )
 }

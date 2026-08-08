@@ -10,7 +10,6 @@ export default function UserDashboardPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">No dashboard data yet.</p>
       </div>
 
       <Card className="rounded-lg">

@@ -40,7 +40,7 @@ export function ClientProjectsTab({ organizationId }: { organizationId: string }
         {projects.map((project) => (
           <Link
             key={project.id}
-            href={`/admin/projects/${project.id}`}
+            href={`/admin/projects/${project.projectCode}`}
             className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-muted/40"
           >
             <div className="min-w-0">

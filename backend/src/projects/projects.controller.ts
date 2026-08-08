@@ -25,6 +25,8 @@ import { CreateProjectCredentialDto } from './dto/create-project-credential.dto'
 import { UpdateProjectCredentialDto } from './dto/update-project-credential.dto';
 import { CreateProjectTeamMemberDto } from './dto/create-project-team-member.dto';
 import { UpdateProjectTeamMemberDto } from './dto/update-project-team-member.dto';
+import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
+import { RespondSupportTicketDto } from './dto/respond-support-ticket.dto';
 
 interface RequestUser {
   id: string;
@@ -67,6 +69,21 @@ export class ProjectsController {
     @Body() dto: CreateRevisionRequestDto,
   ) {
     return this.projectsService.fileRevisionRequestForUser(
+      user.id,
+      id,
+      dto,
+      user.name ?? user.email,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('mine/:id/support-tickets')
+  fileSupportTicketMine(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Body() dto: CreateSupportTicketDto,
+  ) {
+    return this.projectsService.fileSupportTicketForUser(
       user.id,
       id,
       dto,
@@ -164,6 +181,27 @@ export class ProjectsController {
     @Body() dto: RespondRevisionRequestDto,
   ) {
     return this.projectsService.respondToRevisionRequest(id, revisionId, dto);
+  }
+
+  // --- Support tickets ---
+
+  @UseGuards(AdminJwtAuthGuard)
+  @Post('admin/:id/support-tickets')
+  fileSupportTicketAdmin(
+    @Param('id') id: string,
+    @Body() dto: CreateSupportTicketDto,
+  ) {
+    return this.projectsService.fileSupportTicket(id, dto, 'Admin');
+  }
+
+  @UseGuards(AdminJwtAuthGuard)
+  @Patch('admin/:id/support-tickets/:ticketId/respond')
+  respondToSupportTicket(
+    @Param('id') id: string,
+    @Param('ticketId') ticketId: string,
+    @Body() dto: RespondSupportTicketDto,
+  ) {
+    return this.projectsService.respondToSupportTicket(id, ticketId, dto);
   }
 
   // --- Credentials ---

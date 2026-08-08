@@ -179,7 +179,6 @@ export default function AdminLeaveRequestsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Leave requests</h1>
-          <p className="text-muted-foreground">Review and approve leave across the company.</p>
         </div>
         <LeaveRequestDialog onCreated={() => forceRerender((n) => n + 1)} />
       </div>

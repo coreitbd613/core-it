@@ -1,22 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { PlusIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { RichTextEditor } from "@/components/shared/rich-text-editor"
@@ -98,9 +87,8 @@ export function ProjectRevisionsTab({
 
   return (
     <Card className="max-w-3xl">
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle>Revision requests</CardTitle>
-        {variant === "portal" && <RequestRevisionDialog onRequest={handleRequest} />}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
@@ -199,6 +187,8 @@ export function ProjectRevisionsTab({
           </p>
         )}
 
+        {variant === "portal" && <InlineRevisionRequestForm onRequest={handleRequest} />}
+
         {revisions.length === 0 ? (
           <p className="text-sm text-muted-foreground">No revisions requested yet.</p>
         ) : (
@@ -250,8 +240,7 @@ function isHtmlEmpty(html: string): boolean {
   return html.replace(/<[^>]*>/g, "").trim().length === 0
 }
 
-function RequestRevisionDialog({ onRequest }: { onRequest: (description: string) => void }) {
-  const [open, setOpen] = React.useState(false)
+function InlineRevisionRequestForm({ onRequest }: { onRequest: (description: string) => void }) {
   const [description, setDescription] = React.useState("")
 
   function handleSubmit(e: React.FormEvent) {
@@ -259,49 +248,27 @@ function RequestRevisionDialog({ onRequest }: { onRequest: (description: string)
     if (isHtmlEmpty(description)) return
     onRequest(description)
     setDescription("")
-    setOpen(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <PlusIcon />
-          Request a revision
+    <form onSubmit={handleSubmit} className="rounded-lg border p-3">
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="revision-description">Request a revision</FieldLabel>
+          <RichTextEditor
+            id="revision-description"
+            value={description}
+            onChange={setDescription}
+            placeholder="Describe the change you'd like — Core IT will pick it up from here."
+            minHeight="120px"
+          />
+        </Field>
+      </FieldGroup>
+      <div className="mt-3 flex justify-end">
+        <Button type="submit" size="sm" disabled={isHtmlEmpty(description)}>
+          Send request
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Request a revision</DialogTitle>
-            <DialogDescription>
-              Describe the change you&apos;d like — Core IT will pick it up from here.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="py-4">
-            <Field>
-              <FieldLabel htmlFor="revision-description">What needs to change?</FieldLabel>
-              <RichTextEditor
-                id="revision-description"
-                value={description}
-                onChange={setDescription}
-                placeholder="Describe the revision..."
-                minHeight="120px"
-              />
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={isHtmlEmpty(description)}>
-              Send request
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </form>
   )
 }

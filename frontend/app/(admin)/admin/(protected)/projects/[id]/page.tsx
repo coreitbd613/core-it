@@ -19,12 +19,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/ta
 import { ProjectOverviewTab } from "@/components/shared/projects/project-overview-tab"
 import { ProjectRevisionsTab } from "@/components/shared/projects/project-revisions-tab"
 import { ProjectSupportTab } from "@/components/shared/projects/project-support-tab"
+import { ProjectTeamTab } from "@/components/shared/projects/project-team-tab"
 import { ProjectTimelineTab } from "@/components/shared/projects/project-timeline-tab"
 import { useAdminProject, useUpdateProjectStatus } from "@/hooks/use-projects"
 import { projectStatusLabels, type ProjectStatus } from "@/lib/projects"
 
 import { ProjectCredentialsTab } from "../_components/project-credentials-tab"
-import { ProjectTeamTab } from "../_components/project-team-tab"
 
 const projectStatuses: ProjectStatus[] = ["PLANNING", "IN_PROGRESS", "REVIEW", "COMPLETED"]
 
@@ -119,7 +119,7 @@ export default function AdminProjectDetailPage() {
           <ProjectSupportTab project={project} variant="admin" />
         </TabsContent>
         <TabsContent value="team">
-          <ProjectTeamTab project={project} />
+          <ProjectTeamTab project={project} variant="admin" />
         </TabsContent>
         <TabsContent value="credentials">
           <ProjectCredentialsTab project={project} />

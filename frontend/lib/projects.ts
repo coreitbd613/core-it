@@ -5,6 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"
 export type ProjectStatus = "PLANNING" | "IN_PROGRESS" | "REVIEW" | "COMPLETED"
 export type MilestoneStatus = "PENDING" | "IN_PROGRESS" | "DONE"
 export type RevisionStatus = "OPEN" | "IN_PROGRESS" | "DONE"
+export type SupportTicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED"
 export type TeamAccessLevel = "FULL" | "EDIT" | "VIEW"
 export type SupportSla = "STANDARD" | "PRIORITY" | "PREMIUM"
 export type DeploymentMethod = "MANUAL" | "CI_CD" | "FTP" | "GIT_PUSH"
@@ -40,6 +41,21 @@ export const revisionStatusVariant: Record<
   OPEN: "outline",
   IN_PROGRESS: "secondary",
   DONE: "default",
+}
+
+export const supportTicketStatusLabels: Record<SupportTicketStatus, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  RESOLVED: "Resolved",
+}
+
+export const supportTicketStatusVariant: Record<
+  SupportTicketStatus,
+  "default" | "secondary" | "outline"
+> = {
+  OPEN: "outline",
+  IN_PROGRESS: "secondary",
+  RESOLVED: "default",
 }
 
 export const milestoneStatusLabels: Record<MilestoneStatus, string> = {
@@ -114,6 +130,17 @@ export type ProjectRevisionRequest = {
   respondedAt: string | null
 }
 
+export type ProjectSupportTicket = {
+  id: string
+  projectId: string
+  subject: string
+  description: string
+  status: SupportTicketStatus
+  requestedBy: string
+  requestedAt: string
+  resolvedAt: string | null
+}
+
 export type ProjectCredential = {
   id: string
   projectId: string
@@ -134,6 +161,7 @@ export type ProjectTeamMember = {
 
 export type Project = {
   id: string
+  projectCode: string
   organizationId: string
   organization: { id: string; name: string } | null
   name: string
@@ -186,6 +214,7 @@ export type Project = {
   revisionRequests: ProjectRevisionRequest[]
   credentials: ProjectCredential[]
   teamMembers: ProjectTeamMember[]
+  supportTickets: ProjectSupportTicket[]
 }
 
 export function revisionStats(
@@ -226,6 +255,18 @@ export function supportStatus(
   }
 }
 
+export function supportTicketStats(
+  project: Pick<Project, "includedSupportTickets" | "supportTickets">
+): { included: number | null; used: number; remaining: number | null } {
+  const used = project.supportTickets.length
+  const included = project.includedSupportTickets
+  return {
+    included,
+    used,
+    remaining: included == null ? null : Math.max(0, included - used),
+  }
+}
+
 export type CreateMilestoneInput = { title: string; dueAt?: string }
 export type UpdateMilestoneInput = { title?: string; dueAt?: string; status?: MilestoneStatus }
 export type CreateTeamMemberInput = { name: string; role: string; accessLevel?: TeamAccessLevel }
@@ -240,6 +281,8 @@ export type CreateCredentialInput = {
 export type UpdateCredentialInput = Partial<CreateCredentialInput>
 export type CreateRevisionRequestInput = { description: string; requestedBy?: string }
 export type RespondRevisionRequestInput = { status: RevisionStatus }
+export type CreateSupportTicketInput = { subject: string; description: string; requestedBy?: string }
+export type RespondSupportTicketInput = { status: SupportTicketStatus }
 
 export type CreateProjectInput = {
   organizationId: string
@@ -465,6 +508,37 @@ export async function respondToRevisionRequest(
   return (await res.json()) as ProjectRevisionRequest
 }
 
+export async function adminFileSupportTicket(
+  projectId: string,
+  input: CreateSupportTicketInput
+): Promise<ProjectSupportTicket> {
+  const res = await authFetch(
+    `${API_URL}/projects/admin/${projectId}/support-tickets`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) },
+    "admin"
+  )
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, "Couldn't file this support ticket."))
+  }
+  return (await res.json()) as ProjectSupportTicket
+}
+
+export async function respondToSupportTicket(
+  projectId: string,
+  ticketId: string,
+  input: RespondSupportTicketInput
+): Promise<ProjectSupportTicket> {
+  const res = await authFetch(
+    `${API_URL}/projects/admin/${projectId}/support-tickets/${ticketId}/respond`,
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) },
+    "admin"
+  )
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, "Couldn't update this support ticket."))
+  }
+  return (await res.json()) as ProjectSupportTicket
+}
+
 export async function addCredential(
   projectId: string,
   input: CreateCredentialInput
@@ -593,4 +667,19 @@ export async function fileMyRevisionRequest(
     throw new Error(await parseErrorMessage(res, "Couldn't submit this revision request."))
   }
   return (await res.json()) as ProjectRevisionRequest
+}
+
+export async function fileMySupportTicket(
+  projectId: string,
+  input: CreateSupportTicketInput
+): Promise<ProjectSupportTicket> {
+  const res = await authFetch(
+    `${API_URL}/projects/mine/${projectId}/support-tickets`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) },
+    "client"
+  )
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, "Couldn't submit this support ticket."))
+  }
+  return (await res.json()) as ProjectSupportTicket
 }

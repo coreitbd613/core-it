@@ -56,7 +56,7 @@ export function getClientNotifications(
           id: `revision-done-${r.id}`,
           title: "Your revision request was completed",
           description: r.description,
-          href: `/portal/projects/${project.id}`,
+          href: `/portal/projects/${project.projectCode}`,
           createdAt: r.respondedAt,
         })
       }
@@ -79,7 +79,7 @@ export function getAdminNotifications(
         id: `revision-open-${r.id}`,
         title: `New revision request${project.organization ? ` — ${project.organization.name}` : ""}`,
         description: r.description,
-        href: `/admin/projects/${project.id}`,
+        href: `/admin/projects/${project.projectCode}`,
         createdAt: r.requestedAt,
       })
     }

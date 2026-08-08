@@ -1,19 +1,21 @@
 import type { Prisma } from '../../generated/prisma/client';
+import { randomToken } from '../common/random-code';
 
 /**
- * Atomically claims the next invoice number for the current calendar year via
- * an upsert on InvoiceSequence. Must be called inside the same $transaction
- * as the invoice.create() that consumes it, so a failed create rolls the
- * increment back too and no numbers are burned.
+ * Claims a non-sequential invoice number for the current calendar year.
+ * Deliberately not incrementing — a sequential suffix would let anyone
+ * looking at an invoice infer how many invoices we've issued this year.
+ * Retries on the rare collision; must run inside the same $transaction as
+ * the invoice.create() that consumes it.
  */
 export async function nextInvoiceNumber(
   tx: Prisma.TransactionClient,
 ): Promise<string> {
   const year = new Date().getFullYear();
-  const sequence = await tx.invoiceSequence.upsert({
-    where: { year },
-    create: { year, lastNumber: 1 },
-    update: { lastNumber: { increment: 1 } },
-  });
-  return `INV-${year}-${String(sequence.lastNumber).padStart(3, '0')}`;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const number = `INV-${year}-${randomToken()}`;
+    const existing = await tx.invoice.findUnique({ where: { number } });
+    if (!existing) return number;
+  }
+  throw new Error('Could not generate a unique invoice number.');
 }

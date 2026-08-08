@@ -317,7 +317,6 @@ export default function AdminProposalsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Proposals</h1>
-          <p className="text-muted-foreground">Proposals across every company you work with.</p>
         </div>
         <Button asChild>
           <Link href="/admin/proposals/new">

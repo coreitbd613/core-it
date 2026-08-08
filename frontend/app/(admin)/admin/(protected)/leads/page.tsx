@@ -341,7 +341,6 @@ export default function AdminLeadsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Leads</h1>
-          <p className="text-muted-foreground">Track and follow up on inbound leads.</p>
         </div>
         <div className="flex items-center gap-2">
           <ToggleGroup

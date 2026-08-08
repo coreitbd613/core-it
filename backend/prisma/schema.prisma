@@ -289,11 +289,6 @@ model Payment {
   @@index([recordedByUserId])
 }
 
-model InvoiceSequence {
-  year       Int @id
-  lastNumber Int @default(0)
-}
-
 enum ProjectStatus {
   PLANNING
   IN_PROGRESS
@@ -325,6 +320,12 @@ enum SupportSla {
   PREMIUM
 }
 
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
 enum DeploymentMethod {
   MANUAL
   CI_CD
@@ -336,6 +337,8 @@ model Project {
   id             String       @id @default(uuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  projectCode String @unique
 
   name        String
   description String?
@@ -394,6 +397,7 @@ model Project {
   revisionRequests ProjectRevisionRequest[]
   credentials      ProjectCredential[]
   teamMembers      ProjectTeamMember[]
+  supportTickets   ProjectSupportTicket[]
   invoices         Invoice[]
 
   @@index([organizationId])
@@ -423,6 +427,21 @@ model ProjectRevisionRequest {
   requestedBy String
   requestedAt DateTime       @default(now())
   respondedAt DateTime?
+
+  @@index([projectId])
+}
+
+model ProjectSupportTicket {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  subject     String
+  description String
+  status      SupportTicketStatus @default(OPEN)
+  requestedBy String
+  requestedAt DateTime            @default(now())
+  resolvedAt  DateTime?
 
   @@index([projectId])
 }
@@ -480,7 +499,7 @@ enum LeadActivityType {
 }
 
 model Lead {
-  id          String     @id @default(uuid())
+  id          String  @id @default(uuid())
   contactName String
   companyName String?
   email       String?

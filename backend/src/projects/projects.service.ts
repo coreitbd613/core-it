@@ -16,6 +16,9 @@ import { CreateProjectCredentialDto } from './dto/create-project-credential.dto'
 import { UpdateProjectCredentialDto } from './dto/update-project-credential.dto';
 import { CreateProjectTeamMemberDto } from './dto/create-project-team-member.dto';
 import { UpdateProjectTeamMemberDto } from './dto/update-project-team-member.dto';
+import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
+import { RespondSupportTicketDto } from './dto/respond-support-ticket.dto';
+import { nextProjectCode } from './project-code';
 
 const detailInclude = {
   organization: { select: { id: true, name: true } },
@@ -23,14 +26,18 @@ const detailInclude = {
   revisionRequests: { orderBy: { requestedAt: 'desc' as const } },
   credentials: true,
   teamMembers: true,
+  supportTickets: { orderBy: { requestedAt: 'desc' as const } },
 };
 
 @Injectable()
 export class ProjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async getRawOrThrow(id: string) {
-    const project = await this.prisma.project.findUnique({ where: { id } });
+  /** Resolves the public-facing projectCode (e.g. "PRJ-2026-003") to its row, including the internal UUID used for FK writes. */
+  private async getRawOrThrow(projectCode: string) {
+    const project = await this.prisma.project.findUnique({
+      where: { projectCode },
+    });
     if (!project) {
       throw new NotFoundException('Project not found.');
     }
@@ -45,72 +52,76 @@ export class ProjectsService {
       throw new NotFoundException('Organization not found.');
     }
 
-    return this.prisma.project.create({
-      data: {
-        organizationId: dto.organizationId,
-        name: dto.name,
-        description: dto.description,
-        proposalId: dto.proposalId,
-        contractId: dto.contractId,
-        startedAt: new Date(dto.startedAt),
-        targetEndAt: dto.targetEndAt ? new Date(dto.targetEndAt) : undefined,
-        includedRevisions: dto.includedRevisions ?? 0,
-        supportMonths: dto.supportMonths ?? 0,
-        projectType: dto.projectType,
-        department: dto.department,
-        projectManagerName: dto.projectManagerName,
-        paymentTerms: dto.paymentTerms,
-        paymentSchedule: dto.paymentSchedule,
-        contractValueBdt: dto.contractValueBdt,
-        goLiveAt: dto.goLiveAt ? new Date(dto.goLiveAt) : undefined,
-        revisionWindowDays: dto.revisionWindowDays,
-        maxDaysPerRevision: dto.maxDaysPerRevision,
-        extraRevisionPriceBdt: dto.extraRevisionPriceBdt,
-        revisionNotes: dto.revisionNotes,
-        supportSla: dto.supportSla ?? 'STANDARD',
-        supportWorkingHours: dto.supportWorkingHours,
-        includedSupportTickets: dto.includedSupportTickets,
-        supportContactName: dto.supportContactName,
-        sendRenewalReminder: dto.sendRenewalReminder ?? false,
-        domain: dto.domain,
-        hostingProvider: dto.hostingProvider,
-        serverDetails: dto.serverDetails,
-        repositoryUrl: dto.repositoryUrl,
-        stagingUrl: dto.stagingUrl,
-        productionUrl: dto.productionUrl,
-        techStack: dto.techStack,
-        deploymentMethod: dto.deploymentMethod,
-        credentialsNotes: dto.credentialsNotes,
-        milestones: dto.milestones?.length
-          ? {
-              create: dto.milestones.map((m) => ({
-                title: m.title,
-                dueAt: m.dueAt ? new Date(m.dueAt) : undefined,
-              })),
-            }
-          : undefined,
-        teamMembers: dto.teamMembers?.length
-          ? {
-              create: dto.teamMembers.map((t) => ({
-                name: t.name,
-                role: t.role,
-                accessLevel: t.accessLevel ?? 'VIEW',
-              })),
-            }
-          : undefined,
-        credentials: dto.credentials?.length
-          ? {
-              create: dto.credentials.map((c) => ({
-                label: c.label,
-                username: c.username,
-                password: c.password,
-                url: c.url,
-                notes: c.notes,
-              })),
-            }
-          : undefined,
-      },
-      include: detailInclude,
+    return this.prisma.$transaction(async (tx) => {
+      const projectCode = await nextProjectCode(tx);
+      return tx.project.create({
+        data: {
+          projectCode,
+          organizationId: dto.organizationId,
+          name: dto.name,
+          description: dto.description,
+          proposalId: dto.proposalId,
+          contractId: dto.contractId,
+          startedAt: new Date(dto.startedAt),
+          targetEndAt: dto.targetEndAt ? new Date(dto.targetEndAt) : undefined,
+          includedRevisions: dto.includedRevisions ?? 0,
+          supportMonths: dto.supportMonths ?? 0,
+          projectType: dto.projectType,
+          department: dto.department,
+          projectManagerName: dto.projectManagerName,
+          paymentTerms: dto.paymentTerms,
+          paymentSchedule: dto.paymentSchedule,
+          contractValueBdt: dto.contractValueBdt,
+          goLiveAt: dto.goLiveAt ? new Date(dto.goLiveAt) : undefined,
+          revisionWindowDays: dto.revisionWindowDays,
+          maxDaysPerRevision: dto.maxDaysPerRevision,
+          extraRevisionPriceBdt: dto.extraRevisionPriceBdt,
+          revisionNotes: dto.revisionNotes,
+          supportSla: dto.supportSla ?? 'STANDARD',
+          supportWorkingHours: dto.supportWorkingHours,
+          includedSupportTickets: dto.includedSupportTickets,
+          supportContactName: dto.supportContactName,
+          sendRenewalReminder: dto.sendRenewalReminder ?? false,
+          domain: dto.domain,
+          hostingProvider: dto.hostingProvider,
+          serverDetails: dto.serverDetails,
+          repositoryUrl: dto.repositoryUrl,
+          stagingUrl: dto.stagingUrl,
+          productionUrl: dto.productionUrl,
+          techStack: dto.techStack,
+          deploymentMethod: dto.deploymentMethod,
+          credentialsNotes: dto.credentialsNotes,
+          milestones: dto.milestones?.length
+            ? {
+                create: dto.milestones.map((m) => ({
+                  title: m.title,
+                  dueAt: m.dueAt ? new Date(m.dueAt) : undefined,
+                })),
+              }
+            : undefined,
+          teamMembers: dto.teamMembers?.length
+            ? {
+                create: dto.teamMembers.map((t) => ({
+                  name: t.name,
+                  role: t.role,
+                  accessLevel: t.accessLevel ?? 'VIEW',
+                })),
+              }
+            : undefined,
+          credentials: dto.credentials?.length
+            ? {
+                create: dto.credentials.map((c) => ({
+                  label: c.label,
+                  username: c.username,
+                  password: c.password,
+                  url: c.url,
+                  notes: c.notes,
+                })),
+              }
+            : undefined,
+        },
+        include: detailInclude,
+      });
     });
   }
 
@@ -128,9 +139,9 @@ export class ProjectsService {
     });
   }
 
-  async getForAdmin(id: string) {
+  async getForAdmin(projectCode: string) {
     const project = await this.prisma.project.findUnique({
-      where: { id },
+      where: { projectCode },
       include: detailInclude,
     });
     if (!project) {
@@ -139,10 +150,10 @@ export class ProjectsService {
     return project;
   }
 
-  async updateProject(id: string, dto: UpdateProjectDto) {
-    await this.getRawOrThrow(id);
+  async updateProject(projectCode: string, dto: UpdateProjectDto) {
+    const project = await this.getRawOrThrow(projectCode);
     return this.prisma.project.update({
-      where: { id },
+      where: { id: project.id },
       data: {
         ...dto,
         startedAt: dto.startedAt ? new Date(dto.startedAt) : undefined,
@@ -153,10 +164,10 @@ export class ProjectsService {
     });
   }
 
-  async updateStatus(id: string, dto: UpdateProjectStatusDto) {
-    const project = await this.getRawOrThrow(id);
+  async updateStatus(projectCode: string, dto: UpdateProjectStatusDto) {
+    const project = await this.getRawOrThrow(projectCode);
     return this.prisma.project.update({
-      where: { id },
+      where: { id: project.id },
       data: {
         status: dto.status,
         completedAt:
@@ -168,9 +179,9 @@ export class ProjectsService {
     });
   }
 
-  async deleteProject(id: string): Promise<void> {
-    await this.getRawOrThrow(id);
-    await this.prisma.project.delete({ where: { id } });
+  async deleteProject(projectCode: string): Promise<void> {
+    const project = await this.getRawOrThrow(projectCode);
+    await this.prisma.project.delete({ where: { id: project.id } });
   }
 
   async listForUser(userId: string, organizationId?: string) {
@@ -185,9 +196,9 @@ export class ProjectsService {
     });
   }
 
-  async getForUser(userId: string, id: string) {
+  async getForUser(userId: string, projectCode: string) {
     const project = await this.prisma.project.findUnique({
-      where: { id },
+      where: { projectCode },
       include: detailInclude,
     });
     if (!project) {
@@ -196,7 +207,7 @@ export class ProjectsService {
     const orgIds = await getActiveOrganizationIds(this.prisma, userId);
     if (!orgIds.includes(project.organizationId)) {
       // 404, not 403 — same reasoning as invoices.service.ts: avoid revealing
-      // that a project with this id exists for an org the caller isn't in.
+      // that a project with this code exists for an org the caller isn't in.
       throw new NotFoundException('Project not found.');
     }
     return project;
@@ -210,11 +221,11 @@ export class ProjectsService {
 
   // --- Milestones ---
 
-  async addMilestone(projectId: string, dto: CreateProjectMilestoneDto) {
-    await this.getRawOrThrow(projectId);
+  async addMilestone(projectCode: string, dto: CreateProjectMilestoneDto) {
+    const project = await this.getRawOrThrow(projectCode);
     return this.prisma.projectMilestone.create({
       data: {
-        projectId,
+        projectId: project.id,
         title: dto.title,
         dueAt: dto.dueAt ? new Date(dto.dueAt) : undefined,
       },
@@ -222,14 +233,15 @@ export class ProjectsService {
   }
 
   async updateMilestone(
-    projectId: string,
+    projectCode: string,
     milestoneId: string,
     dto: UpdateMilestoneDto,
   ) {
+    const project = await this.getRawOrThrow(projectCode);
     const milestone = await this.prisma.projectMilestone.findUnique({
       where: { id: milestoneId },
     });
-    if (!milestone || milestone.projectId !== projectId) {
+    if (!milestone || milestone.projectId !== project.id) {
       throw new NotFoundException('Milestone not found.');
     }
     return this.prisma.projectMilestone.update({
@@ -243,11 +255,15 @@ export class ProjectsService {
     });
   }
 
-  async deleteMilestone(projectId: string, milestoneId: string): Promise<void> {
+  async deleteMilestone(
+    projectCode: string,
+    milestoneId: string,
+  ): Promise<void> {
+    const project = await this.getRawOrThrow(projectCode);
     const milestone = await this.prisma.projectMilestone.findUnique({
       where: { id: milestoneId },
     });
-    if (!milestone || milestone.projectId !== projectId) {
+    if (!milestone || milestone.projectId !== project.id) {
       throw new NotFoundException('Milestone not found.');
     }
     await this.prisma.projectMilestone.delete({ where: { id: milestoneId } });
@@ -258,23 +274,23 @@ export class ProjectsService {
   /** Client-facing file: validates org membership via getForUser before filing. */
   async fileRevisionRequestForUser(
     userId: string,
-    projectId: string,
+    projectCode: string,
     dto: CreateRevisionRequestDto,
     requestedBy: string,
   ) {
-    await this.getForUser(userId, projectId);
-    return this.fileRevisionRequest(projectId, dto, requestedBy);
+    await this.getForUser(userId, projectCode);
+    return this.fileRevisionRequest(projectCode, dto, requestedBy);
   }
 
   async fileRevisionRequest(
-    projectId: string,
+    projectCode: string,
     dto: CreateRevisionRequestDto,
     requestedBy: string,
   ) {
-    await this.getRawOrThrow(projectId);
+    const project = await this.getRawOrThrow(projectCode);
     return this.prisma.projectRevisionRequest.create({
       data: {
-        projectId,
+        projectId: project.id,
         description: dto.description,
         requestedBy: dto.requestedBy ?? requestedBy,
       },
@@ -282,14 +298,15 @@ export class ProjectsService {
   }
 
   async respondToRevisionRequest(
-    projectId: string,
+    projectCode: string,
     revisionId: string,
     dto: RespondRevisionRequestDto,
   ) {
+    const project = await this.getRawOrThrow(projectCode);
     const revision = await this.prisma.projectRevisionRequest.findUnique({
       where: { id: revisionId },
     });
-    if (!revision || revision.projectId !== projectId) {
+    if (!revision || revision.projectId !== project.id) {
       throw new NotFoundException('Revision request not found.');
     }
     return this.prisma.projectRevisionRequest.update({
@@ -305,11 +322,11 @@ export class ProjectsService {
 
   // --- Credentials ---
 
-  async addCredential(projectId: string, dto: CreateProjectCredentialDto) {
-    await this.getRawOrThrow(projectId);
+  async addCredential(projectCode: string, dto: CreateProjectCredentialDto) {
+    const project = await this.getRawOrThrow(projectCode);
     return this.prisma.projectCredential.create({
       data: {
-        projectId,
+        projectId: project.id,
         label: dto.label,
         username: dto.username,
         password: dto.password,
@@ -320,14 +337,15 @@ export class ProjectsService {
   }
 
   async updateCredential(
-    projectId: string,
+    projectCode: string,
     credentialId: string,
     dto: UpdateProjectCredentialDto,
   ) {
+    const project = await this.getRawOrThrow(projectCode);
     const credential = await this.prisma.projectCredential.findUnique({
       where: { id: credentialId },
     });
-    if (!credential || credential.projectId !== projectId) {
+    if (!credential || credential.projectId !== project.id) {
       throw new NotFoundException('Credential not found.');
     }
     return this.prisma.projectCredential.update({
@@ -337,13 +355,14 @@ export class ProjectsService {
   }
 
   async deleteCredential(
-    projectId: string,
+    projectCode: string,
     credentialId: string,
   ): Promise<void> {
+    const project = await this.getRawOrThrow(projectCode);
     const credential = await this.prisma.projectCredential.findUnique({
       where: { id: credentialId },
     });
-    if (!credential || credential.projectId !== projectId) {
+    if (!credential || credential.projectId !== project.id) {
       throw new NotFoundException('Credential not found.');
     }
     await this.prisma.projectCredential.delete({ where: { id: credentialId } });
@@ -351,11 +370,11 @@ export class ProjectsService {
 
   // --- Team members ---
 
-  async addTeamMember(projectId: string, dto: CreateProjectTeamMemberDto) {
-    await this.getRawOrThrow(projectId);
+  async addTeamMember(projectCode: string, dto: CreateProjectTeamMemberDto) {
+    const project = await this.getRawOrThrow(projectCode);
     return this.prisma.projectTeamMember.create({
       data: {
-        projectId,
+        projectId: project.id,
         name: dto.name,
         role: dto.role,
         accessLevel: dto.accessLevel ?? 'VIEW',
@@ -364,14 +383,15 @@ export class ProjectsService {
   }
 
   async updateTeamMember(
-    projectId: string,
+    projectCode: string,
     teamMemberId: string,
     dto: UpdateProjectTeamMemberDto,
   ) {
+    const project = await this.getRawOrThrow(projectCode);
     const teamMember = await this.prisma.projectTeamMember.findUnique({
       where: { id: teamMemberId },
     });
-    if (!teamMember || teamMember.projectId !== projectId) {
+    if (!teamMember || teamMember.projectId !== project.id) {
       throw new NotFoundException('Team member not found.');
     }
     return this.prisma.projectTeamMember.update({
@@ -380,13 +400,69 @@ export class ProjectsService {
     });
   }
 
-  async deleteTeamMember(projectId: string, teamMemberId: string): Promise<void> {
+  async deleteTeamMember(
+    projectCode: string,
+    teamMemberId: string,
+  ): Promise<void> {
+    const project = await this.getRawOrThrow(projectCode);
     const teamMember = await this.prisma.projectTeamMember.findUnique({
       where: { id: teamMemberId },
     });
-    if (!teamMember || teamMember.projectId !== projectId) {
+    if (!teamMember || teamMember.projectId !== project.id) {
       throw new NotFoundException('Team member not found.');
     }
     await this.prisma.projectTeamMember.delete({ where: { id: teamMemberId } });
+  }
+
+  // --- Support tickets ---
+
+  /** Client-facing file: validates org membership via getForUser before filing. */
+  async fileSupportTicketForUser(
+    userId: string,
+    projectCode: string,
+    dto: CreateSupportTicketDto,
+    requestedBy: string,
+  ) {
+    await this.getForUser(userId, projectCode);
+    return this.fileSupportTicket(projectCode, dto, requestedBy);
+  }
+
+  async fileSupportTicket(
+    projectCode: string,
+    dto: CreateSupportTicketDto,
+    requestedBy: string,
+  ) {
+    const project = await this.getRawOrThrow(projectCode);
+    return this.prisma.projectSupportTicket.create({
+      data: {
+        projectId: project.id,
+        subject: dto.subject,
+        description: dto.description,
+        requestedBy: dto.requestedBy ?? requestedBy,
+      },
+    });
+  }
+
+  async respondToSupportTicket(
+    projectCode: string,
+    ticketId: string,
+    dto: RespondSupportTicketDto,
+  ) {
+    const project = await this.getRawOrThrow(projectCode);
+    const ticket = await this.prisma.projectSupportTicket.findUnique({
+      where: { id: ticketId },
+    });
+    if (!ticket || ticket.projectId !== project.id) {
+      throw new NotFoundException('Support ticket not found.');
+    }
+    return this.prisma.projectSupportTicket.update({
+      where: { id: ticketId },
+      // Only RESOLVED stamps resolvedAt — IN_PROGRESS/OPEN leave it
+      // untouched, matching the revision-request respondedAt convention.
+      data: {
+        status: dto.status,
+        resolvedAt: dto.status === 'RESOLVED' ? new Date() : undefined,
+      },
+    });
   }
 }

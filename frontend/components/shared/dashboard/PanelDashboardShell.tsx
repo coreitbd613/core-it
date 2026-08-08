@@ -105,6 +105,7 @@ type PanelDashboardShellProps = {
   sidebarFooterExtra?: ReactNode;
   search?: ReactNode;
   notifications?: ReactNode;
+  portalLabel?: string;
 };
 
 export default function PanelDashboardShell({
@@ -121,6 +122,7 @@ export default function PanelDashboardShell({
   sidebarFooterExtra,
   search,
   notifications,
+  portalLabel,
 }: PanelDashboardShellProps) {
   const pathname = usePathname();
   const breadcrumbItems = getBreadcrumbItems(pathname, navItems);
@@ -144,6 +146,7 @@ export default function PanelDashboardShell({
             loading={loading}
             userMenuItems={userMenuItems}
             sidebarFooterExtra={sidebarFooterExtra}
+            portalLabel={portalLabel}
           />
         </Suspense>
         <SidebarInset className="min-w-0 bg-muted/20">
@@ -246,6 +249,7 @@ function PanelSidebar({
   loading,
   userMenuItems,
   sidebarFooterExtra,
+  portalLabel,
 }: {
   navItems: PanelNavItem[];
   panelHomeHref: string;
@@ -255,6 +259,7 @@ function PanelSidebar({
   loading: boolean;
   userMenuItems: UserMenuItem[];
   sidebarFooterExtra?: ReactNode;
+  portalLabel?: string;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -272,13 +277,16 @@ function PanelSidebar({
       <SidebarHeader className="mx-auto w-full max-w-5xl">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild size="lg">
               <Link href={panelHomeHref}>
                 <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-background ring-1 ring-border">
                   <Image src="/logo-icon.png" alt="Core IT" width={32} height={32} className="object-cover" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Core IT</span>
+                  {portalLabel ? (
+                    <span className="truncate text-xs text-muted-foreground">{portalLabel}</span>
+                  ) : null}
                 </div>
               </Link>
             </SidebarMenuButton>

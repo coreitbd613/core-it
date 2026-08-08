@@ -76,7 +76,7 @@ export default function ContractDetailPage() {
         supportMonths: 3,
       })
       toast.success("Contract signed — your project has started.")
-      router.push(`/portal/projects/${project.id}`)
+      router.push(`/portal/projects/${project.projectCode}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't start this project.")
       setIsSigning(false)

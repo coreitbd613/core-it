@@ -123,7 +123,6 @@ export default function AdminAttendancePage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Attendance</h1>
-          <p className="text-muted-foreground">Daily attendance sheet across the company.</p>
         </div>
         <div className="w-48">
           <DatePickerField value={date} onChange={setDate} />

@@ -64,9 +64,6 @@ export default function AdminDomainOrdersPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Domain orders</h1>
-        <p className="text-muted-foreground">
-          Domains customers have requested through the search page.
-        </p>
       </div>
 
       <DataTable

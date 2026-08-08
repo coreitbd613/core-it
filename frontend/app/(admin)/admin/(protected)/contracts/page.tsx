@@ -79,7 +79,6 @@ export default function AdminContractsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Contracts</h1>
-        <p className="text-muted-foreground">Agreements across every company.</p>
       </div>
 
       <DashboardStatsGrid items={stats} />

@@ -213,9 +213,6 @@ export default function TeamSettingsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Team</h1>
-        <p className="text-muted-foreground">
-          Manage who has access to your company workspace and what they can do.
-        </p>
       </div>
 
       <DashboardStatsGrid items={stats} />

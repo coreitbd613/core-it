@@ -113,7 +113,6 @@ export default function StatementsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Statements</h1>
-        <p className="text-muted-foreground">Your running balance across all invoices and payments.</p>
       </div>
 
       <Card className="max-w-sm">

@@ -3,6 +3,8 @@
 import { PlusIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -22,7 +24,13 @@ import {
   type UpdateTeamMemberInput,
 } from "@/lib/projects"
 
-export function ProjectTeamTab({ project }: { project: Project }) {
+export function ProjectTeamTab({
+  project,
+  variant,
+}: {
+  project: Project
+  variant: "admin" | "portal"
+}) {
   const addTeamMember = useAddTeamMember(project.id)
   const updateTeamMember = useUpdateTeamMember(project.id)
   const deleteTeamMember = useDeleteTeamMember(project.id)
@@ -60,15 +68,34 @@ export function ProjectTeamTab({ project }: { project: Project }) {
   return (
     <Card className="max-w-3xl">
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Team & permissions</CardTitle>
-        <Button size="sm" onClick={handleAdd}>
-          <PlusIcon />
-          Add team member
-        </Button>
+        <CardTitle>Team</CardTitle>
+        {variant === "admin" && (
+          <Button size="sm" onClick={handleAdd}>
+            <PlusIcon />
+            Add team member
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {team.length === 0 ? (
           <p className="text-sm text-muted-foreground">No team members assigned yet.</p>
+        ) : variant === "portal" ? (
+          <div className="flex flex-col gap-3">
+            {team.map((member) => (
+              <div key={member.id} className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarFallback>{member.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium text-foreground">{member.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">{member.role}</span>
+                </div>
+                <Badge variant="outline" className="ml-auto shrink-0">
+                  {teamAccessLevelLabels[member.accessLevel]}
+                </Badge>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="flex flex-col gap-2">
             {team.map((member) => (

@@ -64,7 +64,7 @@ function buildSearchItems(invoices: Invoice[], projects: Project[]): SearchItem[
     id: `project-${p.id}`,
     group: "Projects",
     label: p.name,
-    href: `/portal/projects/${p.id}`,
+    href: `/portal/projects/${p.projectCode}`,
   }))
 
   const invoiceEntries: SearchItem[] = invoices.map((inv) => ({
@@ -142,7 +142,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <PanelDashboardShell
-      panelHomeHref="/portal/invoices"
+      panelHomeHref="/portal/dashboard"
+      portalLabel="Client Portal"
       navItems={buildNavItems()}
       user={{
         name: user?.name ?? "User",

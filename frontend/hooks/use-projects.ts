@@ -7,6 +7,7 @@ import {
   addMilestone,
   addTeamMember,
   adminFileRevisionRequest,
+  adminFileSupportTicket,
   createMyProject,
   createProject,
   deleteCredential,
@@ -14,11 +15,13 @@ import {
   deleteProject,
   deleteTeamMember,
   fileMyRevisionRequest,
+  fileMySupportTicket,
   getAdminProject,
   getAdminProjects,
   getMyProject,
   getMyProjects,
   respondToRevisionRequest,
+  respondToSupportTicket,
   updateCredential,
   updateMilestone,
   updateProject,
@@ -28,10 +31,12 @@ import {
   type CreateMilestoneInput,
   type CreateProjectInput,
   type CreateRevisionRequestInput,
+  type CreateSupportTicketInput,
   type CreateTeamMemberInput,
   type Project,
   type ProjectStatus,
   type RespondRevisionRequestInput,
+  type RespondSupportTicketInput,
   type UpdateCredentialInput,
   type UpdateMilestoneInput,
   type UpdateProjectInput,
@@ -201,6 +206,31 @@ export function useRespondToRevisionRequest(projectId: string) {
   return useMutation({
     mutationFn: ({ revisionId, input }: { revisionId: string; input: RespondRevisionRequestInput }) =>
       respondToRevisionRequest(projectId, revisionId, input),
+    onSuccess: refetch,
+  })
+}
+
+export function useAdminFileSupportTicket(projectId: string) {
+  const refetch = useRefetchProject(projectId)
+  return useMutation({
+    mutationFn: (input: CreateSupportTicketInput) => adminFileSupportTicket(projectId, input),
+    onSuccess: refetch,
+  })
+}
+
+export function useFileMySupportTicket(projectId: string) {
+  const refetch = useRefetchProject(projectId)
+  return useMutation({
+    mutationFn: (input: CreateSupportTicketInput) => fileMySupportTicket(projectId, input),
+    onSuccess: refetch,
+  })
+}
+
+export function useRespondToSupportTicket(projectId: string) {
+  const refetch = useRefetchProject(projectId)
+  return useMutation({
+    mutationFn: ({ ticketId, input }: { ticketId: string; input: RespondSupportTicketInput }) =>
+      respondToSupportTicket(projectId, ticketId, input),
     onSuccess: refetch,
   })
 }

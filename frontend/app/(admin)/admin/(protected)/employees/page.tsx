@@ -212,7 +212,6 @@ export default function AdminEmployeesPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Employees</h1>
-          <p className="text-muted-foreground">Directory of everyone on the team.</p>
         </div>
         <Button asChild>
           <Link href="/admin/employees/new">

@@ -199,7 +199,7 @@ export function ProjectForm() {
           })),
       })
       toast.success("Project created.")
-      router.push(`/admin/projects/${project.id}`)
+      router.push(`/admin/projects/${project.projectCode}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't create this project.")
     }

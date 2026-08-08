@@ -111,7 +111,7 @@ function buildAdminSearchItems(
     group: "Projects",
     label: p.name,
     description: p.organization?.name,
-    href: `/admin/projects/${p.id}`,
+    href: `/admin/projects/${p.projectCode}`,
   }))
 
   const invoiceEntries: SearchItem[] = invoices.map((inv) => ({
@@ -167,6 +167,7 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
   return (
     <PanelDashboardShell
       panelHomeHref="/admin/dashboard"
+      portalLabel="Admin Portal"
       navItems={adminNavItems}
       user={{
         name: user?.name ?? "Admin",

@@ -217,7 +217,6 @@ export default function AdminCustomersPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Customers</h1>
-        <p className="text-muted-foreground">Everyone who has signed up on the Core IT website.</p>
       </div>
 
       <DashboardStatsGrid items={stats} loading={isPending} />
