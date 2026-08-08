@@ -16,19 +16,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { LEAD_STAGE_ORDER, leadStageLabels, type Lead } from "@/lib/mock/leads"
+import { LEAD_STAGE_ORDER, leadStageLabels, type Lead } from "@/lib/leads"
 
 import { useLeadStageChange } from "./use-lead-stage-change"
 
-export function LeadStageStepper({
-  lead,
-  authorName,
-  onChange,
-}: {
-  lead: Lead
-  authorName: string
-  onChange: () => void
-}) {
+export function LeadStageStepper({ lead }: { lead: Lead }) {
   const {
     attemptStageChange,
     lostDialogOpen,
@@ -36,7 +28,7 @@ export function LeadStageStepper({
     setLostReason,
     confirmLost,
     cancelLost,
-  } = useLeadStageChange(authorName, onChange)
+  } = useLeadStageChange()
   const currentIndex = LEAD_STAGE_ORDER.indexOf(lead.stage)
 
   if (lead.stage === "LOST") {

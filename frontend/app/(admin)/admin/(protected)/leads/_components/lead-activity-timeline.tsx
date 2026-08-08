@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import { ArrowRightIcon, CalendarClockIcon, MessageSquareIcon, SendIcon, TrophyIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { logLeadActivity, type Lead, type LeadActivityType } from "@/lib/mock/leads"
+import { useAddLeadActivity } from "@/hooks/use-leads"
+import { type Lead, type LeadActivityType } from "@/lib/leads"
 
 const activityIcons: Record<LeadActivityType, React.ElementType> = {
   NOTE: MessageSquareIcon,
@@ -15,23 +17,21 @@ const activityIcons: Record<LeadActivityType, React.ElementType> = {
   CONVERTED: TrophyIcon,
 }
 
-export function LeadActivityTimeline({
-  lead,
-  authorName,
-  onChange,
-}: {
-  lead: Lead
-  authorName: string
-  onChange: () => void
-}) {
+export function LeadActivityTimeline({ lead }: { lead: Lead }) {
+  const addActivity = useAddLeadActivity(lead.id)
   const [message, setMessage] = React.useState("")
 
   function handleAddNote(e: React.FormEvent) {
     e.preventDefault()
     if (!message.trim()) return
-    logLeadActivity(lead, "NOTE", message.trim(), authorName)
-    setMessage("")
-    onChange()
+    addActivity.mutate(
+      { message: message.trim() },
+      {
+        onSuccess: () => setMessage(""),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't add this note."),
+      }
+    )
   }
 
   return (

@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, XIcon } from "lucide-react"
@@ -21,27 +20,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useAdminAuth } from "@/contexts/admin-auth-context"
+import { Spinner } from "@/components/ui/spinner"
+import { useAdminLead, useConvertLead } from "@/hooks/use-leads"
 import { formatBDT } from "@/lib/format"
-import {
-  LEAD_OWNERS,
-  isLeadClosed,
-  leadSourceLabels,
-  leadStageLabels,
-  leadStageVariant,
-  leadTemperature,
-  leadTemperatureLabels,
-  leadTemperatureVariant,
-  logLeadActivity,
-  mockLeads,
-} from "@/lib/mock/leads"
+import { isLeadClosed, leadSourceLabels, leadStageLabels, leadStageVariant } from "@/lib/leads"
 
 import { LeadActivityTimeline } from "../_components/lead-activity-timeline"
 import { LeadFollowUpCard } from "../_components/lead-follow-up-card"
@@ -50,11 +32,16 @@ import { LeadStageStepper } from "../_components/lead-stage-stepper"
 
 export default function AdminLeadDetailPage() {
   const params = useParams<{ id: string }>()
-  const { user } = useAdminAuth()
-  const authorName = user?.name ?? "Core IT"
-  const [, forceRerender] = React.useState(0)
+  const { data: lead, isLoading } = useAdminLead(params.id)
+  const convertLead = useConvertLead()
 
-  const lead = mockLeads.find((l) => l.id === params.id)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!lead) {
     return (
@@ -72,27 +59,13 @@ export default function AdminLeadDetailPage() {
     )
   }
 
-  function refresh() {
-    forceRerender((n) => n + 1)
-  }
-
-  function handleReassign(owner: string) {
-    lead!.ownerName = owner === "unassigned" ? null : owner
-    logLeadActivity(
-      lead!,
-      "NOTE",
-      owner === "unassigned" ? "Unassigned" : `Reassigned to ${owner}`,
-      authorName
-    )
-    refresh()
-  }
-
   function handleConvert() {
-    lead!.stage = "WON"
-    lead!.convertedAt = new Date().toISOString()
-    logLeadActivity(lead!, "CONVERTED", "Converted to customer", authorName)
-    toast.success("Lead converted — create their account under Customers to finish onboarding.")
-    refresh()
+    convertLead.mutate(lead!.id, {
+      onSuccess: () =>
+        toast.success("Lead converted — create their account under Customers to finish onboarding."),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : "Couldn't convert this lead."),
+    })
   }
 
   const closed = isLeadClosed(lead)
@@ -126,7 +99,7 @@ export default function AdminLeadDetailPage() {
               <CardTitle>Pipeline stage</CardTitle>
             </CardHeader>
             <CardContent>
-              <LeadStageStepper lead={lead} authorName={authorName} onChange={refresh} />
+              <LeadStageStepper lead={lead} />
             </CardContent>
           </Card>
 
@@ -135,7 +108,7 @@ export default function AdminLeadDetailPage() {
               <CardTitle>Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <LeadActivityTimeline lead={lead} authorName={authorName} onChange={refresh} />
+              <LeadActivityTimeline lead={lead} />
             </CardContent>
           </Card>
         </div>
@@ -144,12 +117,7 @@ export default function AdminLeadDetailPage() {
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>Details</CardTitle>
-              <div className="flex items-center gap-1.5">
-                <Badge variant={leadTemperatureVariant[leadTemperature(lead)]}>
-                  {leadTemperatureLabels[leadTemperature(lead)]}
-                </Badge>
-                <Badge variant={leadStageVariant[lead.stage]}>{leadStageLabels[lead.stage]}</Badge>
-              </div>
+              <Badge variant={leadStageVariant[lead.stage]}>{leadStageLabels[lead.stage]}</Badge>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <LeadQuickActions lead={lead} />
@@ -170,26 +138,9 @@ export default function AdminLeadDetailPage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Est. value</p>
                   <p className="text-sm text-foreground">
-                    {lead.estimatedValueBdt != null ? formatBDT(lead.estimatedValueBdt) : "—"}
+                    {lead.estimatedValueBdt != null ? formatBDT(Number(lead.estimatedValueBdt)) : "—"}
                   </p>
                 </div>
-              </div>
-
-              <div>
-                <p className="mb-1.5 text-xs text-muted-foreground">Owner</p>
-                <Select value={lead.ownerName ?? "unassigned"} onValueChange={handleReassign}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {LEAD_OWNERS.map((owner) => (
-                      <SelectItem key={owner} value={owner}>
-                        {owner}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {lead.convertedAt && (
@@ -225,7 +176,7 @@ export default function AdminLeadDetailPage() {
             )}
           </Card>
 
-          <LeadFollowUpCard lead={lead} authorName={authorName} onChange={refresh} />
+          <LeadFollowUpCard lead={lead} />
         </div>
       </div>
     </div>

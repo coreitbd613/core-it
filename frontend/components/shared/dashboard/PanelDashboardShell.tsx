@@ -186,7 +186,7 @@ export default function PanelDashboardShell({
                 <AnimatedThemeToggler
                   theme={resolvedTheme === "light" ? "light" : "dark"}
                   onThemeChange={(theme) => setTheme(theme)}
-                  className="flex size-9 items-center justify-center rounded-lg border border-input text-foreground/80 hover:bg-muted hover:text-foreground [&_svg]:size-4"
+                  className="flex size-9 items-center justify-center rounded-lg border border-input bg-card text-foreground/80 hover:bg-muted hover:text-foreground [&_svg]:size-4"
                 />
               )}
               <Button asChild variant="outline" size="sm" className="size-9 gap-2 px-0 sm:w-auto sm:px-3">

@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAddTeamMember, useDeleteTeamMember, useUpdateTeamMember } from "@/hooks/use-projects"
-import { LEAD_OWNERS } from "@/lib/mock/leads"
+import { STAFF_MEMBERS } from "@/lib/staff"
 import {
   TEAM_ROLES,
   teamAccessLevelLabels,
@@ -31,7 +31,7 @@ export function ProjectTeamTab({ project }: { project: Project }) {
 
   function handleAdd() {
     addTeamMember.mutate(
-      { name: LEAD_OWNERS[0] ?? "", role: TEAM_ROLES[0], accessLevel: "EDIT" },
+      { name: STAFF_MEMBERS[0] ?? "", role: TEAM_ROLES[0], accessLevel: "EDIT" },
       {
         onError: (error) =>
           toast.error(error instanceof Error ? error.message : "Couldn't add this team member."),
@@ -81,7 +81,7 @@ export function ProjectTeamTab({ project }: { project: Project }) {
                     <SelectValue placeholder="Name" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LEAD_OWNERS.map((owner) => (
+                    {STAFF_MEMBERS.map((owner) => (
                       <SelectItem key={owner} value={owner}>
                         {owner}
                       </SelectItem>

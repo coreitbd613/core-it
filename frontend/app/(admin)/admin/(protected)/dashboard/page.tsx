@@ -20,6 +20,7 @@ import {
 
 import { useAdminCustomers } from "@/hooks/use-customers"
 import { useAdminInvoices } from "@/hooks/use-invoices"
+import { useAdminLeads } from "@/hooks/use-leads"
 import { useAdminOrganizations } from "@/hooks/use-organization"
 import type { AdminCustomer } from "@/lib/customers"
 import { formatBDT } from "@/lib/format"
@@ -29,10 +30,9 @@ import {
   isLeadOverdue,
   leadStageLabels,
   leadStageVariant,
-  mockLeads,
   pipelineValueBdt,
   type Lead,
-} from "@/lib/mock/leads"
+} from "@/lib/leads"
 import { isOnLeaveToday, mockLeaveRequests, pendingLeaveCount } from "@/lib/mock/leave"
 import { mockPayslips, totalPayrollForMonth } from "@/lib/mock/payroll"
 import { mockProposals } from "@/lib/mock/proposals"
@@ -103,6 +103,7 @@ export default function AdminDashboardPage() {
   const { data: customers, isPending } = useAdminCustomers()
   const { data: organizations = [] } = useAdminOrganizations()
   const { data: invoices = [] } = useAdminInvoices()
+  const { data: leads = [] } = useAdminLeads()
   const rows = customers ?? []
 
   const userStats = useMemo<DashboardStatItem[]>(() => {
@@ -131,14 +132,14 @@ export default function AdminDashboardPage() {
 
   const leadStats = useMemo<DashboardStatItem[]>(() => {
     const weekStart = startOfWeek(new Date())
-    const newThisWeek = mockLeads.filter((lead) => new Date(lead.createdAt) >= weekStart).length
-    const overdue = mockLeads.filter((lead) => isLeadOverdue(lead)).length
+    const newThisWeek = leads.filter((lead) => new Date(lead.createdAt) >= weekStart).length
+    const overdue = leads.filter((lead) => isLeadOverdue(lead)).length
     return [
       { label: "New Leads This Week", value: newThisWeek, icon: TargetIcon, tone: "primary" },
       { label: "Overdue Follow-ups", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
-      { label: "Pipeline Value", value: formatBDT(pipelineValueBdt(mockLeads)), icon: WalletIcon, tone: "chart4" },
+      { label: "Pipeline Value", value: formatBDT(pipelineValueBdt(leads)), icon: WalletIcon, tone: "chart4" },
     ]
-  }, [])
+  }, [leads])
 
   const employeeStats = useMemo<DashboardStatItem[]>(() => {
     const headcount = activeEmployees(mockEmployees).length
@@ -158,7 +159,7 @@ export default function AdminDashboardPage() {
     ]
   }, [])
 
-  const followUpsDue = mockLeads
+  const followUpsDue = leads
     .filter((lead) => !isLeadClosed(lead) && lead.nextFollowUpAt)
     .sort(
       (a, b) => new Date(a.nextFollowUpAt!).getTime() - new Date(b.nextFollowUpAt!).getTime()

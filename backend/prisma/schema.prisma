@@ -452,3 +452,71 @@ model ProjectTeamMember {
 
   @@index([projectId])
 }
+
+enum LeadSource {
+  FACEBOOK_ADS
+  WHATSAPP
+  WEBSITE
+  REFERRAL
+  COLD_OUTREACH
+  SOCIAL_MEDIA
+  EVENT
+  OTHER
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum LeadActivityType {
+  NOTE
+  STAGE_CHANGE
+  FOLLOW_UP_SCHEDULED
+  CONVERTED
+}
+
+model Lead {
+  id          String     @id @default(uuid())
+  contactName String
+  companyName String?
+  email       String?
+  phone       String?
+
+  source       LeadSource
+  sourceDetail String?
+
+  stage             LeadStage @default(NEW)
+  estimatedValueBdt Decimal?
+  nextFollowUpAt    DateTime?
+  convertedAt       DateTime?
+  lostReason        String?
+
+  industry String?
+  tags     String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities LeadActivity[]
+
+  @@index([stage])
+  @@index([source])
+}
+
+model LeadActivity {
+  id     String @id @default(uuid())
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type       LeadActivityType
+  message    String
+  authorName String
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+}

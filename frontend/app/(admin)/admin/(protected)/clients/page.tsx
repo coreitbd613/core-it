@@ -63,7 +63,7 @@ export default function AdminClientsPage() {
     const activeClients = rows.filter((r) => r.activeProjectCount > 0 || r.outstandingBdt > 0).length
     return [
       { label: "Total Clients", value: rows.length, icon: Building2Icon, tone: "primary" },
-      { label: "Active Clients", value: activeClients, icon: TrendingUpIcon, tone: "chart2" },
+      { label: "Active Clients", value: activeClients, icon: TrendingUpIcon, tone: "chart3" },
       { label: "Lifetime Revenue", value: formatBDT(totalRevenue), icon: BanknoteIcon, tone: "chart4" },
       { label: "Outstanding", value: formatBDT(totalOutstanding), icon: WalletIcon, tone: "destructive" },
     ]

@@ -20,9 +20,11 @@ import { AdminAuthProvider, useAdminAuth } from "@/contexts/admin-auth-context"
 import { useAdminInvoices } from "@/hooks/use-invoices"
 import { useAdminOrganizations } from "@/hooks/use-organization"
 import { useAdminProjects } from "@/hooks/use-projects"
+import { useAdminLeads } from "@/hooks/use-leads"
 import type { Invoice } from "@/lib/invoices"
 import type { Organization } from "@/lib/organizations"
 import type { Project } from "@/lib/projects"
+import type { Lead } from "@/lib/leads"
 import PanelDashboardShell, {
   type PanelNavItem,
 } from "@/components/shared/dashboard/PanelDashboardShell"
@@ -31,7 +33,6 @@ import { NotificationsBell } from "@/components/shared/dashboard/notifications-b
 import { getAdminNotifications } from "@/lib/mock/notifications"
 import { mockContracts } from "@/lib/mock/contracts"
 import { mockEmployees } from "@/lib/mock/employees"
-import { mockLeads } from "@/lib/mock/leads"
 import { latestProposalVersions, mockProposals } from "@/lib/mock/proposals"
 
 const adminNavItems: PanelNavItem[] = [
@@ -61,7 +62,8 @@ const adminNavItems: PanelNavItem[] = [
 function buildAdminSearchItems(
   invoices: Invoice[],
   organizations: Organization[],
-  projects: Project[]
+  projects: Project[],
+  leads: Lead[]
 ): SearchItem[] {
   const navEntries: SearchItem[] = [
     { id: "nav-dashboard", group: "Go to", label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="size-4" /> },
@@ -88,7 +90,7 @@ function buildAdminSearchItems(
     href: `/admin/clients/${org.id}`,
   }))
 
-  const leadEntries: SearchItem[] = mockLeads.map((lead) => ({
+  const leadEntries: SearchItem[] = leads.map((lead) => ({
     id: `lead-${lead.id}`,
     group: "Leads",
     label: lead.contactName,
@@ -154,6 +156,7 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
   const { data: invoices = [] } = useAdminInvoices()
   const { data: organizations = [] } = useAdminOrganizations()
   const { data: projects = [] } = useAdminProjects()
+  const { data: leads = [] } = useAdminLeads()
 
   async function handleLogout() {
     await logout()
@@ -173,7 +176,7 @@ function AdminProtectedShell({ children }: { children: React.ReactNode }) {
       profileHref="/admin/profile"
       onLogout={handleLogout}
       loading={isPending}
-      search={<GlobalSearch items={buildAdminSearchItems(invoices, organizations, projects)} />}
+      search={<GlobalSearch items={buildAdminSearchItems(invoices, organizations, projects, leads)} />}
       notifications={<NotificationsBell items={getAdminNotifications(invoices, projects)} />}
     >
       {children}

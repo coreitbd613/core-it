@@ -8,38 +8,28 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { isLeadOverdue, logLeadActivity, type Lead } from "@/lib/mock/leads"
+import { useUpdateFollowUp } from "@/hooks/use-leads"
+import { isLeadOverdue, type Lead } from "@/lib/leads"
 
-export function LeadFollowUpCard({
-  lead,
-  authorName,
-  onChange,
-}: {
-  lead: Lead
-  authorName: string
-  onChange: () => void
-}) {
-  const [date, setDate] = React.useState(lead.nextFollowUpAt ?? "")
+export function LeadFollowUpCard({ lead }: { lead: Lead }) {
+  const updateFollowUp = useUpdateFollowUp(lead.id)
+  const [date, setDate] = React.useState(lead.nextFollowUpAt?.slice(0, 10) ?? "")
   const overdue = isLeadOverdue(lead)
 
-  function handleSave() {
-    lead.nextFollowUpAt = date || null
-    logLeadActivity(
-      lead,
-      "FOLLOW_UP_SCHEDULED",
-      date ? `Follow-up set for ${new Date(date).toLocaleDateString()}` : "Follow-up cleared",
-      authorName
+  function save(nextDate: string) {
+    updateFollowUp.mutate(
+      { nextFollowUpAt: nextDate || null },
+      {
+        onSuccess: () => toast.success(nextDate ? "Follow-up scheduled." : "Follow-up cleared."),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update the follow-up."),
+      }
     )
-    toast.success(date ? "Follow-up scheduled." : "Follow-up cleared.")
-    onChange()
   }
 
   function handleClear() {
     setDate("")
-    lead.nextFollowUpAt = null
-    logLeadActivity(lead, "FOLLOW_UP_SCHEDULED", "Follow-up cleared", authorName)
-    toast.success("Follow-up cleared.")
-    onChange()
+    save("")
   }
 
   return (
@@ -67,7 +57,7 @@ export function LeadFollowUpCard({
           />
         </Field>
         <div className="flex gap-2">
-          <Button size="sm" className="flex-1" onClick={handleSave}>
+          <Button size="sm" className="flex-1" onClick={() => save(date)}>
             Save
           </Button>
           <Button size="sm" variant="outline" className="flex-1" onClick={handleClear}>

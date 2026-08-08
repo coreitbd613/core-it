@@ -63,7 +63,7 @@ export default function TeamSettingsPage() {
     const pending = members.filter((m) => m.status === "PENDING").length
     return [
       { label: "Total Members", value: members.length, icon: UsersIcon, tone: "primary" },
-      { label: "Active", value: active, icon: CrownIcon, tone: "chart2" },
+      { label: "Active", value: active, icon: CrownIcon, tone: "chart3" },
       { label: "Pending Invites", value: pending, icon: ClockIcon, tone: "chart4" },
     ]
   }, [members])

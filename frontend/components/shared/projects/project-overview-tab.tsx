@@ -15,7 +15,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useUpdateProject } from "@/hooks/use-projects"
 import { formatBDT, formatDate } from "@/lib/format"
-import { LEAD_OWNERS } from "@/lib/mock/leads"
+import { STAFF_MEMBERS } from "@/lib/staff"
 import { mockContracts } from "@/lib/mock/contracts"
 import { proposalTotalBdt, mockProposals } from "@/lib/mock/proposals"
 import {
@@ -223,7 +223,7 @@ export function ProjectOverviewTab({
                     <SelectValue placeholder="Select manager" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LEAD_OWNERS.map((owner) => (
+                    {STAFF_MEMBERS.map((owner) => (
                       <SelectItem key={owner} value={owner}>
                         {owner}
                       </SelectItem>

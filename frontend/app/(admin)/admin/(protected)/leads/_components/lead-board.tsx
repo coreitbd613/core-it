@@ -24,22 +24,14 @@ import {
   leadStageLabels,
   type Lead,
   type LeadStage,
-} from "@/lib/mock/leads"
+} from "@/lib/leads"
 
 import { LeadQuickActions } from "./lead-quick-actions"
 import { useLeadStageChange } from "./use-lead-stage-change"
 
 const BOARD_STAGES: LeadStage[] = [...LEAD_STAGE_ORDER, "LOST"]
 
-export function LeadBoard({
-  leads,
-  authorName,
-  onChange,
-}: {
-  leads: Lead[]
-  authorName: string
-  onChange: () => void
-}) {
+export function LeadBoard({ leads }: { leads: Lead[] }) {
   const {
     attemptStageChange,
     lostDialogOpen,
@@ -47,7 +39,7 @@ export function LeadBoard({
     setLostReason,
     confirmLost,
     cancelLost,
-  } = useLeadStageChange(authorName, onChange)
+  } = useLeadStageChange()
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
   const [dragOverStage, setDragOverStage] = React.useState<LeadStage | null>(null)
 
@@ -65,7 +57,7 @@ export function LeadBoard({
         {BOARD_STAGES.map((stage) => {
           const stageLeads = leads.filter((lead) => lead.stage === stage)
           const stageValue = stageLeads.reduce(
-            (sum, lead) => sum + (lead.estimatedValueBdt ?? 0),
+            (sum, lead) => sum + (lead.estimatedValueBdt ? Number(lead.estimatedValueBdt) : 0),
             0
           )
 
@@ -134,7 +126,9 @@ export function LeadBoard({
 
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium tabular-nums text-foreground">
-                          {lead.estimatedValueBdt != null ? formatBDT(lead.estimatedValueBdt) : "—"}
+                          {lead.estimatedValueBdt != null
+                            ? formatBDT(Number(lead.estimatedValueBdt))
+                            : "—"}
                         </span>
                         {isLeadOverdue(lead) && (
                           <span className="flex items-center gap-1 text-xs font-medium text-destructive">
@@ -144,10 +138,7 @@ export function LeadBoard({
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          {lead.ownerName ?? "Unassigned"}
-                        </span>
+                      <div className="flex items-center justify-end">
                         <LeadQuickActions lead={lead} />
                       </div>
                     </div>

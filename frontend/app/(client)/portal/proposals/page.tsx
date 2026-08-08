@@ -67,7 +67,7 @@ export default function ProposalsPage() {
     return [
       { label: "Total Proposals", value: proposals.length, icon: FileTextIcon, tone: "primary" },
       { label: "Awaiting Response", value: pending, icon: ClockIcon, tone: "chart4" },
-      { label: "Approved", value: approved, icon: CheckCircle2Icon, tone: "chart2" },
+      { label: "Approved", value: approved, icon: CheckCircle2Icon, tone: "chart3" },
       { label: "Rejected", value: rejected, icon: XCircleIcon, tone: "neutral" },
     ]
   }, [proposals])

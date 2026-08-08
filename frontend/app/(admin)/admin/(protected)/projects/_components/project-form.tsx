@@ -33,7 +33,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { DatePickerField } from "@/components/shared/date-picker-field"
 import { useAdminOrganizations } from "@/hooks/use-organization"
 import { useCreateProject } from "@/hooks/use-projects"
-import { LEAD_OWNERS } from "@/lib/mock/leads"
+import { STAFF_MEMBERS } from "@/lib/staff"
 import { mockProposals } from "@/lib/mock/proposals"
 import {
   DEFAULT_MILESTONE_TITLES,
@@ -289,7 +289,7 @@ export function ProjectForm() {
                       <SelectValue placeholder="Select manager" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LEAD_OWNERS.map((owner) => (
+                      {STAFF_MEMBERS.map((owner) => (
                         <SelectItem key={owner} value={owner}>
                           {owner}
                         </SelectItem>
@@ -489,7 +489,7 @@ export function ProjectForm() {
                       <SelectValue placeholder="Select contact" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LEAD_OWNERS.map((owner) => (
+                      {STAFF_MEMBERS.map((owner) => (
                         <SelectItem key={owner} value={owner}>
                           {owner}
                         </SelectItem>
@@ -636,7 +636,7 @@ export function ProjectForm() {
                         <SelectValue placeholder="Name" />
                       </SelectTrigger>
                       <SelectContent>
-                        {LEAD_OWNERS.map((owner) => (
+                        {STAFF_MEMBERS.map((owner) => (
                           <SelectItem key={owner} value={owner}>
                             {owner}
                           </SelectItem>

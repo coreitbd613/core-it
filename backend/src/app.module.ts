@@ -12,6 +12,7 @@ import { DomainModule } from './domains/domain.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { ProjectsModule } from './projects/projects.module';
+import { LeadsModule } from './leads/leads.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProjectsModule } from './projects/projects.module';
     InvoicesModule,
     OrganizationsModule,
     ProjectsModule,
+    LeadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -69,7 +69,7 @@ export default function AdminCustomersPage() {
     const revenue = rows.reduce((sum, c) => sum + c.totalSpentBdt, 0)
     return [
       { label: "Total Customers", value: rows.length, icon: UsersIcon, tone: "primary" },
-      { label: "Verified", value: verified, icon: BadgeCheckIcon, tone: "chart2" },
+      { label: "Verified", value: verified, icon: BadgeCheckIcon, tone: "chart3" },
       { label: "Total Orders", value: orders, icon: ShoppingBagIcon, tone: "chart4" },
       { label: "Total Revenue", value: formatBDT(revenue), icon: BanknoteIcon, tone: "chart5" },
     ]

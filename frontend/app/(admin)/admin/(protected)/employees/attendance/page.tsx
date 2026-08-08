@@ -41,10 +41,10 @@ export default function AdminAttendancePage() {
 
   const counts = todaysAttendanceCounts(mockAttendance, date)
   const stats: DashboardStatItem[] = [
-    { label: "Present", value: counts.PRESENT, icon: CalendarCheckIcon, tone: "primary" },
+    { label: "Present", value: counts.PRESENT, icon: CalendarCheckIcon, tone: "chart3" },
     { label: "Absent", value: counts.ABSENT, icon: CalendarXIcon, tone: "destructive" },
-    { label: "Late", value: counts.LATE, icon: ClockIcon, tone: "chart2" },
-    { label: "On Leave", value: counts.ON_LEAVE, icon: UsersRoundIcon, tone: "chart3" },
+    { label: "Late", value: counts.LATE, icon: ClockIcon, tone: "chart4" },
+    { label: "On Leave", value: counts.ON_LEAVE, icon: UsersRoundIcon, tone: "chart2" },
   ]
 
   function handleSave(employee: Employee, status: AttendanceStatus, checkIn: string, checkOut: string) {

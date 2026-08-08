@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { useUpdateProject } from "@/hooks/use-projects"
 import { formatDate } from "@/lib/format"
-import { LEAD_OWNERS } from "@/lib/mock/leads"
+import { STAFF_MEMBERS } from "@/lib/staff"
 import {
   supportSlaLabels,
   supportStatus,
@@ -172,7 +172,7 @@ export function ProjectSupportTab({
                     <SelectValue placeholder="Select contact" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LEAD_OWNERS.map((owner) => (
+                    {STAFF_MEMBERS.map((owner) => (
                       <SelectItem key={owner} value={owner}>
                         {owner}
                       </SelectItem>

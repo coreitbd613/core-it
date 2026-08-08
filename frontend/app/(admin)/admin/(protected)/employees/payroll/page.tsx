@@ -49,8 +49,8 @@ export default function AdminPayrollPage() {
 
   const stats: DashboardStatItem[] = [
     { label: "Total Payroll", value: formatBDT(totalPayrollForMonth(mockPayslips, month)), icon: WalletIcon, tone: "primary" },
-    { label: "Paid", value: rows.filter((p) => p.status === "PAID").length, icon: CheckIcon, tone: "chart2" },
-    { label: "Pending", value: rows.filter((p) => p.status === "PENDING").length, icon: HourglassIcon, tone: "chart3" },
+    { label: "Paid", value: rows.filter((p) => p.status === "PAID").length, icon: CheckIcon, tone: "chart3" },
+    { label: "Pending", value: rows.filter((p) => p.status === "PENDING").length, icon: HourglassIcon, tone: "chart4" },
   ]
 
   const columns: ColumnDef<Payslip>[] = [

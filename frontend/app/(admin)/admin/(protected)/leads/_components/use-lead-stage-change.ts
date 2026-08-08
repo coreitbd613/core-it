@@ -3,9 +3,11 @@
 import * as React from "react"
 import { toast } from "sonner"
 
-import { leadStageLabels, logLeadActivity, type Lead, type LeadStage } from "@/lib/mock/leads"
+import { useUpdateLeadStage } from "@/hooks/use-leads"
+import { leadStageLabels, type Lead, type LeadStage } from "@/lib/leads"
 
-export function useLeadStageChange(authorName: string, onChange: () => void) {
+export function useLeadStageChange() {
+  const updateStage = useUpdateLeadStage()
   const [lostDialogOpen, setLostDialogOpen] = React.useState(false)
   const [lostReason, setLostReason] = React.useState("")
   const pendingLeadRef = React.useRef<Lead | null>(null)
@@ -20,28 +22,32 @@ export function useLeadStageChange(authorName: string, onChange: () => void) {
       return
     }
 
-    lead.stage = stage
-    logLeadActivity(lead, "STAGE_CHANGE", `Stage changed to ${leadStageLabels[stage]}`, authorName)
-    toast.success(`Marked as ${leadStageLabels[stage]}.`)
-    onChange()
+    updateStage.mutate(
+      { id: lead.id, input: { stage } },
+      {
+        onSuccess: () => toast.success(`Marked as ${leadStageLabels[stage]}.`),
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update this lead."),
+      }
+    )
   }
 
   function confirmLost() {
     const lead = pendingLeadRef.current
     if (!lead) return
 
-    lead.stage = "LOST"
-    lead.lostReason = lostReason.trim() || null
-    logLeadActivity(
-      lead,
-      "STAGE_CHANGE",
-      `Stage changed to Lost${lostReason.trim() ? ` — ${lostReason.trim()}` : ""}`,
-      authorName
+    updateStage.mutate(
+      { id: lead.id, input: { stage: "LOST", lostReason: lostReason.trim() || undefined } },
+      {
+        onSuccess: () => {
+          toast.success("Lead marked as lost.")
+          setLostDialogOpen(false)
+          pendingLeadRef.current = null
+        },
+        onError: (error) =>
+          toast.error(error instanceof Error ? error.message : "Couldn't update this lead."),
+      }
     )
-    toast.success("Lead marked as lost.")
-    setLostDialogOpen(false)
-    pendingLeadRef.current = null
-    onChange()
   }
 
   function cancelLost() {

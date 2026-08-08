@@ -5,13 +5,22 @@ import Link from "next/link"
 import { XIcon } from "lucide-react"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import { mockLeads } from "@/lib/mock/leads"
+import { Spinner } from "@/components/ui/spinner"
+import { useAdminLead } from "@/hooks/use-leads"
 
 import { LeadForm } from "../../_components/lead-form"
 
 export default function EditLeadPage() {
   const params = useParams<{ id: string }>()
-  const lead = mockLeads.find((l) => l.id === params.id)
+  const { data: lead, isLoading } = useAdminLead(params.id)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner className="size-6" />
+      </div>
+    )
+  }
 
   if (!lead) {
     return (

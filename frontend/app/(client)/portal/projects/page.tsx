@@ -28,7 +28,7 @@ export default function ProjectsPage() {
       { label: "Total Projects", value: projects.length, icon: FolderKanbanIcon, tone: "primary" },
       { label: "In Progress", value: inProgress, icon: Loader2Icon, tone: "chart2" },
       { label: "In Review", value: review, icon: ClockIcon, tone: "chart4" },
-      { label: "Completed", value: completed, icon: CheckCircle2Icon, tone: "neutral" },
+      { label: "Completed", value: completed, icon: CheckCircle2Icon, tone: "chart3" },
     ]
   }, [projects])
 

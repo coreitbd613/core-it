@@ -16,10 +16,10 @@ import {
   UserPlusIcon,
   WalletIcon,
 } from "lucide-react"
+import { FaWhatsapp } from "react-icons/fa6"
 import { toast } from "sonner"
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
-import { useAdminAuth } from "@/contexts/admin-auth-context"
 import DashboardStatsGrid, {
   type DashboardStatItem,
 } from "@/components/shared/dashboard/DashboardStatsGrid"
@@ -63,45 +63,42 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { useAdminLeads, useConvertLead, useDeleteLead, useUpdateLeadStage } from "@/hooks/use-leads"
 import { formatBDT } from "@/lib/format"
 import {
-  LEAD_OWNERS,
   isLeadClosed,
   isLeadOverdue,
   leadSourceLabels,
   leadStageLabels,
   leadStageVariant,
-  logLeadActivity,
-  mockLeads,
   pipelineValueBdt,
+  waLink,
   type Lead,
   type LeadSource,
   type LeadStage,
-} from "@/lib/mock/leads"
+} from "@/lib/leads"
 
 import { LeadBoard } from "./_components/lead-board"
-import { LeadQuickActions } from "./_components/lead-quick-actions"
 
 export default function AdminLeadsPage() {
   const router = useRouter()
-  const { user } = useAdminAuth()
-  const authorName = user?.name ?? "Core IT"
+  const { data: leads = [] } = useAdminLeads()
+  const deleteLead = useDeleteLead()
+  const convertLead = useConvertLead()
+  const updateStage = useUpdateLeadStage()
+
   const [search, setSearch] = useState("")
   const [stageFilter, setStageFilter] = useState<LeadStage | "ALL">("ALL")
-  const [ownerFilter, setOwnerFilter] = useState<string>("ALL")
   const [sourceFilter, setSourceFilter] = useState<LeadSource | "ALL">("ALL")
   const [overdueOnly, setOverdueOnly] = useState(false)
   const [view, setView] = useState<"table" | "board">("table")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [bulkLostDialogOpen, setBulkLostDialogOpen] = useState(false)
   const [bulkLostReason, setBulkLostReason] = useState("")
-  const [, forceRerender] = useState(0)
 
-  const rows = mockLeads.filter(
+  const rows = leads.filter(
     (lead) =>
       (stageFilter === "ALL" || lead.stage === stageFilter) &&
-      (ownerFilter === "ALL" ||
-        (ownerFilter === "UNASSIGNED" ? !lead.ownerName : lead.ownerName === ownerFilter)) &&
       (sourceFilter === "ALL" || lead.source === sourceFilter) &&
       (!overdueOnly || isLeadOverdue(lead))
   )
@@ -109,93 +106,80 @@ export default function AdminLeadsPage() {
   const selectedCount = selectedIds.length
 
   function handleDelete(lead: Lead) {
-    const index = mockLeads.findIndex((l) => l.id === lead.id)
-    if (index !== -1) mockLeads.splice(index, 1)
-    forceRerender((n) => n + 1)
-    toast.success(`Deleted ${lead.contactName}.`)
+    deleteLead.mutate(lead.id, {
+      onSuccess: () => toast.success(`Deleted ${lead.contactName}.`),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : "Couldn't delete this lead."),
+    })
   }
 
-  function handleBulkDelete() {
-    for (const id of selectedIds) {
-      const index = mockLeads.findIndex((l) => l.id === id)
-      if (index !== -1) mockLeads.splice(index, 1)
+  async function handleBulkDelete() {
+    try {
+      await Promise.all(selectedIds.map((id) => deleteLead.mutateAsync(id)))
+      setRowSelection({})
+      toast.success(`Deleted ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't delete those leads.")
     }
-    setRowSelection({})
-    forceRerender((n) => n + 1)
-    toast.success(`Deleted ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
   }
 
   function handleConvert(lead: Lead) {
-    lead.stage = "WON"
-    lead.convertedAt = new Date().toISOString()
-    logLeadActivity(lead, "CONVERTED", "Converted to customer", authorName)
-    toast.success("Lead converted — create their account under Customers to finish onboarding.")
-    forceRerender((n) => n + 1)
+    convertLead.mutate(lead.id, {
+      onSuccess: () =>
+        toast.success("Lead converted — create their account under Customers to finish onboarding."),
+      onError: (error) =>
+        toast.error(error instanceof Error ? error.message : "Couldn't convert this lead."),
+    })
   }
 
-  function handleBulkStageChange(stage: LeadStage) {
+  async function handleBulkStageChange(stage: LeadStage) {
     if (stage === "LOST") {
       setBulkLostReason("")
       setBulkLostDialogOpen(true)
       return
     }
-    for (const id of selectedIds) {
-      const lead = mockLeads.find((l) => l.id === id)
-      if (!lead || lead.stage === stage) continue
-      lead.stage = stage
-      logLeadActivity(lead, "STAGE_CHANGE", `Stage changed to ${leadStageLabels[stage]}`, authorName)
-    }
-    setRowSelection({})
-    forceRerender((n) => n + 1)
-    toast.success(`Updated ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
-  }
-
-  function confirmBulkLost() {
-    for (const id of selectedIds) {
-      const lead = mockLeads.find((l) => l.id === id)
-      if (!lead) continue
-      lead.stage = "LOST"
-      lead.lostReason = bulkLostReason.trim() || null
-      logLeadActivity(
-        lead,
-        "STAGE_CHANGE",
-        `Stage changed to Lost${bulkLostReason.trim() ? ` — ${bulkLostReason.trim()}` : ""}`,
-        authorName
+    try {
+      await Promise.all(
+        selectedIds.map((id) => updateStage.mutateAsync({ id, input: { stage } }))
       )
+      setRowSelection({})
+      toast.success(`Updated ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't update those leads.")
     }
-    setBulkLostDialogOpen(false)
-    setRowSelection({})
-    forceRerender((n) => n + 1)
-    toast.success(`Updated ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
   }
 
-  function handleBulkReassign(owner: string) {
-    const ownerName = owner === "unassigned" ? null : owner
-    for (const id of selectedIds) {
-      const lead = mockLeads.find((l) => l.id === id)
-      if (!lead) continue
-      lead.ownerName = ownerName
-      logLeadActivity(lead, "NOTE", ownerName ? `Reassigned to ${ownerName}` : "Unassigned", authorName)
+  async function confirmBulkLost() {
+    try {
+      await Promise.all(
+        selectedIds.map((id) =>
+          updateStage.mutateAsync({
+            id,
+            input: { stage: "LOST", lostReason: bulkLostReason.trim() || undefined },
+          })
+        )
+      )
+      setBulkLostDialogOpen(false)
+      setRowSelection({})
+      toast.success(`Updated ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't update those leads.")
     }
-    setRowSelection({})
-    forceRerender((n) => n + 1)
-    toast.success(`Reassigned ${selectedIds.length} lead${selectedIds.length > 1 ? "s" : ""}.`)
   }
 
   const stats = useMemo<DashboardStatItem[]>(() => {
     const startOfWeek = new Date()
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
     startOfWeek.setHours(0, 0, 0, 0)
-    const newThisWeek = mockLeads.filter((lead) => new Date(lead.createdAt) >= startOfWeek).length
-    const overdue = mockLeads.filter((lead) => isLeadOverdue(lead)).length
-    const won = mockLeads.filter((lead) => lead.stage === "WON").length
+    const newThisWeek = leads.filter((lead) => new Date(lead.createdAt) >= startOfWeek).length
+    const overdue = leads.filter((lead) => isLeadOverdue(lead)).length
     return [
-      { label: "Total Leads", value: mockLeads.length, icon: TargetIcon, tone: "primary" },
+      { label: "Total Leads", value: leads.length, icon: TargetIcon, tone: "primary" },
       { label: "New This Week", value: newThisWeek, icon: UserPlusIcon, tone: "chart2" },
       { label: "Overdue Follow-ups", value: overdue, icon: AlertTriangleIcon, tone: "destructive" },
-      { label: "Pipeline Value", value: formatBDT(pipelineValueBdt(mockLeads)), icon: WalletIcon, tone: "chart4" },
+      { label: "Pipeline Value", value: formatBDT(pipelineValueBdt(leads)), icon: WalletIcon, tone: "chart4" },
     ]
-  }, [])
+  }, [leads])
 
   const columns = useMemo<ColumnDef<Lead>[]>(
     () => [
@@ -219,11 +203,29 @@ export default function AdminLeadsPage() {
                 {row.original.companyName ?? row.original.email ?? "—"}
               </span>
             </div>
-            <div className="ml-auto shrink-0">
-              <LeadQuickActions lead={row.original} />
-            </div>
           </div>
         ),
+      },
+      {
+        id: "whatsapp",
+        accessorFn: (row) => row.phone ?? "",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="WhatsApp" />,
+        cell: ({ row }) => {
+          const link = waLink(row.original.phone)
+          if (!link) return <span className="text-sm text-muted-foreground">—</span>
+          return (
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:underline"
+            >
+              <FaWhatsapp className="size-4 text-[#25D366]" />
+              {row.original.phone}
+            </a>
+          )
+        },
       },
       {
         id: "stage",
@@ -245,30 +247,14 @@ export default function AdminLeadsPage() {
         ),
       },
       {
-        id: "owner",
-        accessorFn: (row) => row.ownerName ?? "",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Owner" />,
-        cell: ({ row }) =>
-          row.original.ownerName ? (
-            <div className="flex items-center gap-2">
-              <Avatar className="size-6">
-                <AvatarFallback className="text-[10px]">
-                  {row.original.ownerName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-foreground">{row.original.ownerName}</span>
-            </div>
-          ) : (
-            <span className="text-sm text-muted-foreground">Unassigned</span>
-          ),
-      },
-      {
         id: "estimatedValueBdt",
-        accessorFn: (row) => row.estimatedValueBdt ?? 0,
+        accessorFn: (row) => (row.estimatedValueBdt ? Number(row.estimatedValueBdt) : 0),
         header: ({ column }) => <DataTableColumnHeader column={column} title="Est. Value" />,
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            {row.original.estimatedValueBdt != null ? formatBDT(row.original.estimatedValueBdt) : "—"}
+            {row.original.estimatedValueBdt != null
+              ? formatBDT(Number(row.original.estimatedValueBdt))
+              : "—"}
           </span>
         ),
       },
@@ -346,6 +332,7 @@ export default function AdminLeadsPage() {
         size: 40,
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [router]
   )
 
@@ -401,20 +388,6 @@ export default function AdminLeadsPage() {
                 <SelectItem value="LOST">Lost</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All owners</SelectItem>
-                <SelectItem value="UNASSIGNED">Unassigned</SelectItem>
-                {LEAD_OWNERS.map((owner) => (
-                  <SelectItem key={owner} value={owner}>
-                    {owner}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as LeadSource | "ALL")}>
               <SelectTrigger className="w-40">
                 <SelectValue />
@@ -457,19 +430,6 @@ export default function AdminLeadsPage() {
                   <SelectItem value="LOST">Lost</SelectItem>
                 </SelectContent>
               </Select>
-              <Select key={`owner-${selectedIds.join(",")}`} onValueChange={handleBulkReassign}>
-                <SelectTrigger className="w-40" size="sm">
-                  <SelectValue placeholder="Assign owner..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {LEAD_OWNERS.map((owner) => (
-                    <SelectItem key={owner} value={owner}>
-                      {owner}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
@@ -509,11 +469,7 @@ export default function AdminLeadsPage() {
           getRowClassName={(row) => (isLeadOverdue(row) ? "bg-destructive/5" : undefined)}
         />
       ) : (
-        <LeadBoard
-          leads={rows}
-          authorName={authorName}
-          onChange={() => forceRerender((n) => n + 1)}
-        />
+        <LeadBoard leads={rows} />
       )}
 
       <Dialog open={bulkLostDialogOpen} onOpenChange={setBulkLostDialogOpen}>

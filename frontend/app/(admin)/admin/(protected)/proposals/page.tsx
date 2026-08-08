@@ -151,7 +151,7 @@ export default function AdminProposalsPage() {
     return [
       { label: "Total Proposals", value: proposals.length, icon: FileTextIcon, tone: "primary" },
       { label: "Awaiting Response", value: sent, icon: SendIcon, tone: "chart4" },
-      { label: "Approved", value: approved, icon: FileTextIcon, tone: "chart2" },
+      { label: "Approved", value: approved, icon: FileTextIcon, tone: "chart3" },
       { label: "Total Value", value: formatBDT(totalValue), icon: FileTextIcon, tone: "chart5" },
     ]
   }, [proposals])

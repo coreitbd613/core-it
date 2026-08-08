@@ -80,7 +80,7 @@ export default function AdminLeaveRequestsPage() {
   }
 
   const stats: DashboardStatItem[] = [
-    { label: "Pending", value: pendingLeaveCount(mockLeaveRequests), icon: HourglassIcon, tone: "chart3" },
+    { label: "Pending", value: pendingLeaveCount(mockLeaveRequests), icon: HourglassIcon, tone: "chart4" },
     {
       label: "On Leave Today",
       value: [...new Set(mockLeaveRequests.filter((r) => r.status === "APPROVED").map((r) => r.employeeId))].filter(
@@ -93,7 +93,7 @@ export default function AdminLeaveRequestsPage() {
       label: "Approved",
       value: mockLeaveRequests.filter((r) => r.status === "APPROVED").length,
       icon: CheckIcon,
-      tone: "chart2",
+      tone: "chart3",
     },
     {
       label: "Rejected",

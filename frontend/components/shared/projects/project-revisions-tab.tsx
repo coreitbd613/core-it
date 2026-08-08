@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { RichTextEditor } from "@/components/shared/rich-text-editor"
 import {
   Select,
   SelectContent,
@@ -232,7 +233,10 @@ export function ProjectRevisionsTab({
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-foreground">{revision.description}</p>
+                <div
+                  className="prose prose-sm max-w-none text-foreground dark:prose-invert"
+                  dangerouslySetInnerHTML={{ __html: revision.description }}
+                />
               </div>
             ))}
           </div>
@@ -242,14 +246,18 @@ export function ProjectRevisionsTab({
   )
 }
 
+function isHtmlEmpty(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").trim().length === 0
+}
+
 function RequestRevisionDialog({ onRequest }: { onRequest: (description: string) => void }) {
   const [open, setOpen] = React.useState(false)
   const [description, setDescription] = React.useState("")
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!description.trim()) return
-    onRequest(description.trim())
+    if (isHtmlEmpty(description)) return
+    onRequest(description)
     setDescription("")
     setOpen(false)
   }
@@ -273,13 +281,12 @@ function RequestRevisionDialog({ onRequest }: { onRequest: (description: string)
           <FieldGroup className="py-4">
             <Field>
               <FieldLabel htmlFor="revision-description">What needs to change?</FieldLabel>
-              <Textarea
+              <RichTextEditor
                 id="revision-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={setDescription}
                 placeholder="Describe the revision..."
-                rows={4}
-                required
+                minHeight="120px"
               />
             </Field>
           </FieldGroup>
@@ -289,7 +296,9 @@ function RequestRevisionDialog({ onRequest }: { onRequest: (description: string)
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">Send request</Button>
+            <Button type="submit" disabled={isHtmlEmpty(description)}>
+              Send request
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
